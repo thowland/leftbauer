@@ -9,12 +9,10 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
-
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-
     "types": ["node"]
   },
   "include": [
@@ -22,6 +20,7 @@
     "vitest.config.ts",
     "playwright.config.ts",
     "eslint.config.js",
-    "tests/e2e"
+    "tests/e2e",
+    "scripts"
   ]
 }

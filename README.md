@@ -4,7 +4,7 @@ An installable, browser-based Euchre game for one player against three computer 
 
 The name comes from the left bower, the jack that leaves its own suit to become the second-highest trump. "Bower" comes from the German _Bauer_, the name for the jack in German card games.
 
-> **Status:** Sprint 3 of the [implementation plan](docs/IMPLEMENTATION_PLAN.md). A full game is playable against placeholder bots that choose random legal moves; real Euchre strategy arrives in Sprint 4.
+> **Status:** Sprint 4 of the [implementation plan](docs/IMPLEMENTATION_PLAN.md). Play a full game with a conventional partner against two of four named opponents.
 
 ## Documents
 

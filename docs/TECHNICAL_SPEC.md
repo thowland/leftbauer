@@ -525,11 +525,12 @@ These are stateless services used by policies. Each is cohesive and replaceable 
 
 ```ts
 interface ConventionRule<T> {
-  readonly id: ReasonCode;                           // e.g. 'lead-trump-partner-called'
-  applies(ctx: DecisionContext): boolean;
-  score(ctx: DecisionContext): ScoredOption<T>[];    // the options this rule recommends
+  readonly id: ReasonCode;                           // e.g. 'lead-trump-to-partner'
+  choose(ctx: DecisionContext): T | null;            // null when the rule does not apply
 }
 ```
+
+*As built (ADR-0003):* card play and the discard are rule chains; bidding and the loner decision are threshold scores (expected tricks against a threshold that moves with persona, seat and score), each option still carrying a reason code. The loner decision always uses the best selector.
 
 The first rule that applies produces the top-scored options, and lower rules fill in the rest of the ranking. This structure gives three things at once:
 
@@ -803,7 +804,7 @@ interface Settings {
 
 ### 11.3 Tournament harness
 
-`scripts/tournament.ts` runs `TableDriver` headless with four `BotSeatController`s over `InlineBotRunner`, seeded shuffles and no presentation sinks. It reports win, make, euchre, march and loner rates per pairing and confirms the difficulty ordering (Sharp > Standard > Casual) and the partner's strength (§9 acceptance criteria in the requirements). A small fixed-seed version runs in CI as a regression gate on bot strength.
+`runMatch` in `src/session/tournament.ts` (wrapped by `scripts/tournament.ts`, run with `npm run tournament`) runs `TableDriver` headless with four `BotSeatController`s over `InlineBotRunner`, seeded shuffles and no presentation sinks. It reports win, make, euchre, march and loner rates per pairing and confirms the difficulty ordering (Sharp > Standard > Casual) and the partner's strength (§9 acceptance criteria in the requirements). A small fixed-seed version runs in CI as a regression gate on bot strength.
 
 ## 12. Multiplayer readiness
 

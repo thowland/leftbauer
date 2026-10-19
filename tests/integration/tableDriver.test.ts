@@ -16,7 +16,7 @@ import { TableDriver, type DriverDeps, type EventSink } from '../../src/session/
 import { immediateScheduler, timerScheduler, type Scheduler } from '../../src/session/scheduler';
 import { seededRng } from '../../src/util/rng';
 
-const SPEC: BotSpec = { role: 'opponent', personaId: 'placeholder', skill: 'standard' };
+const SPEC: BotSpec = { role: 'opponent', personaId: 'smooth', skill: 'standard' };
 
 function bots(runner: BotRunner = new InlineBotRunner()): SeatController[] {
   return [0, 1, 2, 3].map(() => new BotSeatController(SPEC, runner));
@@ -96,7 +96,7 @@ describe('TableDriver with four bots', () => {
     const liar: BotRunner = {
       decide: async () => ({
         action: { type: 'play', card: '9S' },
-        reason: { code: 'random-legal' },
+        reason: { code: 'lead-lowest' },
       }),
     };
     const onIllegal = vi.fn();

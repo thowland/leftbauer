@@ -30,5 +30,10 @@ export const CARD_ROOM: Theme = {
     '--suit-red': '#ad2f2a',
     '--suit-blue': '#255a9b',
     '--suit-green': '#2d7a3e',
+    '--persona-partner': '#c9a45c',
+    '--persona-soopy': '#7f9fb8',
+    '--persona-shrubs': '#8fae6b',
+    '--persona-rusty': '#c4703f',
+    '--persona-smooth': '#a58bc2',
   },
 };

@@ -11,8 +11,8 @@
 import type { Action } from '../engine/actions';
 import type { PlayerView } from '../engine/view';
 
-/** Persona ids. Sprint 4 adds the partner and the four named opponents. */
-export type PersonaId = 'placeholder';
+/** The partner, and the four named opponents (OP-3). */
+export type PersonaId = 'partner' | 'soopy' | 'shrubs' | 'rusty' | 'smooth';
 
 export type SkillLevel = 'casual' | 'standard' | 'sharp';
 
@@ -23,8 +23,29 @@ export interface BotSpec {
   readonly skill: SkillLevel;
 }
 
-/** Why a bot chose an action. Structured, never prose (rendered by coach/). */
-export type ReasonCode = 'random-legal';
+/**
+ * Why a bot chose an action: one code per convention (PB-4). Structured,
+ * never prose; the coach renders the words (Sprint 8).
+ */
+export type ReasonCode =
+  | 'bid-strong-hand'
+  | 'bid-call-next'
+  | 'bid-best-suit'
+  | 'bid-stuck'
+  | 'bid-pass-weak'
+  | 'loner-strong'
+  | 'loner-not-strong-enough'
+  | 'discard-make-void'
+  | 'discard-lowest'
+  | 'lead-boss-trump'
+  | 'lead-trump-to-partner'
+  | 'lead-off-ace'
+  | 'lead-short-suit'
+  | 'lead-lowest'
+  | 'follow-partner-winning'
+  | 'follow-save-trump'
+  | 'follow-win-cheaply'
+  | 'follow-throw-low';
 
 export interface Reason {
   readonly code: ReasonCode;

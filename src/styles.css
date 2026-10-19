@@ -165,13 +165,62 @@ body {
 
 .seat-label {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   margin: 0;
   font-size: 0.85rem;
   color: var(--ink-muted);
+  text-align: center;
+}
+
+.seat-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* A persona's initial in its own color (OP-4). */
+.monogram {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  color: var(--felt-shadow);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Always one chip tall, empty or not, so statuses never shift the layout. */
+.seat-status {
+  display: flex;
+  align-items: center;
+  min-height: 1.15rem;
+}
+
+.seat-cards {
+  position: relative;
+}
+
+/* The dealer button sits on the corner of the seat's cards (out of flow). */
+.dealer-button {
+  position: absolute;
+  z-index: 2;
+  top: -0.6rem;
+  right: -0.6rem;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--felt-shadow);
+  border-radius: 50%;
+  background: var(--brass);
+  color: var(--felt-shadow);
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
 }
 
 .chip {
@@ -184,17 +233,12 @@ body {
   white-space: nowrap;
 }
 
-.dealer-chip {
-  background: var(--brass);
-  color: var(--felt-shadow);
-}
-
 .status-chip {
   border: 1px solid var(--ink-muted);
   color: var(--ink-on-felt);
 }
 
-.seat-active .seat-label > span:first-child {
+.seat-active .seat-name {
   color: var(--ink-on-felt);
   text-decoration: underline;
   text-decoration-color: var(--brass);
