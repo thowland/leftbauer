@@ -4,10 +4,10 @@ import { App } from './ui/App';
 import { parseLaunchOptions } from './ui/launchOptions';
 import './styles.css';
 
-const { dev, seed } = parseLaunchOptions(window.location.search);
+const { dev, seed, fast } = parseLaunchOptions(window.location.search);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App dev={dev} seed={seed} />
+    <App dev={dev} seed={seed} fast={fast} />
   </StrictMode>
 );

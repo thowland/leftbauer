@@ -44,11 +44,12 @@ body {
 
   display: grid;
   grid-template-columns: auto 1fr auto;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   grid-template-areas:
     'score score score'
     'top top top'
     'left center right'
+    'actions actions actions'
     'bottom bottom bottom';
   height: 100%;
   padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
@@ -82,6 +83,20 @@ body {
   display: flex;
   align-items: baseline;
   gap: 6px;
+  white-space: nowrap;
+}
+
+/* Phones in portrait: the score needs the whole bar during play. */
+@media (max-width: 520px) {
+  .table .brand {
+    display: none;
+  }
+
+  .score {
+    flex: 1;
+    justify-content: space-between;
+    gap: 8px;
+  }
 }
 
 .score dt {
@@ -284,6 +299,214 @@ body {
 
 .hand-card {
   width: var(--card-w);
+}
+
+.hand-slot {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  transition: transform 120ms ease-out;
+}
+
+.hand-choice {
+  cursor: pointer;
+}
+
+.hand-choice:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.hand-choice.raised {
+  transform: translateY(-12%);
+}
+
+.card-illegal {
+  opacity: 0.45;
+  filter: saturate(0.6);
+}
+
+.bower-badge {
+  position: absolute;
+  z-index: 1;
+  top: -0.55rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--brass);
+  color: var(--felt-shadow);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* The prompt and bid buttons between the table and the hand (GF-2, GF-3). */
+.action-bar {
+  grid-area: actions;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 1.5rem;
+}
+
+.turn-prompt {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: 0.9rem;
+  color: var(--ink-on-felt);
+  text-align: center;
+}
+
+.bid-panel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.button-primary {
+  background: var(--brass);
+  color: var(--felt-shadow);
+  font-weight: 700;
+}
+
+.button-primary:active {
+  background: #b38f4a;
+}
+
+.suit-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.suit-button-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.alone-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-size: 0.95rem;
+}
+
+.alone-toggle input {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--brass);
+}
+
+/* Hand summary and game over (GF-6, GF-7). */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(10 20 14 / 0.6);
+}
+
+.dialog {
+  width: min(100%, 360px);
+  padding: 20px;
+  border: 1px solid var(--brass);
+  border-radius: 14px;
+  background: var(--felt-shadow);
+  color: var(--ink-on-felt);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.5);
+}
+
+.dialog-title {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+  font-style: italic;
+  color: var(--brass);
+}
+
+.dialog-body p {
+  margin: 0 0 8px;
+}
+
+.dialog-result {
+  font-size: 1.05rem;
+}
+
+.dialog-score {
+  color: var(--ink-muted);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.highlights {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.highlights th,
+.highlights td {
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.highlights th[scope='row'] {
+  text-align: left;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Home (GF-1). */
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+}
+
+.home-title {
+  margin: 0;
+  font-size: clamp(2.4rem, 10vw, 4rem);
+  font-style: italic;
+  color: var(--brass);
+}
+
+.home-tagline {
+  margin: 0 0 16px;
+  color: var(--ink-muted);
+}
+
+.home-button {
+  min-width: 200px;
+  font-size: 1.1rem;
 }
 
 /* The trick: each card sits toward the seat that played it. */

@@ -13,7 +13,8 @@ test.describe('dev panel', () => {
   test('steps through a full hand to a scored result', async ({ page }, testInfo) => {
     const status = page.getByRole('status');
     const step = page.getByRole('button', { name: 'Step' });
-    const score = page.getByLabel('Score').locator('dd');
+    // The first two values are Us and Them; Trump and Tricks follow once trump is set.
+    const score = page.getByLabel('Score').locator('dd').filter({ hasText: /^\d+$/ });
     await expect(score).toHaveText(['0', '0']);
 
     for (let i = 0; i < 40 && (await step.isEnabled()); i++) {
@@ -29,7 +30,8 @@ test.describe('dev panel', () => {
     const log = page.getByRole('list', { name: 'Event log' });
     await expect(log).toContainText(/takes trick 5\./);
     await expect(log.locator('li').last()).toContainText(/point|redealt/);
-    const total = (await score.allTextContents()).map(Number).reduce((a, b) => a + b, 0);
+    const [us, them] = (await score.allTextContents()).map(Number);
+    const total = us! + them!;
     expect(total).toBeGreaterThan(0);
   });
 

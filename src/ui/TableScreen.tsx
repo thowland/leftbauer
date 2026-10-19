@@ -1,12 +1,16 @@
 import type { ReactNode } from 'react';
+import { isBidAction, type Action } from '../engine/actions';
 import { sortHand, type CardId } from '../engine/cards';
 import type { Hands } from '../engine/deal';
 import { SEATS, teamOf, type Seat } from '../engine/seats';
 import type { Trick } from '../engine/state';
 import type { PlayerView } from '../engine/view';
 import { SUIT_NAMES } from '../assets/manifest';
+import { tricksWon } from '../engine/scoring';
+import { BidPanel } from './BidPanel';
 import { Card } from './Card';
-import { seatStatus } from './describe';
+import { seatStatus, turnPrompt } from './describe';
+import { PlayerHand } from './PlayerHand';
 import { screenPosition, seatName } from './layout';
 import { SuitIcon } from './SuitIcon';
 
@@ -17,6 +21,9 @@ interface TableScreenProps {
   readonly revealed?: Hands | null;
   /** Extra controls for the score bar (for example, Deal again). */
   readonly controls?: ReactNode;
+  /** The human's legal actions while the table waits for them, else `null`. */
+  readonly legal?: readonly Action[] | null;
+  readonly onAction?: (action: Action) => void;
 }
 
 /**
@@ -24,10 +31,24 @@ interface TableScreenProps {
  * can only show what the human is entitled to see (unless `revealed` is
  * passed by the dev panel).
  */
-export function TableScreen({ view, revealed = null, controls }: TableScreenProps) {
+export function TableScreen({
+  view,
+  revealed = null,
+  controls,
+  legal = null,
+  onAction = () => {},
+}: TableScreenProps) {
   const human = view.seat;
   const us = teamOf(human);
+  const them = us === 0 ? 1 : 0;
   const trump = view.contract?.trump ?? null;
+  const bids = legal?.filter(isBidAction) ?? [];
+  const choosable = (legal ?? []).flatMap((a) =>
+    a.type === 'play' || a.type === 'discard' ? [a.card] : []
+  );
+  const choose = (card: CardId) =>
+    onAction(view.phase === 'dealerDiscard' ? { type: 'discard', card } : { type: 'play', card });
+  const tricks = tricksWon(view.tricks);
   return (
     <main className="table" aria-label="Euchre table">
       <header className="score-bar">
@@ -39,7 +60,7 @@ export function TableScreen({ view, revealed = null, controls }: TableScreenProp
           </div>
           <div>
             <dt>Them</dt>
-            <dd>{view.score[us === 0 ? 1 : 0]}</dd>
+            <dd>{view.score[them]}</dd>
           </div>
           {trump !== null && (
             <div className="trump" aria-label={`Trump: ${SUIT_NAMES[trump]}`}>
@@ -48,6 +69,14 @@ export function TableScreen({ view, revealed = null, controls }: TableScreenProp
                 <svg viewBox="0 0 100 100" className="trump-icon" aria-hidden="true">
                   <SuitIcon suit={trump} x={50} y={50} size={100} color="var(--ink-on-felt)" />
                 </svg>
+              </dd>
+            </div>
+          )}
+          {view.contract !== null && (
+            <div className="tricks" aria-label={`Tricks: us ${tricks[us]}, them ${tricks[them]}`}>
+              <dt>Tricks</dt>
+              <dd>
+                {tricks[us]}–{tricks[them]}
               </dd>
             </div>
           )}
@@ -63,17 +92,27 @@ export function TableScreen({ view, revealed = null, controls }: TableScreenProp
         <CenterContents view={view} />
       </section>
 
+      <section className="action-bar" aria-label="Your turn">
+        <p className="turn-prompt" aria-live="polite">
+          {turnPrompt(view, legal)}
+        </p>
+        {bids.length > 0 && (
+          <BidPanel legal={bids} isDealer={view.dealer === human} onBid={onAction} />
+        )}
+      </section>
+
       <section
         className={seatClasses('bottom', view, human)}
         aria-label="Your hand"
         aria-current={view.toAct === human ? 'true' : undefined}
       >
         <SeatLabel view={view} seat={human} />
-        <div className="hand">
-          {sortHand(view.myHand, trump).map((card: CardId) => (
-            <Card key={card} card={card} className="hand-card" />
-          ))}
-        </div>
+        <PlayerHand
+          cards={sortHand(view.myHand, trump)}
+          trump={trump}
+          choosable={choosable}
+          onChoose={choose}
+        />
       </section>
     </main>
   );
