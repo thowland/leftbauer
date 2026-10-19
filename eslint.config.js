@@ -38,7 +38,9 @@ const layerConfigs = Object.entries(LAYERS).map(([layer, { allows, pure }]) => {
   const forbidden = ALL_LAYERS.filter((l) => l !== layer && !allows.includes(l));
   const patterns = [
     {
-      group: forbidden.flatMap((l) => [`**/${l}`, `**/${l}/**`]),
+      // Cross-layer imports climb out of the layer first (`../engine/cards`),
+      // so same-named files inside a layer (engine/state.ts) don't match.
+      regex: `^(\\.\\./)+(${forbidden.join('|')})(/|$)`,
       message: `src/${layer}/ may only import from: ${allows.join(', ') || 'nothing internal'}.`,
     },
     ...(pure ? reactPatterns : []),
