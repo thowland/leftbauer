@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Dependency security upgrade
+
+### Changed
+
+- Upgraded Vite to 8, @vitejs/plugin-react to 6, Vitest and coverage to 5, lint-staged to 17 and jsdom to 30, clearing every `npm audit` advisory (one critical, one high, two moderate) in dev tooling. See the ADR-0001 amendment.
+
 ## Sprint 1 — Foundations and first visible table
 
 ### Added
