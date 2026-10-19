@@ -4,7 +4,7 @@ An installable, browser-based Euchre game for one player against three computer 
 
 The name comes from the left bower, the jack that leaves its own suit to become the second-highest trump. "Bower" comes from the German _Bauer_, the name for the jack in German card games.
 
-> **Status:** Sprint 2 of the [implementation plan](docs/IMPLEMENTATION_PLAN.md). The complete standard rules run in the engine; open the app with `?dev` to step through hands. Interactive play arrives in Sprint 3.
+> **Status:** Sprint 3 of the [implementation plan](docs/IMPLEMENTATION_PLAN.md). A full game is playable against placeholder bots that choose random legal moves; real Euchre strategy arrives in Sprint 4.
 
 ## Documents
 
@@ -42,11 +42,13 @@ npm run dev -- --host                    # also reachable from a phone on the sa
 src/
   util/      Rng and hashing (pure)
   engine/    Euchre rules (pure)
+  bots/      Bot interface and bots (pure)
+  session/   TableDriver, seat controllers, pacing (pure, no DOM)
   assets/    Card presentation data (pure)
   themes/    CSS-variable palettes (pure)
   ui/        React components
 tests/
-  unit/  component/  e2e/
+  unit/  component/  integration/  e2e/
 ```
 
 Layer boundaries from Technical Spec §3.1 are enforced by ESLint; see `eslint.config.js`.

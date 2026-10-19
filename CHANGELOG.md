@@ -2,6 +2,22 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Sprint 3 — Playable game
+
+### Added
+
+- `session/`: the `TableDriver` game loop, human and bot seat controllers, an inline bot runner, real-time and immediate schedulers, and event sinks (Technical Spec §8; ADR-0002). Stopping and restarting the driver is safe even when React StrictMode does it.
+- `bots/`: the `Bot` interface, `createBot`, and a temporary `PlaceholderBot` that picks a random legal action, seeded from its view so it is deterministic (PB-3).
+- A home screen with **New game** (GF-1).
+- Interactive play: legal bids as large buttons with a **Go alone** option (GF-3); tap a card to raise it and tap again to play or discard, with illegal cards dimmed (GF-2); bower badges and trump-first sorting (UI-4); a prompt saying whose turn it is.
+- Score bar with trump and a tricks tally; bot pacing (GF-4, first pass).
+- Hand summary after every hand (GF-6) and a game-over screen with highlights, **Play again** and **Home** (GF-7).
+- `?e2e` launch option for unpaced end-to-end runs.
+
+### Changed
+
+- The `?dev` panel moved to its own `DevApp`; normal play starts at the home screen.
+
 ## Sprint 2 — Rules engine
 
 ### Added

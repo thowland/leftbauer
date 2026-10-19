@@ -4,7 +4,7 @@
  * status messages later.
  */
 
-import type { BidAction } from '../engine/actions';
+import type { Action, BidAction } from '../engine/actions';
 import type { GameEvent } from '../engine/events';
 import type { Seat } from '../engine/seats';
 import type { HandOutcome, HandResult } from '../engine/state';
@@ -97,4 +97,58 @@ export function seatStatus(view: PlayerView, seat: Seat): string | null {
   const round = view.phase === 'bidRound2' ? 2 : 1;
   const bid = view.bids.filter((b) => b.seat === seat && b.round === round).at(-1);
   return bid?.action.type === 'pass' ? 'Pass' : null;
+}
+
+/** The line under the table telling the human what is happening (GF-2, GF-3). */
+export function turnPrompt(view: PlayerView, legal: readonly Action[] | null): string {
+  if (view.toAct === null) return '';
+  if (legal === null) {
+    return view.toAct === view.seat
+      ? 'Your turn.'
+      : `${seatName(view.toAct, view.seat)} is thinking…`;
+  }
+  switch (view.phase) {
+    case 'bidRound1':
+      return view.dealer === view.seat
+        ? 'Pick up the upcard, or pass.'
+        : 'Order up the upcard, or pass.';
+    case 'bidRound2':
+      return legal.some((a) => a.type === 'pass')
+        ? 'Name trump, or pass.'
+        : 'Stick the dealer: you must name trump.';
+    case 'dealerDiscard':
+      return 'Choose a card to discard: tap it, then tap again.';
+    default:
+      return view.currentTrick === null
+        ? 'Your lead: tap a card, then tap again to play.'
+        : 'Your turn: tap a card, then tap again to play.';
+  }
+}
+
+export interface GameHighlight {
+  readonly label: string;
+  readonly us: number;
+  readonly them: number;
+}
+
+/** Notable events over a whole game, for the game-over screen (GF-7). */
+export function gameHighlights(results: readonly HandResult[], humanSeat: Seat): GameHighlight[] {
+  const count = (
+    label: string,
+    test: (r: Extract<HandResult, { kind: 'scored' }>) => boolean,
+    by: 'makers' | 'pointsTo'
+  ) => {
+    const tally = { label, us: 0, them: 0 };
+    for (const r of results) {
+      if (r.kind !== 'scored' || !test(r)) continue;
+      if (teamName(r[by], humanSeat) === 'Us') tally.us++;
+      else tally.them++;
+    }
+    return tally;
+  };
+  return [
+    count('Marches', (r) => r.outcome === 'march', 'makers'),
+    count('Loners made', (r) => r.outcome === 'lonerMade' || r.outcome === 'lonerSweep', 'makers'),
+    count('Euchres', (r) => r.outcome === 'euchred' || r.outcome === 'euchredAlone', 'pointsTo'),
+  ];
 }

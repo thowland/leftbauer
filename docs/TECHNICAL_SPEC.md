@@ -621,12 +621,15 @@ class TableDriver {
   constructor(deps: {
     controllers: readonly [SeatController, SeatController, SeatController, SeatController];
     scheduler: Scheduler;            // pacing between bot actions (GF-4); faked in tests
-    sinks: readonly EventSink[];     // presentation, audio, stats, persistence
     shuffleRng: Rng;
-  });
-  start(game: GameState): void;      // a new or resumed game
-  stop(): void;                      // aborts pending requests (new game, concede)
-  snapshot(): TableSnapshot;         // for useSyncExternalStore
+    sinks?: readonly EventSink[];    // presentation, audio, stats, persistence
+    pacing?: Pacing;                 // { botMs, trickMs }
+    autoContinue?: boolean;          // deal on without waiting (tests, tournaments)
+  }, initial: GameState);            // a new or resumed game
+  start(initialEvents?): Promise<GameState>;  // run or resume; resolves at game over or stop
+  stop(): void;                      // aborts pending requests; resumable with start()
+  continueToNextHand(): void;        // the human acknowledged the hand summary
+  snapshot(): TableSnapshot;         // { state, status, awaiting } for useSyncExternalStore
   subscribe(listener: () => void): () => void;
 }
 

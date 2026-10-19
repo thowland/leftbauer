@@ -5,7 +5,14 @@ import { STANDARD_RULES } from '../../../src/engine/rules';
 import type { Seat } from '../../../src/engine/seats';
 import type { Trick } from '../../../src/engine/state';
 import { toPlayerView } from '../../../src/engine/view';
-import { describeEvent, describeResult, seatStatus } from '../../../src/ui/describe';
+import { legalActions } from '../../../src/engine/game';
+import {
+  describeEvent,
+  describeResult,
+  gameHighlights,
+  seatStatus,
+  turnPrompt,
+} from '../../../src/ui/describe';
 import { act, gameFromDeck } from '../../helpers/engine';
 
 const d = (event: GameEvent, dealer: Seat = 3) => describeEvent(event, 0, dealer);
@@ -111,5 +118,60 @@ describe('seatStatus', () => {
     expect(seatStatus(view, 1)).toBe('Called diamonds · alone');
     expect(seatStatus(view, 3)).toBe('Sitting out');
     expect(seatStatus(view, 0)).toBeNull();
+  });
+});
+
+describe('turnPrompt', () => {
+  it('says who is thinking when it is not the human’s turn', () => {
+    const s = act(gameFromDeck(), 0, { type: 'pass' });
+    expect(turnPrompt(toPlayerView(s, 0), null)).toBe('Left opponent is thinking…');
+    expect(turnPrompt(toPlayerView(gameFromDeck(), 0), null)).toBe('Your turn.');
+  });
+
+  it('prompts each kind of decision', () => {
+    let s = gameFromDeck();
+    const prompt = (seat: Seat) => turnPrompt(toPlayerView(s, seat), legalActions(s, seat));
+    expect(prompt(0)).toBe('Order up the upcard, or pass.');
+    for (const seat of [0, 1, 2] as const) s = act(s, seat, { type: 'pass' });
+    expect(prompt(3)).toBe('Pick up the upcard, or pass.');
+    s = act(s, 3, { type: 'pass' });
+    expect(prompt(0)).toBe('Name trump, or pass.');
+    s = act(gameFromDeck(), 0, { type: 'orderUp', alone: false });
+    expect(prompt(3)).toMatch(/^Choose a card to discard/);
+    s = act(s, 3, { type: 'discard', card: 'AC' });
+    expect(prompt(0)).toMatch(/^Your lead/);
+    s = act(s, 0, { type: 'play', card: 'AH' });
+    expect(prompt(1)).toMatch(/^Your turn/);
+  });
+
+  it('tells a stuck dealer they must name trump', () => {
+    let s = gameFromDeck(undefined, 3, { ...STANDARD_RULES, stickTheDealer: true });
+    for (const seat of [0, 1, 2, 3, 0, 1, 2] as const) s = act(s, seat, { type: 'pass' });
+    expect(turnPrompt(toPlayerView(s, 3), legalActions(s, 3))).toBe(
+      'Stick the dealer: you must name trump.'
+    );
+  });
+
+  it('is empty once the hand is over', () => {
+    let s = gameFromDeck();
+    for (const seat of [0, 1, 2, 3, 0, 1, 2, 3] as const) s = act(s, seat, { type: 'pass' });
+    expect(turnPrompt(toPlayerView(s, 0), null)).toBe('');
+  });
+});
+
+describe('gameHighlights', () => {
+  it('tallies marches, loners and euchres for each team', () => {
+    const contract = { trump: 'H' as const, maker: 0 as const, round: 1 as const, alone: false };
+    const results = [
+      scoreHand(contract, tricks(0, 0, 0, 2, 2), STANDARD_RULES), // our march
+      scoreHand({ ...contract, alone: true }, tricks(0, 0, 0, 1, 0), STANDARD_RULES), // our loner
+      scoreHand(contract, tricks(1, 1, 3, 0, 1), STANDARD_RULES), // they euchre us
+      { kind: 'redeal' as const },
+    ];
+    expect(gameHighlights(results, 0)).toEqual([
+      { label: 'Marches', us: 1, them: 0 },
+      { label: 'Loners made', us: 1, them: 0 },
+      { label: 'Euchres', us: 0, them: 1 },
+    ]);
   });
 });

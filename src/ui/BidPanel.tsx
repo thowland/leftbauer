@@ -1,0 +1,62 @@
+import { useState } from 'react';
+import type { Action, BidAction } from '../engine/actions';
+import { SUITS, type Suit } from '../engine/cards';
+import { SUIT_NAMES } from '../assets/manifest';
+import { SuitIcon } from './SuitIcon';
+
+interface BidPanelProps {
+  readonly legal: readonly Action[];
+  readonly isDealer: boolean;
+  readonly onBid: (action: BidAction) => void;
+}
+
+const capitalize = (s: string) => s[0]!.toUpperCase() + s.slice(1);
+
+/** Only the legal bids, as large buttons — GF-3. */
+export function BidPanel({ legal, isDealer, onBid }: BidPanelProps) {
+  const [alone, setAlone] = useState(false);
+  const canOrder = legal.some((a) => a.type === 'orderUp');
+  const callable = SUITS.filter((suit) =>
+    legal.some((a) => a.type === 'callTrump' && a.suit === suit)
+  );
+  const canPass = legal.some((a) => a.type === 'pass');
+  const canGoAlone = legal.some((a) => (a.type === 'orderUp' || a.type === 'callTrump') && a.alone);
+
+  return (
+    <div className="bid-panel" role="group" aria-label="Your bid">
+      {canOrder && (
+        <button
+          type="button"
+          className="button button-primary"
+          onClick={() => onBid({ type: 'orderUp', alone })}
+        >
+          {isDealer ? 'Pick it up' : 'Order it up'}
+        </button>
+      )}
+      {callable.map((suit: Suit) => (
+        <button
+          key={suit}
+          type="button"
+          className="button button-primary suit-button"
+          onClick={() => onBid({ type: 'callTrump', suit, alone })}
+        >
+          <svg viewBox="0 0 100 100" className="suit-button-icon" aria-hidden="true">
+            <SuitIcon suit={suit} x={50} y={50} size={100} color="currentColor" />
+          </svg>
+          {capitalize(SUIT_NAMES[suit])}
+        </button>
+      ))}
+      {canGoAlone && (
+        <label className="alone-toggle">
+          <input type="checkbox" checked={alone} onChange={(e) => setAlone(e.target.checked)} />
+          Go alone
+        </label>
+      )}
+      {canPass && (
+        <button type="button" className="button" onClick={() => onBid({ type: 'pass' })}>
+          Pass
+        </button>
+      )}
+    </div>
+  );
+}
