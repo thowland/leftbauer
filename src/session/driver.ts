@@ -61,6 +61,9 @@ export class TableDriver {
   private readonly listeners = new Set<() => void>();
   private abort: AbortController | null = null;
   private continueGate: (() => void) | null = null;
+  /** Set by `hurry`: skip bot pauses until the current trick is won. */
+  private hurried = false;
+  private cutPause: (() => void) | null = null;
 
   constructor(
     private readonly deps: DriverDeps,
@@ -104,6 +107,15 @@ export class TableDriver {
     gate?.();
   };
 
+  /**
+   * The human tapped the table: end the current pause and play the rest
+   * of this trick (or bidding round) without pauses (GF-4).
+   */
+  readonly hurry = (): void => {
+    this.hurried = true;
+    this.cutPause?.();
+  };
+
   private publish(change: Partial<TableSnapshot>): void {
     this.current = { ...this.current, ...change };
     for (const listener of this.listeners) listener();
@@ -137,6 +149,7 @@ export class TableDriver {
           }
           this.publish({ status: 'handComplete' });
           if (!this.deps.autoContinue) await settled(this.waitForContinue(signal), signal);
+          this.hurried = false;
           const dealt = dealNextHand(state, this.deps.shuffleRng);
           this.publish({ state: dealt.state, status: 'running' });
           await settled(this.emit(dealt.events, signal), signal);
@@ -160,7 +173,13 @@ export class TableDriver {
 
         const trickWon = applied.events.some((e) => e.type === 'trickWon');
         const pause = (trickWon ? pacing.trickMs : 0) + pacing.botMs;
-        await this.paceBot(currentActor(applied.state), pause, signal);
+        // A hurry covers the rest of its trick or bidding round, including
+        // the pause that ends it; a tap during that pause hurries the next.
+        const skip = this.hurried;
+        if (trickWon || applied.state.hand.phase.kind !== state.hand.phase.kind) {
+          this.hurried = false;
+        }
+        await this.paceBot(currentActor(applied.state), pause, signal, skip);
       }
     } catch (error) {
       // `stop` has already published the stopped status.
@@ -169,10 +188,27 @@ export class TableDriver {
     }
   }
 
-  /** Pause before a bot acts, so the human can follow along. */
-  private async paceBot(next: Seat | null, ms: number, signal: AbortSignal): Promise<void> {
-    if (next === null || ms <= 0 || this.deps.controllers[next].kind !== 'bot') return;
-    await settled(this.deps.scheduler.delay(ms, signal), signal);
+  /** Pause before a bot acts, so the human can follow along. `hurry` cuts it short. */
+  private async paceBot(
+    next: Seat | null,
+    ms: number,
+    signal: AbortSignal,
+    skip = this.hurried
+  ): Promise<void> {
+    if (next === null || ms <= 0 || skip || this.deps.controllers[next].kind !== 'bot') return;
+    const pause = new AbortController();
+    const forward = () => pause.abort();
+    signal.addEventListener('abort', forward, { once: true });
+    this.cutPause = forward;
+    try {
+      await this.deps.scheduler.delay(ms, pause.signal);
+    } catch (error) {
+      if (!isAborted(error)) throw error;
+    } finally {
+      signal.removeEventListener('abort', forward);
+      this.cutPause = null;
+    }
+    if (signal.aborted) throw new AbortedError();
   }
 
   private waitForContinue(signal: AbortSignal): Promise<void> {

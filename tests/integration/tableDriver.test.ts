@@ -186,6 +186,104 @@ describe('TableDriver with a human', () => {
   });
 });
 
+describe('TableDriver hurry (GF-4)', () => {
+  /** Resolves once `predicate` holds, checking after every macrotask. */
+  async function eventually(predicate: () => boolean): Promise<void> {
+    for (let i = 0; i < 1000 && !predicate(); i++) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    expect(predicate()).toBe(true);
+  }
+
+  /** A scheduler whose pauses last until they are cut short. */
+  function heldScheduler() {
+    const delays: { phase: string; bids: number; tricks: number; plays: number }[] = [];
+    let d: TableDriver | null = null;
+    const scheduler: Scheduler = {
+      delay: (_ms, signal) => {
+        const { hand } = d!.snapshot().state;
+        delays.push({
+          phase: hand.phase.kind,
+          bids: hand.bids.length,
+          tricks: hand.tricks.length,
+          plays: hand.currentTrick?.plays.length ?? 0,
+        });
+        return abortable<void>(signal, () => () => {});
+      },
+    };
+    return { delays, scheduler, attach: (driver: TableDriver) => (d = driver) };
+  }
+
+  it('cuts the current pause, and skips pauses until the bidding round ends', async () => {
+    const held = heldScheduler();
+    const d = held.attach(
+      driver(bots(), start().state, {
+        scheduler: held.scheduler,
+        pacing: { botMs: 1000, trickMs: 1000 },
+      })
+    );
+    void d.start();
+    await eventually(() => held.delays.length === 1);
+    expect(held.delays[0]).toMatchObject({ phase: 'bidRound1', bids: 1 });
+
+    d.hurry();
+    await eventually(() => held.delays.length === 2);
+    // The next pause comes only once round one is over.
+    expect(held.delays[1]!.phase).not.toBe('bidRound1');
+    d.stop();
+  });
+
+  it('lasts until the trick is won', async () => {
+    const held = heldScheduler();
+    const d = held.attach(
+      driver(bots(), start().state, {
+        scheduler: held.scheduler,
+        pacing: { botMs: 1000, trickMs: 1000 },
+      })
+    );
+    void d.start();
+    const playing = () => d.snapshot().state.hand.phase.kind === 'play';
+    while (!playing()) {
+      const before = held.delays.length;
+      d.hurry();
+      await eventually(() => held.delays.length > before);
+    }
+    // Hurried through trick one; pauses return after the second trick's lead.
+    const before = held.delays.length;
+    expect(held.delays.at(-1)).toMatchObject({ tricks: 0 });
+    d.hurry();
+    await eventually(() => held.delays.length > before);
+    expect(held.delays.at(-1)).toMatchObject({ tricks: 1, plays: 1 });
+    d.stop();
+  });
+
+  it('ends a run stopped during a pause', async () => {
+    const held = heldScheduler();
+    const d = held.attach(
+      driver(bots(), start().state, { scheduler: held.scheduler, pacing: { botMs: 5, trickMs: 5 } })
+    );
+    const run = d.start();
+    await eventually(() => held.delays.length === 1);
+    d.stop();
+    await expect(run).resolves.toBe(d.snapshot().state);
+    expect(d.snapshot().status).toBe('stopped');
+  });
+
+  it('surfaces a scheduler failure', async () => {
+    const failing: Scheduler = { delay: () => Promise.reject(new Error('clock broke')) };
+    const d = driver(bots(), start().state, {
+      scheduler: failing,
+      pacing: { botMs: 5, trickMs: 5 },
+    });
+    await expect(d.start()).rejects.toThrow('clock broke');
+  });
+
+  it('does nothing when there is no pause to cut', () => {
+    const d = driver(bots(), start().state);
+    expect(() => d.hurry()).not.toThrow();
+  });
+});
+
 describe('session primitives', () => {
   it('rejects an already-aborted wait', async () => {
     const abort = new AbortController();
