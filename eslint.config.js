@@ -19,7 +19,7 @@ const LAYERS = {
   bots: { allows: ['engine', 'util'], pure: true },
   coach: { allows: ['bots', 'engine', 'util'], pure: true },
   session: { allows: ['engine', 'bots', 'util'], pure: true },
-  state: { allows: ['engine', 'session', 'util'], pure: true },
+  state: { allows: ['engine', 'bots', 'session', 'util'], pure: true },
   audio: { allows: ['engine', 'assets', 'util'], pure: false },
   assets: { allows: ['engine'], pure: true },
   themes: { allows: [], pure: true },
