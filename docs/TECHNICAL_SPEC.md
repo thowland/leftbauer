@@ -131,7 +131,7 @@ interface HandState {
   readonly phase: HandPhase;
   readonly hands: readonly [CardId[], CardId[], CardId[], CardId[]];  // indexed by Seat
   readonly kitty: readonly CardId[];               // 4 cards; kitty[0] is the upcard
-  readonly upcardStatus: 'faceUp' | 'pickedUp' | 'turnedDown';
+  readonly upcardStatus: 'faceUp' | 'pickedUp' | 'turnedDown' | 'setAside';
   readonly bids: readonly BidEntry[];              // chronological, both rounds
   readonly contract: Contract | null;
   readonly discard: CardId | null;                 // the dealer's discard (hidden)
@@ -175,6 +175,8 @@ interface HandResult {
 ```
 
 Seats that sit out a loner are derived (`activeSeats(hand)`) rather than stored, so loner state has a single source of truth: `Contract`.
+
+`'setAside'` covers the case where the dealer's partner orders up alone in round one. The dealer sits out and does not pick up the upcard, which is turned over. Trump is still the upcard's suit, and the hand goes straight to play (or to `defendAlone`), skipping `dealerDiscard`. This is distinct from `'turnedDown'`, which means the upcard was refused in round one and its suit cannot be named in round two.
 
 ### 4.4 Actions
 
@@ -241,7 +243,7 @@ interface PlayerView {
   readonly toAct: Seat | null;
   readonly myHand: readonly CardId[];
   readonly upcard: CardId;                       // public: it was turned face up
-  readonly upcardStatus: 'faceUp' | 'pickedUp' | 'turnedDown';
+  readonly upcardStatus: 'faceUp' | 'pickedUp' | 'turnedDown' | 'setAside';
   readonly myDiscard: CardId | null;             // only when this seat is the dealer
   readonly handSizes: readonly [number, number, number, number];
   readonly bids: readonly BidEntry[];
@@ -263,6 +265,7 @@ type GameEvent =
   | { type: 'trumpSet'; contract: Contract }
   | { type: 'upcardPickedUp'; dealer: Seat }
   | { type: 'upcardTurnedDown'; dealer: Seat }
+  | { type: 'upcardSetAside'; dealer: Seat }               // dealer sits out a partner's loner
   | { type: 'dealerDiscarded'; dealer: Seat }              // the card stays hidden
   | { type: 'defendAloneDeclared'; seat: Seat }
   | { type: 'cardPlayed'; seat: Seat; card: CardId; trickIndex: number }
@@ -823,7 +826,7 @@ The stack, tooling, layer-purity enforcement, persistence pattern, PWA setup and
 1. **ADR-0001 Tooling**: mirror gammon (React 19, TypeScript, Vite, vite-plugin-pwa, Vitest, Playwright, npm).
 2. **ADR-0002 Session outside React**: `TableDriver`, `useSyncExternalStore` and event sinks (§8, §13).
 3. **ADR-0003 Bot composition**: the `Bot`, policies, selectors, personas as data and skill as strategy selection (§6).
-4. **ADR-0004 Rules edge cases**: whether the dealer exchanges the upcard when sitting out a partner's loner, defending alone and the lead, and the farmer's hand mechanics (once settled).
+4. **ADR-0004 Rules edge cases**: the dealer sitting out a partner's loner (decided: the dealer does not pick up the upcard, which is turned over, and there is no discard), defending alone and the lead, and the farmer's hand mechanics (once settled).
 5. **ADR-0005 Determinism and seeding**: crypto shuffles and view-hashed bot seeds (§5).
 
 ## 15. Requirements traceability
