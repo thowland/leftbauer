@@ -135,6 +135,11 @@ body {
   grid-area: left;
 }
 
+.seat-left,
+.seat-right {
+  max-width: 24vw;
+}
+
 .seat-right {
   grid-area: right;
 }
@@ -145,6 +150,8 @@ body {
 
 .seat-label {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 6px;
   margin: 0;
@@ -152,15 +159,42 @@ body {
   color: var(--ink-muted);
 }
 
-.dealer-chip {
+.chip {
   padding: 1px 7px;
   border-radius: 9px;
-  background: var(--brass);
-  color: var(--felt-shadow);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.dealer-chip {
+  background: var(--brass);
+  color: var(--felt-shadow);
+}
+
+.status-chip {
+  border: 1px solid var(--ink-muted);
+  color: var(--ink-on-felt);
+}
+
+.seat-active .seat-label > span:first-child {
+  color: var(--ink-on-felt);
+  text-decoration: underline;
+  text-decoration-color: var(--brass);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.seat-out .backs {
+  opacity: 0.35;
+}
+
+.trump-icon {
+  display: block;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .card {
@@ -250,6 +284,150 @@ body {
 
 .hand-card {
   width: var(--card-w);
+}
+
+/* The trick: each card sits toward the seat that played it. */
+.trick {
+  --trick-w: calc(var(--card-w) * 0.8);
+
+  display: grid;
+  grid-template-columns: repeat(3, calc(var(--trick-w) * 1.05));
+  grid-template-rows: repeat(3, calc(var(--trick-w) * 0.95));
+  grid-template-areas:
+    '. top .'
+    'left . right'
+    '. bottom .';
+  align-items: center;
+  justify-items: center;
+}
+
+.trick-slot {
+  width: var(--trick-w);
+}
+
+.trick-top {
+  grid-area: top;
+}
+
+.trick-left {
+  grid-area: left;
+}
+
+.trick-right {
+  grid-area: right;
+}
+
+.trick-bottom {
+  grid-area: bottom;
+}
+
+.trick-card {
+  width: 100%;
+}
+
+.trick-done .trick-slot:not(.trick-winner) {
+  opacity: 0.55;
+}
+
+.trick-winner .trick-card {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Dev mode (?dev): the table beside a panel on wide screens, above it on narrow ones. */
+.app-dev {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  height: 100%;
+}
+
+.app-dev .table {
+  min-height: 0;
+}
+
+.dev-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 12px;
+  border-left: 1px solid var(--felt-light);
+  background: rgb(0 0 0 / 0.35);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.85rem;
+}
+
+.dev-panel h2 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--brass);
+}
+
+.dev-status {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.dev-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.dev-buttons .button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+}
+
+.dev-buttons .button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dev-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dev-log {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding-left: 2.2em;
+  overflow-y: auto;
+  color: var(--ink-on-felt);
+}
+
+@media (max-width: 899px) {
+  /* Let the page itself scroll, rather than body or #root. */
+  html:has(.app-dev),
+  html:has(.app-dev) body,
+  html:has(.app-dev) #root {
+    height: auto;
+    overflow: visible;
+  }
+
+  .app-dev {
+    display: block;
+    height: auto;
+  }
+
+  .app-dev .table {
+    height: 100dvh;
+  }
+
+  .dev-panel {
+    border-left: none;
+    border-top: 1px solid var(--felt-light);
+  }
+
+  .dev-log {
+    max-height: 40dvh;
+  }
 }
 
 /* iPhone landscape: little height, so shrink the cards and the chrome. */
