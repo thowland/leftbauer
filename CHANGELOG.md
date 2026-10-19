@@ -2,6 +2,21 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Sprint 4 — Conventional bots and the partner
+
+### Added
+
+- Real Euchre bots (ADR-0003): a composite `PolicyBot` built from bidding, loner, discard and card-play policies, card knowledge (cards seen, voids, boss cards) and a heuristic hand evaluator. Every decision carries a reason code for the coach.
+- The partner's conventions (PB-4): calls with enough expected tricks for the seat, favors "next" left of the dealer, leads the boss trump as maker, leads trump back to a partner who called, cashes off-suit aces, never overtakes a winning partner, wins as cheaply as it can, discards to make a void and never throws a bower. Score-aware calling (PB-5).
+- Four named opponents (OP-3): Soopy (cautious defender), Shrubs (loner hunter), Rusty (bold caller) and Smooth (by the book), shown with colored monograms; two are picked at random each game (OP-4).
+- Casual and Standard skill levels (OP-2); the partner always plays at full strength (PB-2).
+- `npm run tournament`: a headless harness over the same `TableDriver` that reports wins, calls, made, marches, euchres and loners. A fixed-seed test keeps Standard ahead of Casual. Report: `docs/tournaments/sprint-04.md`.
+
+### Changed
+
+- The dealer is a round **D** button pinned to the dealer's cards, and seat statuses sit in a reserved row, so neither shifts the seat labels any more.
+- The placeholder random bot is gone.
+
 ## Sprint 3 — Playable game
 
 ### Added
