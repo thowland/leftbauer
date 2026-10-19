@@ -14,7 +14,12 @@ import type { Rng } from '../util/rng';
 import { ALL_CARDS, type CardId } from './cards';
 import { leftOf, seatsFrom, type Seat } from './seats';
 
-export type Hands = readonly [CardId[], CardId[], CardId[], CardId[]];
+export type Hands = readonly [
+  readonly CardId[],
+  readonly CardId[],
+  readonly CardId[],
+  readonly CardId[],
+];
 
 export interface DealPacket {
   readonly seat: Seat;
@@ -55,7 +60,7 @@ export function dealFrom(deck: readonly CardId[], dealer: Seat): Deal {
   if (deck.length !== ALL_CARDS.length) {
     throw new RangeError(`A Euchre deck has ${ALL_CARDS.length} cards, got ${deck.length}`);
   }
-  const hands: Hands = [[], [], [], []];
+  const hands: [CardId[], CardId[], CardId[], CardId[]] = [[], [], [], []];
   const packets: DealPacket[] = [];
   const order = seatsFrom(leftOf(dealer));
   let next = 0;
