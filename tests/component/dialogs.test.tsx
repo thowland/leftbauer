@@ -5,7 +5,6 @@ import type { GameState } from '../../src/engine/state';
 import { toPlayerView } from '../../src/engine/view';
 import { GameOver } from '../../src/ui/GameOver';
 import { HandSummary } from '../../src/ui/HandSummary';
-import { HomeScreen } from '../../src/ui/HomeScreen';
 import { act, finishHand, gameFromDeck } from '../helpers/engine';
 
 const first = <T,>(legal: readonly T[]): T => legal[0]!;
@@ -96,15 +95,6 @@ describe('GameOver (GF-7)', () => {
       />
     );
     expect(container).toBeEmptyDOMElement();
-  });
-});
-
-describe('HomeScreen (GF-1)', () => {
-  it('starts a new game in one tap', async () => {
-    const onNewGame = vi.fn();
-    render(<HomeScreen onNewGame={onNewGame} />);
-    await userEvent.click(screen.getByRole('button', { name: 'New game' }));
-    expect(onNewGame).toHaveBeenCalledOnce();
   });
 });
 

@@ -1,26 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { createTable, HUMAN_SEAT } from '../../../src/ui/game/createTable';
+import { load, memoryStorage } from '../../../src/state/persistence';
+import { GAME_STORE } from '../../../src/state/savedGame';
+import { DEFAULT_SETTINGS, type Settings } from '../../../src/state/settings';
+import { newTable, resumeTable, type TableOptions } from '../../../src/ui/game/createTable';
 
-describe('createTable', () => {
+const FAST: TableOptions = { fast: true, pacingMs: 650, storage: null };
+
+const settings = (change: Partial<Settings> = {}): Settings => ({ ...DEFAULT_SETTINGS, ...change });
+
+describe('newTable', () => {
   it('seats the human with three bots and an idle driver', () => {
-    const table = createTable({ seed: 1, fast: true });
-    expect(table.humanSeat).toBe(HUMAN_SEAT);
+    const table = newTable(settings(), 1, FAST);
+    expect(table.humanSeat).toBe(0);
     expect(table.driver.snapshot().status).toBe('idle');
     expect(table.initialEvents[0]).toMatchObject({ type: 'handDealt', handNumber: 1 });
   });
 
   it('reproduces a seeded game, and shuffles with crypto otherwise', () => {
-    const a = createTable({ seed: 9, fast: true }).driver.snapshot().state;
-    const b = createTable({ seed: 9, fast: true }).driver.snapshot().state;
+    const a = newTable(settings(), 9, FAST).driver.snapshot().state;
+    const b = newTable(settings(), 9, FAST).driver.snapshot().state;
     expect(a).toEqual(b);
-    const c = createTable({ seed: null, fast: false }).driver.snapshot().state;
+    const c = newTable(settings(), null, { ...FAST, fast: false }).driver.snapshot().state;
     expect(c.hand.hands.every((h) => h.length === 5)).toBe(true);
   });
 });
 
-describe('createTable seating (OP-4)', () => {
+describe('newTable seating (OP-4)', () => {
   it('seats the partner across and two different named opponents', () => {
-    const { seats } = createTable({ seed: 4, fast: true });
+    const { seats } = newTable(settings(), 4, FAST);
     expect(seats[0]).toEqual({ name: 'You', persona: null });
     expect(seats[2].persona?.id).toBe('partner');
     expect(seats[1].persona?.id).not.toBe(seats[3].persona?.id);
@@ -28,18 +35,51 @@ describe('createTable seating (OP-4)', () => {
   });
 
   it('honors chosen opponents and skill', () => {
-    const { seats } = createTable({
-      seed: 4,
-      fast: true,
-      opponents: ['rusty', 'soopy'],
+    const table = newTable(
+      settings({ opponents: { left: 'rusty', right: 'soopy' }, skill: 'casual' }),
+      4,
+      FAST
+    );
+    expect(table.seats.map((s) => s.name)).toEqual(['You', 'Rusty', 'Partner', 'Soopy']);
+    expect(table.setup.seats.bots[1]).toEqual({
+      role: 'opponent',
+      personaId: 'rusty',
       skill: 'casual',
     });
-    expect(seats.map((s) => s.name)).toEqual(['You', 'Rusty', 'Partner', 'Soopy']);
   });
 
   it('chooses opponents without changing the deal', () => {
-    const a = createTable({ seed: 8, fast: true, opponents: ['rusty', 'soopy'] });
-    const b = createTable({ seed: 8, fast: true, opponents: ['smooth', 'shrubs'] });
+    const a = newTable(settings({ opponents: { left: 'rusty', right: 'soopy' } }), 8, FAST);
+    const b = newTable(settings({ opponents: { left: 'smooth', right: 'shrubs' } }), 8, FAST);
     expect(a.driver.snapshot().state).toEqual(b.driver.snapshot().state);
+  });
+});
+
+describe('saving and resuming (PE-1)', () => {
+  it('saves the game as soon as it starts, and resumes it with the same seats', async () => {
+    const storage = memoryStorage();
+    const table = newTable(settings(), 3, { ...FAST, storage });
+    expect(load(storage, GAME_STORE)).toBeNull();
+
+    const run = table.driver.start(table.initialEvents);
+    await new Promise<void>((resolve) => {
+      const off = table.driver.subscribe(() => {
+        if (table.driver.snapshot().awaiting?.seat === 0) {
+          off();
+          resolve();
+        }
+      });
+    });
+    table.driver.stop();
+    await run;
+
+    const saved = load(storage, GAME_STORE)!;
+    expect(saved.game).toEqual(table.driver.snapshot().state);
+    expect(saved.seed).toBe(3);
+
+    const resumed = resumeTable(saved, FAST);
+    expect(resumed.initialEvents).toEqual([]);
+    expect(resumed.seats).toEqual(table.seats);
+    expect(resumed.driver.snapshot().state).toEqual(saved.game);
   });
 });

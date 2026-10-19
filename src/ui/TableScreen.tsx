@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { PointerEvent, ReactNode } from 'react';
 import { isBidAction, type Action } from '../engine/actions';
 import { sortHand, type CardId } from '../engine/cards';
 import type { Hands } from '../engine/deal';
@@ -10,6 +10,7 @@ import { tricksWon } from '../engine/scoring';
 import { BidPanel } from './BidPanel';
 import { Card } from './Card';
 import { seatStatus, turnPrompt } from './describe';
+import { LastTrickPeek } from './LastTrickPeek';
 import { PlayerHand } from './PlayerHand';
 import { namesOf, screenPosition, seatName, type SeatInfo } from './layout';
 import { SuitIcon } from './SuitIcon';
@@ -26,7 +27,14 @@ interface TableScreenProps {
   readonly onAction?: (action: Action) => void;
   /** Who sits where (names and personas); positional names when omitted. */
   readonly seats?: readonly SeatInfo[] | undefined;
+  /** Play a card on the first tap (GF-2). */
+  readonly oneTap?: boolean;
+  /** The table was tapped away from any control: speed up the trick (GF-4). */
+  readonly onHurry?: () => void;
 }
+
+/** Taps on controls and cards are theirs, not a request to hurry. */
+const CONTROLS = 'button, input, select, label, a, .dialog-backdrop';
 
 /**
  * The table — VP-1. Renders entirely from the human's `PlayerView`, so it
@@ -40,6 +48,8 @@ export function TableScreen({
   legal = null,
   onAction = () => {},
   seats,
+  oneTap = false,
+  onHurry,
 }: TableScreenProps) {
   const human = view.seat;
   const us = teamOf(human);
@@ -52,8 +62,11 @@ export function TableScreen({
   const choose = (card: CardId) =>
     onAction(view.phase === 'dealerDiscard' ? { type: 'discard', card } : { type: 'play', card });
   const tricks = tricksWon(view.tricks);
+  const hurry = (event: PointerEvent<HTMLElement>) => {
+    if (!(event.target as Element).closest(CONTROLS)) onHurry?.();
+  };
   return (
-    <main className="table" aria-label="Euchre table">
+    <main className="table" aria-label="Euchre table" onPointerDown={onHurry && hurry}>
       <header className="score-bar">
         <h1 className="brand">Left Bauer</h1>
         <dl className="score" aria-label="Score">
@@ -99,6 +112,11 @@ export function TableScreen({
 
       <section className="center" aria-label="Table center">
         <CenterContents view={view} />
+        {view.phase === 'play' && (
+          <div className="center-corner">
+            <LastTrickPeek tricks={view.tricks} humanSeat={human} names={namesOf(seats)} />
+          </div>
+        )}
       </section>
 
       <section className="action-bar" aria-label="Your turn">
@@ -122,6 +140,7 @@ export function TableScreen({
             trump={trump}
             choosable={choosable}
             onChoose={choose}
+            oneTap={oneTap}
           />
           {view.dealer === human && <DealerButton />}
         </div>
