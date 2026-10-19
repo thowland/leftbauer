@@ -107,12 +107,15 @@ export function TableScreen({
         aria-current={view.toAct === human ? 'true' : undefined}
       >
         <SeatLabel view={view} seat={human} />
-        <PlayerHand
-          cards={sortHand(view.myHand, trump)}
-          trump={trump}
-          choosable={choosable}
-          onChoose={choose}
-        />
+        <div className="seat-cards">
+          <PlayerHand
+            cards={sortHand(view.myHand, trump)}
+            trump={trump}
+            choosable={choosable}
+            onChoose={choose}
+          />
+          {view.dealer === human && <DealerButton />}
+        </div>
       </section>
     </main>
   );
@@ -141,31 +144,45 @@ function OtherSeat({ seat, view, cards }: OtherSeatProps) {
       aria-current={view.toAct === seat ? 'true' : undefined}
     >
       <SeatLabel view={view} seat={seat} />
-      <div className="backs">
-        {cards
-          ? sortHand(cards, trump).map((card) => (
-              <Card key={card} card={card} className="back-card" />
-            ))
-          : Array.from({ length: view.handSizes[seat] }, (_, i) => (
-              <Card key={i} card={null} className="back-card" />
-            ))}
+      <div className="seat-cards">
+        <div className="backs">
+          {cards
+            ? sortHand(cards, trump).map((card) => (
+                <Card key={card} card={card} className="back-card" />
+              ))
+            : Array.from({ length: view.handSizes[seat] }, (_, i) => (
+                <Card key={i} card={null} className="back-card" />
+              ))}
+        </div>
+        {view.dealer === seat && <DealerButton />}
       </div>
     </section>
   );
 }
 
+/**
+ * The seat's name, with a reserved row beneath it for its status (Pass,
+ * Called hearts…), so a status appearing never moves the name or cards.
+ */
 function SeatLabel({ view, seat }: { view: PlayerView; seat: Seat }) {
   const status = seatStatus(view, seat);
   return (
-    <p className="seat-label">
-      <span>{seatName(seat, view.seat)}</span>
-      {view.dealer === seat && (
-        <span className="chip dealer-chip" title="Dealer">
-          Dealer
-        </span>
-      )}
-      {status !== null && <span className="chip status-chip">{status}</span>}
-    </p>
+    <div className="seat-label">
+      <span className="seat-name">{seatName(seat, view.seat)}</span>
+      <span className="seat-status">
+        {status !== null && <span className="chip status-chip">{status}</span>}
+      </span>
+    </div>
+  );
+}
+
+/** A dealer button pinned to the seat's cards, outside the layout flow. */
+function DealerButton() {
+  return (
+    <span className="dealer-button" title="Dealer">
+      <span aria-hidden="true">D</span>
+      <span className="visually-hidden">Dealer</span>
+    </span>
   );
 }
 
