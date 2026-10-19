@@ -3,6 +3,7 @@ import { toPlayerView } from '../engine/view';
 import type { GameTable } from './game/createTable';
 import { GameOver } from './GameOver';
 import { HandSummary } from './HandSummary';
+import { namesOf } from './layout';
 import { TableScreen } from './TableScreen';
 
 interface GameScreenProps {
@@ -33,9 +34,18 @@ export function GameScreen({ table, onPlayAgain, onHome }: GameScreenProps) {
 
   return (
     <>
-      <TableScreen view={view} legal={legal} onAction={(action) => human.submit(action)} />
+      <TableScreen
+        view={view}
+        legal={legal}
+        onAction={(action) => human.submit(action)}
+        seats={table.seats}
+      />
       {snapshot.status === 'handComplete' && (
-        <HandSummary view={view} onContinue={driver.continueToNextHand} />
+        <HandSummary
+          view={view}
+          onContinue={driver.continueToNextHand}
+          names={namesOf(table.seats)}
+        />
       )}
       {snapshot.status === 'gameOver' && (
         <GameOver

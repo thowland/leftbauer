@@ -107,3 +107,16 @@ describe('HomeScreen (GF-1)', () => {
     expect(onNewGame).toHaveBeenCalledOnce();
   });
 });
+
+describe('HandSummary with names', () => {
+  it('names the maker by persona', () => {
+    render(
+      <HandSummary
+        view={toPlayerView(scoredHand(), 0)}
+        onContinue={() => {}}
+        names={['You', 'Rusty', 'Partner', 'Soopy']}
+      />
+    );
+    expect(screen.getByRole('dialog')).toHaveTextContent('Rusty called diamonds, alone.');
+  });
+});

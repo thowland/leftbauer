@@ -11,7 +11,7 @@ import { BidPanel } from './BidPanel';
 import { Card } from './Card';
 import { seatStatus, turnPrompt } from './describe';
 import { PlayerHand } from './PlayerHand';
-import { screenPosition, seatName } from './layout';
+import { namesOf, screenPosition, seatName, type SeatInfo } from './layout';
 import { SuitIcon } from './SuitIcon';
 
 interface TableScreenProps {
@@ -24,6 +24,8 @@ interface TableScreenProps {
   /** The human's legal actions while the table waits for them, else `null`. */
   readonly legal?: readonly Action[] | null;
   readonly onAction?: (action: Action) => void;
+  /** Who sits where (names and personas); positional names when omitted. */
+  readonly seats?: readonly SeatInfo[] | undefined;
 }
 
 /**
@@ -37,6 +39,7 @@ export function TableScreen({
   controls,
   legal = null,
   onAction = () => {},
+  seats,
 }: TableScreenProps) {
   const human = view.seat;
   const us = teamOf(human);
@@ -85,7 +88,13 @@ export function TableScreen({
       </header>
 
       {SEATS.filter((s) => s !== human).map((seat) => (
-        <OtherSeat key={seat} seat={seat} view={view} cards={revealed?.[seat] ?? null} />
+        <OtherSeat
+          key={seat}
+          seat={seat}
+          view={view}
+          cards={revealed?.[seat] ?? null}
+          info={seats?.[seat]}
+        />
       ))}
 
       <section className="center" aria-label="Table center">
@@ -94,7 +103,7 @@ export function TableScreen({
 
       <section className="action-bar" aria-label="Your turn">
         <p className="turn-prompt" aria-live="polite">
-          {turnPrompt(view, legal)}
+          {turnPrompt(view, legal, namesOf(seats))}
         </p>
         {bids.length > 0 && (
           <BidPanel legal={bids} isDealer={view.dealer === human} onBid={onAction} />
@@ -106,7 +115,7 @@ export function TableScreen({
         aria-label="Your hand"
         aria-current={view.toAct === human ? 'true' : undefined}
       >
-        <SeatLabel view={view} seat={human} />
+        <SeatLabel view={view} seat={human} info={seats?.[human]} />
         <div className="seat-cards">
           <PlayerHand
             cards={sortHand(view.myHand, trump)}
@@ -132,9 +141,10 @@ interface OtherSeatProps {
   readonly seat: Seat;
   readonly view: PlayerView;
   readonly cards: readonly CardId[] | null;
+  readonly info: SeatInfo | undefined;
 }
 
-function OtherSeat({ seat, view, cards }: OtherSeatProps) {
+function OtherSeat({ seat, view, cards, info }: OtherSeatProps) {
   const position = screenPosition(seat, view.seat);
   const trump = view.contract?.trump ?? null;
   return (
@@ -143,7 +153,7 @@ function OtherSeat({ seat, view, cards }: OtherSeatProps) {
       aria-label={seatName(seat, view.seat)}
       aria-current={view.toAct === seat ? 'true' : undefined}
     >
-      <SeatLabel view={view} seat={seat} />
+      <SeatLabel view={view} seat={seat} info={info} />
       <div className="seat-cards">
         <div className="backs">
           {cards
@@ -164,11 +174,31 @@ function OtherSeat({ seat, view, cards }: OtherSeatProps) {
  * The seat's name, with a reserved row beneath it for its status (Pass,
  * Called hearts…), so a status appearing never moves the name or cards.
  */
-function SeatLabel({ view, seat }: { view: PlayerView; seat: Seat }) {
+function SeatLabel({
+  view,
+  seat,
+  info,
+}: {
+  view: PlayerView;
+  seat: Seat;
+  info?: SeatInfo | undefined;
+}) {
   const status = seatStatus(view, seat);
+  const persona = info?.persona ?? null;
   return (
     <div className="seat-label">
-      <span className="seat-name">{seatName(seat, view.seat)}</span>
+      <span className="seat-name" title={persona?.tagline}>
+        {persona !== null && (
+          <span
+            className="monogram"
+            style={{ background: `var(${persona.colorToken})` }}
+            aria-hidden="true"
+          >
+            {persona.name[0]}
+          </span>
+        )}
+        {info?.name ?? seatName(seat, view.seat)}
+      </span>
       <span className="seat-status">
         {status !== null && <span className="chip status-chip">{status}</span>}
       </span>

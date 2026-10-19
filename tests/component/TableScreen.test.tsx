@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { Seat } from '../../src/engine/seats';
 import type { GameState } from '../../src/engine/state';
 import { toPlayerView } from '../../src/engine/view';
+import { personaById } from '../../src/bots/personas';
 import { TableScreen } from '../../src/ui/TableScreen';
 import { act, gameFromDeck } from '../helpers/engine';
 
@@ -133,5 +134,36 @@ describe('TableScreen options', () => {
   it('renders extra score-bar controls', () => {
     renderTable(gameFromDeck());
     expect(screen.getByRole('button', { name: 'Extra' })).toBeInTheDocument();
+  });
+});
+
+describe('TableScreen with personas (OP-4)', () => {
+  it('shows persona names and monograms, keeping positional region labels', () => {
+    const seats = [
+      { name: 'You', persona: null },
+      { name: 'Rusty', persona: personaById('rusty') },
+      { name: 'Partner', persona: personaById('partner') },
+      { name: 'Soopy', persona: personaById('soopy') },
+    ] as const;
+    render(<TableScreen view={toPlayerView(gameFromDeck(), 0)} seats={seats} />);
+    const left = screen.getByRole('region', { name: 'Left opponent' });
+    expect(left).toHaveTextContent('Rusty');
+    expect(within(left).getByText('Rusty').closest('.seat-name')).toHaveAttribute(
+      'title',
+      personaById('rusty').tagline
+    );
+    expect(screen.getByRole('region', { name: 'Right opponent' })).toHaveTextContent('SSoopy');
+  });
+
+  it('names the seat to act in the prompt', () => {
+    const seats = [
+      { name: 'You', persona: null },
+      { name: 'Rusty', persona: personaById('rusty') },
+      { name: 'Partner', persona: personaById('partner') },
+      { name: 'Soopy', persona: personaById('soopy') },
+    ] as const;
+    const s = act(gameFromDeck(), 0, { type: 'pass' });
+    render(<TableScreen view={toPlayerView(s, 0)} seats={seats} />);
+    expect(screen.getByText('Rusty is thinking…')).toBeInTheDocument();
   });
 });

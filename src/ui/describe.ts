@@ -10,7 +10,7 @@ import type { Seat } from '../engine/seats';
 import type { HandOutcome, HandResult } from '../engine/state';
 import type { PlayerView } from '../engine/view';
 import { cardLabel, SUIT_NAMES } from '../assets/manifest';
-import { seatName, teamName } from './layout';
+import { seatName, teamName, type SeatNames } from './layout';
 
 const OUTCOME_TEXT: Record<HandOutcome, string> = {
   made: 'made it',
@@ -55,8 +55,13 @@ export function describeResult(result: HandResult, humanSeat: Seat): string {
  * One line per event, or `null` for events that add nothing to read.
  * `dealer` is the dealer of the hand the event belongs to.
  */
-export function describeEvent(event: GameEvent, humanSeat: Seat, dealer: Seat): string | null {
-  const name = (seat: Seat) => seatName(seat, humanSeat);
+export function describeEvent(
+  event: GameEvent,
+  humanSeat: Seat,
+  dealer: Seat,
+  names?: SeatNames
+): string | null {
+  const name = (seat: Seat) => seatName(seat, humanSeat, names);
   const v = (seat: Seat): Conjugate => (seat === humanSeat ? secondPerson : thirdPerson);
   switch (event.type) {
     case 'handDealt':
@@ -100,12 +105,16 @@ export function seatStatus(view: PlayerView, seat: Seat): string | null {
 }
 
 /** The line under the table telling the human what is happening (GF-2, GF-3). */
-export function turnPrompt(view: PlayerView, legal: readonly Action[] | null): string {
+export function turnPrompt(
+  view: PlayerView,
+  legal: readonly Action[] | null,
+  names?: SeatNames
+): string {
   if (view.toAct === null) return '';
   if (legal === null) {
     return view.toAct === view.seat
       ? 'Your turn.'
-      : `${seatName(view.toAct, view.seat)} is thinking…`;
+      : `${seatName(view.toAct, view.seat, names)} is thinking…`;
   }
   switch (view.phase) {
     case 'bidRound1':

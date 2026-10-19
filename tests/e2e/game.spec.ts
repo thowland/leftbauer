@@ -43,6 +43,14 @@ test.describe('playing a game', () => {
       await expect(page.getByRole('region', { name })).toBeVisible();
     }
     await expect(page.getByTitle('Dealer')).toHaveCount(1);
+    // Two different named opponents and the partner (OP-4).
+    const names = /Soopy|Shrubs|Rusty|Smooth/;
+    const left = await page.getByRole('region', { name: 'Left opponent' }).innerText();
+    const right = await page.getByRole('region', { name: 'Right opponent' }).innerText();
+    expect(left).toMatch(names);
+    expect(right).toMatch(names);
+    expect(left.match(names)![0]).not.toBe(right.match(names)![0]);
+    await expect(page.getByRole('region', { name: 'Partner' })).toContainText('Partner');
     await page.screenshot({ path: testInfo.outputPath(`table-${testInfo.project.name}.png`) });
   });
 

@@ -3,15 +3,16 @@ import type { PlayerView } from '../engine/view';
 import { SUIT_NAMES } from '../assets/manifest';
 import { describeResult } from './describe';
 import { Dialog } from './Dialog';
-import { seatName } from './layout';
+import { seatName, type SeatNames } from './layout';
 
 interface HandSummaryProps {
   readonly view: PlayerView;
   readonly onContinue: () => void;
+  readonly names?: SeatNames | undefined;
 }
 
 /** After each hand: who made trump, the result and the running score — GF-6. */
-export function HandSummary({ view, onContinue }: HandSummaryProps) {
+export function HandSummary({ view, onContinue, names }: HandSummaryProps) {
   const { result, contract } = view;
   if (result === null) return null;
   const us = teamOf(view.seat);
@@ -26,7 +27,7 @@ export function HandSummary({ view, onContinue }: HandSummaryProps) {
     >
       {contract !== null && (
         <p>
-          {seatName(contract.maker, view.seat)} called {SUIT_NAMES[contract.trump]}
+          {seatName(contract.maker, view.seat, names)} called {SUIT_NAMES[contract.trump]}
           {contract.alone ? ', alone' : ''}.
         </p>
       )}
