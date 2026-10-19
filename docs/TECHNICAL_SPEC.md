@@ -55,7 +55,7 @@ The design follows gammon's layering and conventions (pure core, React on top, E
 | Bots | `src/bots/` | `engine`, `util` | Yes | `Bot` interface, decision policies, knowledge tracking, simulation, personas, skill levels |
 | Coach | `src/coach/` | `bots`, `engine` | Yes | Hints and rendering reasons as text |
 | Session | `src/session/` | `engine`, `bots` (types and runner), `util` | No DOM | Running a table: turn order, seat controllers, pacing, event fan-out |
-| State | `src/state/` | `engine`, `session` (types), `util` | Yes (storage injected) | Persistence, migrations, settings, stats |
+| State | `src/state/` | `engine`, `bots` (types, personas), `session` (types), `util` | Yes (storage injected) | Persistence, migrations, settings, stats |
 | Audio | `src/audio/` | `engine` (event types), `assets` | No | Mapping events to sounds, playback, iOS unlock |
 | Assets | `src/assets/` | `engine` (types) | Data | Card art and sound manifests, deck variants |
 | Themes | `src/themes/` | nothing | Data | CSS-variable palettes |
@@ -630,6 +630,7 @@ class TableDriver {
   start(initialEvents?): Promise<GameState>;  // run or resume; resolves at game over or stop
   stop(): void;                      // aborts pending requests; resumable with start()
   continueToNextHand(): void;        // the human acknowledged the hand summary
+  hurry(): void;                     // a tap on the table: skip pauses for the rest of the trick (GF-4)
   snapshot(): TableSnapshot;         // { state, status, awaiting } for useSyncExternalStore
   subscribe(listener: () => void): () => void;
 }
@@ -647,7 +648,7 @@ The driver loop:
 2. `action = await controllers[seat].requestAction(toPlayerView(state, seat), legalActions(state, seat), signal)`.
 3. `applied = applyAction(state, seat, action)`. On rejection, log it and request again.
 4. Await every `sink.handle(applied.events, applied.state)`. The presenter's promise resolves when its animation finishes, so actions never outrun the animation.
-5. If the next actor is a bot, `await scheduler.delay(pacingMs)`. A tap on the table shortens the delay (GF-4).
+5. If the next actor is a bot, `await scheduler.delay(pacingMs)`. A tap on the table (`hurry`) cuts the current pause and skips the rest until the trick is won or the bidding round ends (GF-4).
 
 The driver is identical in the app, in integration tests (with fake controllers and an immediate scheduler) and in the tournament harness (four bot controllers and no presentation sinks). That reuse is a deliberate part of the design.
 
@@ -766,9 +767,13 @@ interface SeatSetup {
 
 Saving after every action is cheap (a Euchre game is a few hundred actions). Because bot decisions are deterministic (§5), a resumed game continues exactly as it would have without the interruption.
 
-`PersistenceSink` is the `EventSink` that writes the game, so the driver has no persistence code.
+`PersistenceSink` is the `EventSink` that writes the game, so the driver has no persistence code. It clears the save once the game is won.
+
+As built (Sprint 5): `persistence.ts` is a generic `VersionedStore<T>` (`key`, `schemaVersion`, `migrations`, `isValid`) with guarded `load`/`save`/`clear`, so a full or blocked `localStorage` never breaks a game. `SavedGame` also records the `seed` of a `?seed=N` game; a resumed seeded game deals later hands from a stream derived from the seed and hand number, and a crypto game keeps using crypto. A save is validated structurally and then by asking the engine about it; anything it cannot answer is discarded.
 
 ### 10.2 Settings
+
+As built in Sprint 5, `Settings` holds `opponents`, `skill`, `pacingMs`, `oneTapPlay` and `soundOn`. The remaining fields arrive with their features (hints in Sprint 8; rules, deck and theme in Sprint 9), each with a schema migration. The target shape:
 
 ```ts
 interface Settings {

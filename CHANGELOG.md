@@ -2,6 +2,22 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Sprint 5 — Persistence, settings and table controls
+
+### Added
+
+- The game is saved after every action and survives closing the app (PE-1). **Continue** on the home screen picks it up exactly where it was (GF-1). Saves are schema-versioned with a forward-migration chain, and a corrupt or unreadable save is discarded rather than loaded.
+- Settings, saved separately (UI-1 first pass, PE-3): left and right opponent (named or random, never the same one twice), opponent difficulty (Casual or Standard), pace of play (Relaxed, Normal, Brisk), one-tap play, and a sound toggle that Sprint 6 wires up.
+- An in-game **Menu**: Settings, Home (the game stays saved), New game and Concede, both confirmed with the safe choice focused (GF-8). Starting a new game from home while one is saved also asks first.
+- **Last trick** (GF-5): a button pinned to the corner of the table center that shows the previous trick, who played each card and who took it.
+- Tap the table to hurry (GF-4): the current pause ends and the rest of the trick plays without pauses.
+- One-tap play (GF-2).
+
+### Changed
+
+- `state/` may import `bots` types and personas (Technical Spec §3).
+- Tables are built from a `SavedGame` (`newTable`, `resumeTable`), new or resumed alike.
+
 ## Sprint 4 — Conventional bots and the partner
 
 ### Added
