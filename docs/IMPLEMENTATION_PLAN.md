@@ -34,7 +34,7 @@ In addition to completing the sprint's development work:
 1. **Lint passes.** ESLint and the Prettier check pass on every file in the repository, with no warnings suppressed for the occasion.
 2. **Coverage of at least 80%.** Lines, statements, functions and branches are each at 80% or above, measured across **all** source code, not just the sprint's changes. This is enforced as Vitest coverage thresholds, so the test run fails below them.
 3. **All tests pass.** That means the whole suite, not just the sprint's new tests. Obsolete tests may be deleted, but the overall coverage thresholds must still be met afterward.
-4. **End-to-end tests.** You've set MVP as the first visible table, so Playwright E2E tests are required **from Sprint 1 onward**. Every sprint adds or updates E2E tests for the user-facing behavior it introduces, on three projects: iPhone (WebKit), iPad (WebKit) and Desktop Chrome.
+4. **End-to-end tests.** You've set MVP as the first visible table, so Playwright E2E tests are required **from Sprint 1 onward**. Every sprint adds or updates E2E tests for the user-facing behavior it introduces, on four projects: iPhone portrait and landscape (WebKit), iPad (WebKit) and Desktop Chrome.
 
 Also:
 
@@ -91,7 +91,7 @@ Within each sprint, pure modules (engine, bots, coach, state) are written test-f
 - `ui/TableScreen.tsx`: a static layout of a real deal. Your five cards face up, card backs for the three other seats, the upcard on the kitty, the dealer marker and a placeholder score bar. A **Deal again** button. The layout is responsive across the three device classes (VP-1, first pass).
 - A `themes/` card-room palette as CSS variables (VP-4, first pass).
 
-**E2E:** the app loads, the table renders with five face-up cards and an upcard, **Deal again** produces a new deal, and nothing scrolls horizontally on any of the three projects.
+**E2E:** the app loads, the table renders with five face-up cards and an upcard, **Deal again** produces a new deal, and nothing scrolls on any of the four projects.
 
 **Review:** open the LAN URL on your iPhone and iPad and deal a few hands.
 
