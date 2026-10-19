@@ -1,84 +1,113 @@
 /**
- * Builds a table for one game: the human in seat 0, the partner across,
- * and two named opponents, with a TableDriver to run it.
+ * Builds a table for one game from a `SavedGame`, new or resumed, with a
+ * TableDriver to run it and a PersistenceSink to save it (PE-1).
  */
 
-import type { BotSpec, PersonaId, SkillLevel } from '../../bots/bot';
-import { PARTNER_SPEC } from '../../bots/factory';
-import { OPPONENT_IDS, personaById } from '../../bots/personas';
+import { personaById } from '../../bots/personas';
 import type { GameEvent } from '../../engine/events';
-import { newGame } from '../../engine/game';
-import { STANDARD_RULES, type RuleSet } from '../../engine/rules';
-import type { Seat } from '../../engine/seats';
-import { shuffle } from '../../engine/deal';
+import { STANDARD_RULES } from '../../engine/rules';
+import { SEATS, type Seat } from '../../engine/seats';
 import { InlineBotRunner } from '../../session/botRunner';
-import { BotSeatController, HumanSeatController } from '../../session/controllers';
-import { DEFAULT_PACING, NO_PACING, TableDriver } from '../../session/driver';
+import {
+  BotSeatController,
+  HumanSeatController,
+  type SeatController,
+} from '../../session/controllers';
+import { NO_PACING, TableDriver, type EventSink } from '../../session/driver';
 import { immediateScheduler, timerScheduler } from '../../session/scheduler';
-import { cryptoRng, hashSeed, seededRng, type Rng } from '../../util/rng';
+import type { StorageLike } from '../../state/persistence';
+import {
+  botAt,
+  PersistenceSink,
+  resumeShuffleRng,
+  startGame,
+  type GameSetup,
+  type SavedGame,
+} from '../../state/savedGame';
+import { pacingFor, type Settings } from '../../state/settings';
+import type { Rng } from '../../util/rng';
 import type { SeatInfo } from '../layout';
 
-export const HUMAN_SEAT: Seat = 0;
-
 export interface TableOptions {
-  /** Seed shuffles and opponent choice for a reproducible game; `null` uses crypto (RU-2). */
-  readonly seed: number | null;
   /** `?e2e`: no pacing between bot actions. */
   readonly fast: boolean;
-  readonly rules?: RuleSet;
-  /** Opponent difficulty (OP-2); the partner always plays at full strength (PB-2). */
-  readonly skill?: SkillLevel;
-  /** Opponents for the left and right seats; picked at random when omitted (OP-4). */
-  readonly opponents?: readonly [PersonaId, PersonaId];
+  /** The pause before each bot action (GF-4). */
+  readonly pacingMs: number;
+  /** Where to save the game after every action; `null` to not save. */
+  readonly storage: StorageLike | null;
 }
 
 export interface GameTable {
   readonly driver: TableDriver;
   readonly human: HumanSeatController;
   readonly humanSeat: Seat;
+  /** Events to present when the table first starts (the first deal of a new game). */
   readonly initialEvents: readonly GameEvent[];
   /** Who sits where, indexed by seat. */
   readonly seats: readonly [SeatInfo, SeatInfo, SeatInfo, SeatInfo];
+  /** With the driver's current state, everything needed to resume the game. */
+  readonly setup: GameSetup;
 }
 
-export function createTable({
-  seed,
-  fast,
-  rules = STANDARD_RULES,
-  skill = 'standard',
-  opponents,
-}: TableOptions): GameTable {
-  const shuffleRng: Rng = seed === null ? cryptoRng() : seededRng(seed);
-  // A separate stream for opponent choice, so it never changes the deal.
-  const pickRng: Rng = seed === null ? cryptoRng() : seededRng(hashSeed('opponents', seed));
-  const [left, right] = opponents ?? (shuffle(OPPONENT_IDS, pickRng) as [PersonaId, PersonaId]);
+/** A new game with the current settings (GF-1). `seed` makes it reproducible. */
+export function newTable(
+  settings: Settings,
+  seed: number | null,
+  options: TableOptions
+): GameTable {
+  const { saved, events, shuffleRng } = startGame({
+    rules: STANDARD_RULES,
+    skill: settings.skill,
+    opponents: settings.opponents,
+    seed,
+  });
+  return buildTable(saved, shuffleRng, events, options);
+}
 
-  const firstDealer = shuffleRng.nextInt(4) as Seat;
-  const { state, events } = newGame(rules, firstDealer, shuffleRng);
+/** Pick a saved game up exactly where it was left (PE-1). */
+export function resumeTable(saved: SavedGame, options: TableOptions): GameTable {
+  return buildTable(saved, resumeShuffleRng(saved), [], options);
+}
+
+function buildTable(
+  saved: SavedGame,
+  shuffleRng: Rng,
+  initialEvents: readonly GameEvent[],
+  { fast, pacingMs, storage }: TableOptions
+): GameTable {
+  const { seats } = saved;
   const runner = new InlineBotRunner();
   const human = new HumanSeatController();
   const reportIllegal = (action: unknown) => console.error('Bot chose an illegal action', action);
-  const opponent = (personaId: PersonaId): BotSpec => ({ role: 'opponent', personaId, skill });
-  const seat = (spec: BotSpec) => new BotSeatController(spec, runner, reportIllegal);
+  const controllerAt = (seat: Seat): SeatController => {
+    const spec = botAt(seats, seat);
+    return spec === null ? human : new BotSeatController(spec, runner, reportIllegal);
+  };
+  const infoAt = (seat: Seat): SeatInfo => {
+    const spec = botAt(seats, seat);
+    if (spec === null) return { name: 'You', persona: null };
+    const persona = personaById(spec.personaId);
+    return { name: persona.name, persona };
+  };
+  const setup: GameSetup = { seats, seed: saved.seed };
+  const sinks: EventSink[] = storage === null ? [] : [new PersistenceSink(storage, setup)];
 
   const driver = new TableDriver(
     {
-      controllers: [human, seat(opponent(left)), seat(PARTNER_SPEC), seat(opponent(right))],
+      controllers: [controllerAt(0), controllerAt(1), controllerAt(2), controllerAt(3)],
       scheduler: fast ? immediateScheduler : timerScheduler,
       shuffleRng,
-      pacing: fast ? NO_PACING : DEFAULT_PACING,
+      sinks,
+      pacing: fast ? NO_PACING : pacingFor(pacingMs),
     },
-    state
+    saved.game
   );
-  const bot = (id: PersonaId): SeatInfo => ({
-    name: personaById(id).name,
-    persona: personaById(id),
-  });
   return {
     driver,
     human,
-    humanSeat: HUMAN_SEAT,
-    initialEvents: events,
-    seats: [{ name: 'You', persona: null }, bot(left), bot('partner'), bot(right)],
+    humanSeat: seats.humanSeat,
+    initialEvents,
+    seats: SEATS.map(infoAt) as unknown as GameTable['seats'],
+    setup,
   };
 }

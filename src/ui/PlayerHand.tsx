@@ -10,6 +10,8 @@ interface PlayerHandProps {
   /** Cards the human may choose now; empty when it is not their turn to choose a card. */
   readonly choosable: readonly CardId[];
   readonly onChoose: (card: CardId) => void;
+  /** Play on the first tap instead of raising the card (GF-2). */
+  readonly oneTap?: boolean;
 }
 
 function bowerOf(card: CardId, trump: Suit | null): 'Right bower' | 'Left bower' | null {
@@ -22,9 +24,10 @@ function bowerOf(card: CardId, trump: Suit | null): 'Right bower' | 'Left bower'
 /**
  * The human's hand — GF-2, UI-4. When a card must be chosen (to play or
  * discard), legal cards become buttons: tap once to raise, tap the raised
- * card again to commit. Illegal cards are dimmed. Bowers carry a badge.
+ * card again to commit (or commit on the first tap with one-tap play).
+ * Illegal cards are dimmed. Bowers carry a badge.
  */
-export function PlayerHand({ cards, trump, choosable, onChoose }: PlayerHandProps) {
+export function PlayerHand({ cards, trump, choosable, onChoose, oneTap = false }: PlayerHandProps) {
   const [raised, setRaised] = useState<CardId | null>(null);
   const choosing = choosable.length > 0;
   const raisedCard = raised !== null && choosable.includes(raised) ? raised : null;
@@ -44,7 +47,7 @@ export function PlayerHand({ cards, trump, choosable, onChoose }: PlayerHandProp
               aria-label={bower ? `${cardLabel(card)}, ${bower.toLowerCase()}` : cardLabel(card)}
               aria-pressed={isRaised}
               onClick={() => {
-                if (isRaised) {
+                if (isRaised || oneTap) {
                   setRaised(null);
                   onChoose(card);
                 } else {
