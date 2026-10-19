@@ -1,0 +1,3 @@
+# Sprint gate — Implementation Plan §2.3. Every --no-ff merge must pass
+# lint, typecheck, coverage thresholds and E2E before the merge commit.
+npm run verify

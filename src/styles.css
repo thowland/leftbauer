@@ -1,0 +1,269 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #1d3b2a;
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  height: 100%;
+}
+
+.app {
+  height: 100%;
+  color: var(--ink-on-felt);
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    var(--felt-light) 0%,
+    var(--felt) 55%,
+    var(--felt-shadow) 100%
+  );
+}
+
+/*
+ * Table layout — VP-1. One grid serves every device class; card size is
+ * driven by the smaller of the viewport's width and height so the table
+ * fits in iPhone portrait, iPhone landscape, iPad and laptop windows.
+ */
+.table {
+  --card-w: clamp(46px, min(17vw, 12.5dvh), 118px);
+  --back-w: calc(var(--card-w) * 0.52);
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    'score score score'
+    'top top top'
+    'left center right'
+    'bottom bottom bottom';
+  height: 100%;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+    max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  gap: 6px;
+}
+
+.score-bar {
+  grid-area: score;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand {
+  margin: 0;
+  font-size: 1.15rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  color: var(--brass);
+}
+
+.score {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+}
+
+.score div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.score dt {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+
+.score dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--brass);
+  border-radius: 22px;
+  background: transparent;
+  color: var(--ink-on-felt);
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.button:active {
+  background: rgb(201 164 92 / 0.2);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+.seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.seat-top {
+  grid-area: top;
+}
+
+.seat-left {
+  grid-area: left;
+}
+
+.seat-right {
+  grid-area: right;
+}
+
+.seat-bottom {
+  grid-area: bottom;
+}
+
+.seat-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.dealer-chip {
+  padding: 1px 7px;
+  border-radius: 9px;
+  background: var(--brass);
+  color: var(--felt-shadow);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.card {
+  display: block;
+  flex: none;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.35));
+}
+
+/* Face-down hands: an overlapped row across the top, stacked columns at the sides. */
+.backs {
+  display: flex;
+}
+
+.back-card {
+  width: var(--back-w);
+}
+
+.seat-top .back-card + .back-card {
+  margin-left: calc(var(--back-w) * -0.62);
+}
+
+.seat-left .backs,
+.seat-right .backs {
+  flex-direction: column;
+}
+
+.seat-left .back-card + .back-card,
+.seat-right .back-card + .back-card {
+  margin-top: calc(var(--back-w) * -1.12);
+}
+
+.center {
+  grid-area: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kitty {
+  position: relative;
+  width: calc(var(--card-w) + 12px);
+  height: calc(var(--card-w) * 1.4 + 12px);
+}
+
+.kitty-card,
+.upcard {
+  position: absolute;
+  width: var(--card-w);
+}
+
+.kitty-card:nth-child(1) {
+  top: 0;
+  left: 0;
+}
+
+.kitty-card:nth-child(2) {
+  top: 4px;
+  left: 4px;
+}
+
+.kitty-card:nth-child(3) {
+  top: 8px;
+  left: 8px;
+}
+
+.upcard {
+  top: 12px;
+  left: 12px;
+}
+
+.center-label {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+
+.hand {
+  display: flex;
+  justify-content: center;
+  gap: clamp(2px, 1vw, 10px);
+}
+
+.hand-card {
+  width: var(--card-w);
+}
+
+/* iPhone landscape: little height, so shrink the cards and the chrome. */
+@media (max-height: 500px) {
+  .table {
+    --card-w: clamp(40px, 15dvh, 80px);
+    gap: 2px;
+  }
+
+  .brand {
+    font-size: 1rem;
+  }
+
+  .button {
+    min-height: 36px;
+  }
+}

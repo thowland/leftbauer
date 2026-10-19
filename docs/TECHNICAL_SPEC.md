@@ -57,7 +57,7 @@ The design follows gammon's layering and conventions (pure core, React on top, E
 | Session | `src/session/` | `engine`, `bots` (types and runner), `util` | No DOM | Running a table: turn order, seat controllers, pacing, event fan-out |
 | State | `src/state/` | `engine`, `session` (types), `util` | Yes (storage injected) | Persistence, migrations, settings, stats |
 | Audio | `src/audio/` | `engine` (event types), `assets` | No | Mapping events to sounds, playback, iOS unlock |
-| Assets | `src/assets/` | nothing | Data | Card art and sound manifests, deck variants |
+| Assets | `src/assets/` | `engine` (types) | Data | Card art and sound manifests, deck variants |
 | Themes | `src/themes/` | nothing | Data | CSS-variable palettes |
 | Workers | `src/workers/` | `bots`, `engine` | No DOM | The bot Web Worker entry point |
 | UI | `src/ui/` | everything | No | React components, presentation, wiring |

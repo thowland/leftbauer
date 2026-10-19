@@ -1,0 +1,13 @@
+dist
+node_modules
+coverage
+playwright-report
+test-results
+package-lock.json
+
+# Local tooling artefacts (not part of the app)
+.claude
+
+# Planning and decision docs are authored prose; don't reformat
+docs
+CLAUDE.md
