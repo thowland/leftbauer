@@ -218,7 +218,10 @@ Internally the engine is split by concern:
 
 | File | Owns |
 |---|---|
-| `cards.ts` | Suits, ranks, colors, bowers, trick ranking (§4.1) |
+| `cards.ts` | Suits, ranks, colors, bowers, trick ranking, hand sorting (§4.1) |
+| `seats.ts` | Seats, teams, clockwise order |
+| `state.ts` | `GameState`, `HandState` and the other state types (§4.3) |
+| `actions.ts` | `Action`, `BidAction`, action equality (§4.4) |
 | `rules.ts` | `RuleSet`, `STANDARD_RULES`, house-rule predicates |
 | `deal.ts` | Fisher–Yates shuffle over `Rng`; the 3-2 / 2-3 deal order (animation metadata only) |
 | `bidding.ts` | Both bidding rounds, ordering up, loners, stick the dealer, redeals, defending alone |
@@ -250,7 +253,9 @@ interface PlayerView {
   readonly contract: Contract | null;
   readonly tricks: readonly Trick[];
   readonly currentTrick: Trick | null;
-  readonly sittingOut: readonly Seat[];
+  readonly sittingOut: Seat | null;               // at most one seat sits out
+  readonly result: HandResult | null;              // set once the hand is over
+  readonly gameWinner: Team | null;
 }
 ```
 

@@ -1,10 +1,13 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './ui/App';
+import { parseLaunchOptions } from './ui/launchOptions';
 import './styles.css';
+
+const { dev, seed } = parseLaunchOptions(window.location.search);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <App dev={dev} seed={seed} />
   </StrictMode>
 );

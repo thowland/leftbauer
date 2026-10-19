@@ -22,13 +22,13 @@ test.describe('first visible table', () => {
     for (const card of await hand.getByRole('img').all()) {
       await expect(card).toBeVisible();
     }
-    const kitty = page.getByRole('region', { name: 'Kitty' });
+    const kitty = page.getByRole('region', { name: 'Table center' });
     await expect(kitty.locator('[data-card]')).toHaveCount(1);
     await expect(kitty.locator('[data-card]')).toBeVisible();
   });
 
   test('shows three face-down hands and one dealer', async ({ page }) => {
-    for (const name of ['Partner (top)', 'Opponent (left)', 'Opponent (right)']) {
+    for (const name of ['Partner', 'Left opponent', 'Right opponent']) {
       const seat = page.getByRole('region', { name });
       await expect(seat).toBeVisible();
       await expect(seat.getByRole('img', { name: 'Face-down card' })).toHaveCount(5);
