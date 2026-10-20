@@ -184,6 +184,26 @@ describe('TableDriver with a human', () => {
     expect(delays.every((ms) => ms === 10 || ms === 60)).toBe(true);
     d.stop();
   });
+  it('leaves the last trick on the table before the hand summary', async () => {
+    const pauses: { ms: number; tricks: number; status: string }[] = [];
+    let d: TableDriver | null = null;
+    const recording: Scheduler = {
+      delay: (ms, signal) => {
+        const { state, status } = d!.snapshot();
+        pauses.push({ ms, tricks: state.hand.tricks.length, status });
+        return immediateScheduler.delay(ms, signal);
+      },
+    };
+    d = driver(bots(), start().state, {
+      scheduler: recording,
+      pacing: { botMs: 10, trickMs: 50 },
+      autoContinue: false,
+    });
+    void d.start();
+    await until(d, () => d.snapshot().status === 'handComplete');
+    expect(pauses.at(-1)).toEqual({ ms: 60, tricks: 5, status: 'running' });
+    d.stop();
+  });
 });
 
 describe('TableDriver hurry (GF-4)', () => {

@@ -13,6 +13,10 @@ All notable changes to this project are recorded here, one section per sprint.
 - Tap the table to hurry (GF-4): the current pause ends and the rest of the trick plays without pauses.
 - One-tap play (GF-2).
 
+### Fixed
+
+- The hand's last trick now stays on the table for the usual trick pause before the hand summary appears, whoever plays the last card.
+
 ### Changed
 
 - `state/` may import `bots` types and personas (Technical Spec §3).
