@@ -8,12 +8,14 @@ interface BidPanelProps {
   readonly legal: readonly Action[];
   readonly isDealer: boolean;
   readonly onBid: (action: BidAction) => void;
+  /** The coach's suggested bid (CO-1). */
+  readonly hinted?: BidAction | null;
 }
 
 const capitalize = (s: string) => s[0]!.toUpperCase() + s.slice(1);
 
 /** Only the legal bids, as large buttons — GF-3. */
-export function BidPanel({ legal, isDealer, onBid }: BidPanelProps) {
+export function BidPanel({ legal, isDealer, onBid, hinted = null }: BidPanelProps) {
   const [alone, setAlone] = useState(false);
   const canOrder = legal.some((a) => a.type === 'orderUp');
   const callable = SUITS.filter((suit) =>
@@ -21,13 +23,15 @@ export function BidPanel({ legal, isDealer, onBid }: BidPanelProps) {
   );
   const canPass = legal.some((a) => a.type === 'pass');
   const canGoAlone = legal.some((a) => (a.type === 'orderUp' || a.type === 'callTrump') && a.alone);
+  const mark = (match: boolean) => (match ? ' hinted' : '');
+  const hintedAlone = hinted !== null && hinted.type !== 'pass' && hinted.alone;
 
   return (
     <div className="bid-panel" role="group" aria-label="Your bid">
       {canOrder && (
         <button
           type="button"
-          className="button button-primary"
+          className={`button button-primary${mark(hinted?.type === 'orderUp')}`}
           onClick={() => onBid({ type: 'orderUp', alone })}
         >
           {isDealer ? 'Pick it up' : 'Order it up'}
@@ -37,7 +41,9 @@ export function BidPanel({ legal, isDealer, onBid }: BidPanelProps) {
         <button
           key={suit}
           type="button"
-          className="button button-primary suit-button"
+          className={`button button-primary suit-button${mark(
+            hinted?.type === 'callTrump' && hinted.suit === suit
+          )}`}
           onClick={() => onBid({ type: 'callTrump', suit, alone })}
         >
           <svg viewBox="0 0 100 100" className="suit-button-icon" aria-hidden="true">
@@ -47,13 +53,17 @@ export function BidPanel({ legal, isDealer, onBid }: BidPanelProps) {
         </button>
       ))}
       {canGoAlone && (
-        <label className="alone-toggle">
+        <label className={`alone-toggle${mark(hintedAlone)}`}>
           <input type="checkbox" checked={alone} onChange={(e) => setAlone(e.target.checked)} />
           Go alone
         </label>
       )}
       {canPass && (
-        <button type="button" className="button" onClick={() => onBid({ type: 'pass' })}>
+        <button
+          type="button"
+          className={`button${mark(hinted?.type === 'pass')}`}
+          onClick={() => onBid({ type: 'pass' })}
+        >
           Pass
         </button>
       )}

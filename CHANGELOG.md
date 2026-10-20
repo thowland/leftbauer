@@ -2,6 +2,19 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Sprint 8 — Coach and supporting screens
+
+### Added
+
+- **Hints** (CO-1, CO-2): on your turn, a Hint button shows what your partner would do in your seat, highlighted in place (the card, the discard or the bid, including going alone), with a one-line reason in place of the prompt. Hints can be turned off in Settings (CO-3); settings move to schema version 2, with a migration that turns them on.
+- **How to play** (UI-2), written from the active rules; **How your partner plays** (UI-6), generated from the partner's own rule lists in the order it applies them; and **About** (UI-3), with the Bauer story, the sound credits and the version. All are linked from the home screen.
+- **Stats** (PE-2, UI-5): games, wins, hands, trump you named and made, euchres given and taken, marches and loners, by opponent difficulty and in all, with a confirmed reset. A game left unfinished, by conceding or starting a new one, counts as a loss.
+
+### Fixed
+
+- A dealer's six-card hand now fits on a phone.
+- On phones, the prompt line reserves two lines, so a long prompt or hint never moves the table.
+
 ## Sprint 7 — Sharp level and the Web Worker
 
 ### Added

@@ -25,29 +25,32 @@ export interface BotSpec {
 
 /**
  * Why a bot chose an action: one code per convention (PB-4). Structured,
- * never prose; the coach renders the words (Sprint 8).
+ * never prose; the coach renders the words (`coach/reasons.ts`).
  */
-export type ReasonCode =
-  | 'bid-strong-hand'
-  | 'bid-call-next'
-  | 'bid-best-suit'
-  | 'bid-stuck'
-  | 'bid-pass-weak'
-  | 'loner-strong'
-  | 'loner-not-strong-enough'
-  | 'discard-make-void'
-  | 'discard-lowest'
-  | 'lead-boss-trump'
-  | 'lead-trump-to-partner'
-  | 'lead-off-ace'
-  | 'lead-short-suit'
-  | 'lead-lowest'
-  | 'follow-partner-winning'
-  | 'follow-save-trump'
-  | 'follow-win-cheaply'
-  | 'follow-throw-low'
+export const REASON_CODES = [
+  'bid-strong-hand',
+  'bid-call-next',
+  'bid-best-suit',
+  'bid-stuck',
+  'bid-pass-weak',
+  'loner-strong',
+  'loner-not-strong-enough',
+  'discard-make-void',
+  'discard-lowest',
+  'lead-boss-trump',
+  'lead-trump-to-partner',
+  'lead-off-ace',
+  'lead-short-suit',
+  'lead-lowest',
+  'follow-partner-winning',
+  'follow-save-trump',
+  'follow-win-cheaply',
+  'follow-throw-low',
   /** Sharp: simulation preferred a different card to the conventions' choice. */
-  | 'play-simulated';
+  'play-simulated',
+] as const;
+
+export type ReasonCode = (typeof REASON_CODES)[number];
 
 export interface Reason {
   readonly code: ReasonCode;

@@ -33,12 +33,14 @@ const discardLowest: ConventionRule<CardId> = {
   choose: (ctx) => cheapestFirst(ctx.view.myHand, ctx.view.myHand, trumpOf(ctx))[0]!,
 };
 
+export const DISCARD_RULES: readonly ConventionRule<CardId>[] = [makeVoid, discardLowest];
+
 export const conventionalDiscard: DiscardPolicy = {
   discard(ctx) {
     const hand = ctx.view.myHand;
     return rankByRules(
       ctx,
-      [makeVoid, discardLowest],
+      DISCARD_RULES,
       cheapestFirst(hand, hand, trumpOf(ctx)),
       'discard-lowest'
     );

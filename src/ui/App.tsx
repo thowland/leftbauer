@@ -4,12 +4,25 @@ import type { BotRunner } from '../session/botRunner';
 import { clear, load, memoryStorage, save, type StorageLike } from '../state/persistence';
 import { GAME_STORE, type SavedGame } from '../state/savedGame';
 import { DEFAULT_SETTINGS, SETTINGS_STORE, type Settings } from '../state/settings';
+import {
+  EMPTY_STATS,
+  loadStats,
+  opponentSkill,
+  recordAbandoned,
+  STATS_STORE,
+  type Stats,
+} from '../state/stats';
+import { STANDARD_RULES } from '../engine/rules';
 import { CARD_ROOM, type Theme } from '../themes/cardRoom';
 import { MOTION, motionVars } from '../themes/motion';
 import { DevApp } from './dev/DevApp';
 import { newTable, resumeTable, type GameTable, type TableOptions } from './game/createTable';
 import { GameScreen } from './GameScreen';
-import { HomeScreen } from './HomeScreen';
+import { AboutScreen } from './AboutScreen';
+import { HomeScreen, type InfoScreen } from './HomeScreen';
+import { PartnerConventionsScreen } from './PartnerConventionsScreen';
+import { RulesScreen } from './RulesScreen';
+import { StatsScreen } from './StatsScreen';
 import { SettingsScreen } from './SettingsScreen';
 
 interface AppProps {
@@ -33,7 +46,9 @@ interface AppProps {
 type Screen =
   | { readonly kind: 'home' }
   | { readonly kind: 'game'; readonly id: number; readonly table: GameTable }
-  | { readonly kind: 'settings'; readonly from: 'home' | 'game' };
+  | { readonly kind: 'settings'; readonly from: 'home' | 'game' }
+  | { readonly kind: 'stats'; readonly stats: Stats }
+  | { readonly kind: Exclude<InfoScreen, 'stats'> };
 
 export function App({
   dev = false,
@@ -70,7 +85,22 @@ export function App({
     setGames((n) => n + 1);
   };
 
+  /** A game left unfinished counts as a loss (PE-2). */
+  const abandonInProgress = () => {
+    const playing = screen.kind === 'game' ? screen.table : null;
+    const unfinished =
+      playing !== null
+        ? playing.driver.snapshot().state.winner === null
+          ? playing.setup.seats
+          : null
+        : (paused?.seats ?? null);
+    if (unfinished !== null) {
+      save(store, STATS_STORE, recordAbandoned(loadStats(store), opponentSkill(unfinished)));
+    }
+  };
+
   const newGame = () => {
+    abandonInProgress();
     clear(store, GAME_STORE);
     setPaused(null);
     // Each game in a seeded session gets its own reproducible seed.
@@ -90,6 +120,7 @@ export function App({
   };
 
   const abandon = () => {
+    abandonInProgress();
     clear(store, GAME_STORE);
     setPaused(null);
     setScreen({ kind: 'home' });
@@ -100,6 +131,8 @@ export function App({
     save(store, SETTINGS_STORE, next);
   };
 
+  const home = () => setScreen({ kind: 'home' });
+
   const content = () => {
     switch (screen.kind) {
       case 'home':
@@ -109,6 +142,26 @@ export function App({
             onContinue={() => resume(paused)}
             onNewGame={newGame}
             onSettings={() => setScreen({ kind: 'settings', from: 'home' })}
+            onOpen={(kind) =>
+              setScreen(kind === 'stats' ? { kind, stats: loadStats(store) } : { kind })
+            }
+          />
+        );
+      case 'rules':
+        return <RulesScreen rules={STANDARD_RULES} onDone={home} />;
+      case 'conventions':
+        return <PartnerConventionsScreen onDone={home} />;
+      case 'about':
+        return <AboutScreen onDone={home} />;
+      case 'stats':
+        return (
+          <StatsScreen
+            stats={screen.stats}
+            onDone={home}
+            onReset={() => {
+              clear(store, STATS_STORE);
+              setScreen({ kind: 'stats', stats: EMPTY_STATS });
+            }}
           />
         );
       case 'settings':
@@ -128,6 +181,7 @@ export function App({
             table={table}
             oneTap={settings.oneTapPlay}
             soundOn={settings.soundOn}
+            hintsOn={settings.hintsOn}
             onToggleSound={() => changeSettings({ ...settings, soundOn: !settings.soundOn })}
             onPlayAgain={newGame}
             onHome={() => leave(table, { kind: 'home' })}

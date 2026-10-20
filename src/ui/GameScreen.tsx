@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { hintFor, type Hint } from '../coach/hint';
 import { toPlayerView } from '../engine/view';
 import type { GameTable } from './game/createTable';
 import { GameMenu } from './GameMenu';
@@ -15,6 +16,8 @@ interface GameScreenProps {
   /** Sound effects on (SA-3). */
   readonly soundOn?: boolean;
   readonly onToggleSound?: () => void;
+  /** Offer the Hint control (CO-3). */
+  readonly hintsOn?: boolean;
   readonly onPlayAgain: () => void;
   /** Leave the game; it stays saved to continue later. */
   readonly onHome: () => void;
@@ -35,6 +38,7 @@ export function GameScreen({
   oneTap = false,
   soundOn = false,
   onToggleSound = () => {},
+  hintsOn = false,
   onPlayAgain,
   onHome,
   onSettings,
@@ -47,6 +51,8 @@ export function GameScreen({
   // The first deal's events, until the driver has been started with them.
   const pending = useRef(table.initialEvents);
   const [menuOpen, setMenuOpen] = useState(false);
+  // A hint belongs to the request it answered; a new turn clears it.
+  const [hinted, setHinted] = useState<{ for: object; hint: Hint } | null>(null);
 
   useEffect(() => {
     // Start after StrictMode's mount, unmount and remount, so the first
@@ -64,7 +70,13 @@ export function GameScreen({
   }, [driver]);
 
   const view = toPlayerView(snapshot.state, humanSeat);
-  const legal = snapshot.awaiting?.seat === humanSeat ? snapshot.awaiting.legal : null;
+  const awaiting = snapshot.awaiting?.seat === humanSeat ? snapshot.awaiting : null;
+  const legal = awaiting?.legal ?? null;
+  const hint = awaiting !== null && hinted?.for === awaiting ? hinted.hint : null;
+  const askCoach =
+    hintsOn && awaiting !== null
+      ? () => setHinted({ for: awaiting, hint: hintFor(view, awaiting.legal) })
+      : undefined;
 
   return (
     <>
@@ -76,6 +88,8 @@ export function GameScreen({
         oneTap={oneTap}
         onHurry={driver.hurry}
         cue={cue}
+        onHint={askCoach}
+        hint={hint}
         controls={
           <>
             <SoundToggle on={soundOn} onToggle={onToggleSound} />

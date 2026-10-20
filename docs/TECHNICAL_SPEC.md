@@ -600,6 +600,8 @@ function partnerConventions(): readonly ConventionSummary[];          // generat
 
 `renderReason` owns all player-facing strategy wording, so the bots stay free of UI text, and a wording change never touches the strategy code. In Phase 2, after-hand explanations (CO-4) will replay the hand's recorded decisions through the same renderer.
 
+*As built (Sprint 8):* `coach/reasons.ts` (`REASON_TEXT`, typed `Record<ReasonCode, …>` over the runtime `REASON_CODES` list in `bots/bot.ts`), `coach/hint.ts` (`hintFor`, through a Sharp bot with `COACH_SPEC`, run synchronously on a tap) and `coach/conventions.ts` (`partnerConventions()`, which takes its order from the bots' exported `LEAD_RULES`, `FOLLOW_RULES` and `DISCARD_RULES`). A hint belongs to the request it answered: `GameScreen` keys it to the driver's `awaiting` object, so the next turn clears it. The suggestion is highlighted in place (`.hinted`), and its reason replaces the turn prompt, which reserves two lines on phones so the table never shifts.
+
 ## 8. Session (`src/session/`)
 
 The session runs a table. It is the only component that knows the turn order of real time, and it knows nothing about React.
@@ -781,7 +783,7 @@ As built (Sprint 5): `persistence.ts` is a generic `VersionedStore<T>` (`key`, `
 
 ### 10.2 Settings
 
-As built in Sprint 5, `Settings` holds `opponents`, `skill`, `pacingMs`, `oneTapPlay` and `soundOn`. The remaining fields arrive with their features (hints in Sprint 8; rules, deck and theme in Sprint 9), each with a schema migration. The target shape:
+As built in Sprint 8, `Settings` (schema version 2) holds `opponents`, `skill`, `pacingMs`, `oneTapPlay`, `soundOn` and `hintsOn`; the version 1 → 2 migration adds `hintsOn: true`. Rules, deck and theme arrive in Sprint 9, each with a migration. The target shape:
 
 ```ts
 interface Settings {
@@ -800,6 +802,8 @@ interface Settings {
 ### 10.3 Stats
 
 `stats.ts` is a pure reducer, `applyToStats(stats, events, humanSeat, skill): Stats`, wired in through `StatsSink`. Stats are bucketed by `SkillLevel` (PE-2). Hint use is deliberately not recorded (CO-3).
+
+*As built (Sprint 8):* the signature is `applyToStats(stats, events, state, humanSeat, skill)`, because the maker's seat comes from `state.hand.contract` (a `HandResult` carries only the makers' team). Calls, made and loners count the human's own calls; euchres and marches count for the human's team. A game's level is its opponents' skill (`opponentSkill`). A game abandoned unfinished, by conceding or by starting a new game, is recorded as played and lost (`recordAbandoned`, called by `App`). `StatsSink` runs after `PersistenceSink`, and only on batches with `handScored` or `gameOver`.
 
 ## 11. Testing
 

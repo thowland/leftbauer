@@ -355,6 +355,10 @@ body {
   position: absolute;
   right: 0;
   bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 /* Phones in portrait: the trick fills the center's width; the empty felt is above it. */
@@ -412,7 +416,8 @@ body {
 }
 
 .hand-card {
-  width: var(--card-w);
+  /* A dealer briefly holds six cards: never wider than the screen. */
+  width: min(var(--card-w), calc((100vw - 24px) / var(--count, 5) - clamp(2px, 1vw, 10px)));
 }
 
 .hand-slot {
@@ -473,9 +478,17 @@ body {
 .turn-prompt {
   margin: 0;
   min-height: 1.2em;
+  line-height: 1.25;
   font-size: 0.9rem;
   color: var(--ink-on-felt);
   text-align: center;
+}
+
+/* Phones: prompts and hints can wrap; reserve both lines so the table never shifts. */
+@media (max-width: 520px) {
+  .turn-prompt {
+    min-height: 2.5em;
+  }
 }
 
 .bid-panel {
@@ -972,4 +985,108 @@ body {
   .flip {
     animation: none;
   }
+}
+
+/* The coach (CO-1, CO-2): the suggestion glows in place; its reason replaces the prompt. */
+.hinted {
+  box-shadow:
+    0 0 0 3px var(--brass),
+    0 0 14px 2px rgb(201 164 92 / 0.7);
+}
+
+.hand-slot.hinted {
+  border-radius: 8px;
+}
+
+.alone-toggle.hinted {
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+.hint-text {
+  color: var(--brass);
+}
+
+/* Reading screens (UI-2, UI-3, UI-5, UI-6). */
+.page-section p {
+  margin: 0 0 8px;
+  line-height: 1.45;
+}
+
+.page-heading {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  color: var(--brass);
+}
+
+.page-lede {
+  margin: 4px 0 12px;
+  color: var(--ink-muted);
+}
+
+.page a {
+  color: var(--brass);
+}
+
+.rules-list {
+  margin: 0 0 8px;
+  padding-left: 1.3rem;
+  line-height: 1.45;
+}
+
+.rules-list li + li {
+  margin-top: 4px;
+}
+
+.rules-cards {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.rules-card {
+  width: min(64px, 20vw);
+}
+
+.stats-scroll {
+  overflow-x: auto;
+  margin-bottom: 8px;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-table {
+  font-size: 0.92rem;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid rgb(201 164 92 / 0.25);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.stats-table th[scope='row'] {
+  white-space: normal;
+  text-align: left;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.stats-table thead th {
+  color: var(--brass);
+}
+
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 340px;
+  margin-top: 8px;
 }

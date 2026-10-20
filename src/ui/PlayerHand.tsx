@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { isLeftBower, isRightBower, type CardId, type Suit } from '../engine/cards';
 import { cardLabel } from '../assets/manifest';
 import { Card } from './Card';
@@ -15,6 +15,8 @@ interface PlayerHandProps {
   readonly oneTap?: boolean;
   /** How each card is animated for the current cue (SA-1). */
   readonly motionFor?: (card: CardId, index: number) => CardMotion | undefined;
+  /** The coach's suggested card (CO-1). */
+  readonly hinted?: CardId | null;
 }
 
 function bowerOf(card: CardId, trump: Suit | null): 'Right bower' | 'Left bower' | null {
@@ -37,13 +39,14 @@ export function PlayerHand({
   onChoose,
   oneTap = false,
   motionFor = () => undefined,
+  hinted = null,
 }: PlayerHandProps) {
   const [raised, setRaised] = useState<CardId | null>(null);
   const choosing = choosable.length > 0;
   const raisedCard = raised !== null && choosable.includes(raised) ? raised : null;
 
   return (
-    <div className="hand">
+    <div className="hand" style={{ '--count': cards.length } as CSSProperties}>
       {cards.map((card, index) => {
         const bower = bowerOf(card, trump);
         const badge = bower && <span className="bower-badge">{bower.split(' ')[0]}</span>;
@@ -53,7 +56,9 @@ export function PlayerHand({
             <button
               key={card}
               type="button"
-              className={`hand-slot hand-choice${isRaised ? ' raised' : ''}`}
+              className={`hand-slot hand-choice${isRaised ? ' raised' : ''}${
+                hinted === card ? ' hinted' : ''
+              }`}
               aria-label={bower ? `${cardLabel(card)}, ${bower.toLowerCase()}` : cardLabel(card)}
               aria-pressed={isRaised}
               onClick={() => {
