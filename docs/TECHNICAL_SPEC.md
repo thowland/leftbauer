@@ -722,7 +722,7 @@ The UI reads table state with `useSyncExternalStore(driver.subscribe, driver.sna
 - `AudioEngine` handles Web Audio playback, preloading from the asset manifest, the mute setting and unlocking audio on the first gesture (SA-3).
 - `AudioSink` is the `EventSink` that connects the two.
 
-*As built (Sprint 6):* sounds are small mono MP3s in `public/sounds/` (ADR-0005). `AudioEngine.unlockOn(window)` resumes the context on every tap or key press, so audio also recovers after iOS suspends it; sounds load on the first unlock and any that have not loaded are skipped, never played late. `AudioSink` matches `EventSink` structurally, since `audio/` may not import `session/`. The mute control is a Sound toggle beside Menu, stored as `Settings.soundOn`.
+*As built (Sprint 6):* sounds are small mono MP3s in `public/sounds/` (ADR-0005). `AudioEngine.unlockOn(window)` resumes the context on every tap or key press, so audio also recovers after iOS suspends it; sounds load on the first unlock and any that have not loaded are skipped, never played late. `AudioSink` matches `EventSink` structurally, since `audio/` may not import `session/`. The mute control is a Sound toggle beside Menu, stored as `Settings.soundOn`. Tests never make a sound: `?e2e` creates no `AudioEngine` (`?sound` restores it), Playwright's Chrome runs muted, and unit and component tests use a fake `SoundPlayer`.
 
 ### 9.4 Bot runner and worker
 

@@ -11,6 +11,7 @@ All notable changes to this project are recorded here, one section per sprint.
 - A Sound toggle on the table beside Menu (SA-3), saved with the settings. Audio starts on the first tap, as iOS requires.
 - Court cards now carry emblems: a crown for kings, a coronet for queens and the Bauer's hat for jacks. The 9 and 10 have tighter pip columns.
 - `?motion` keeps animation on under `?e2e`, for the animation tests. Animation is off when the device asks for reduced motion.
+- Tests are silent. Under `?e2e` the app creates no audio engine, so no sound is loaded or played; `?sound` turns it back on for a test that needs it. Playwright's Chrome also runs with `--mute-audio`. Unit and component tests only ever use a fake player.
 
 ### Fixed
 

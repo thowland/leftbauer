@@ -73,6 +73,18 @@ test.describe('animation (SA-1)', () => {
 });
 
 test.describe('sound (SA-3)', () => {
+  test('tests stay silent: no sound is loaded under ?e2e', async ({ page }) => {
+    const sounds: string[] = [];
+    page.on('request', (r) => {
+      if (r.url().includes('/sounds/')) sounds.push(r.url());
+    });
+    await open(page, 35);
+    await page.getByRole('button', { name: 'New game' }).click();
+    // Taps are what would unlock and load audio.
+    await playUntil(page, async () => (await page.locator('.trick').count()) > 0);
+    expect(sounds).toEqual([]);
+  });
+
   test('the mute control on the table persists across a reload', async ({ page }) => {
     const errors = await open(page, 34);
     await page.getByRole('button', { name: 'New game' }).click();
