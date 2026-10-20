@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { isLeftBower, isRightBower, type CardId, type Suit } from '../engine/cards';
 import { cardLabel } from '../assets/manifest';
 import { Card } from './Card';
+import type { CardMotion } from './motion';
 
 interface PlayerHandProps {
   /** Already sorted for display. */
@@ -12,6 +13,8 @@ interface PlayerHandProps {
   readonly onChoose: (card: CardId) => void;
   /** Play on the first tap instead of raising the card (GF-2). */
   readonly oneTap?: boolean;
+  /** How each card is animated for the current cue (SA-1). */
+  readonly motionFor?: (card: CardId, index: number) => CardMotion | undefined;
 }
 
 function bowerOf(card: CardId, trump: Suit | null): 'Right bower' | 'Left bower' | null {
@@ -27,14 +30,21 @@ function bowerOf(card: CardId, trump: Suit | null): 'Right bower' | 'Left bower'
  * card again to commit (or commit on the first tap with one-tap play).
  * Illegal cards are dimmed. Bowers carry a badge.
  */
-export function PlayerHand({ cards, trump, choosable, onChoose, oneTap = false }: PlayerHandProps) {
+export function PlayerHand({
+  cards,
+  trump,
+  choosable,
+  onChoose,
+  oneTap = false,
+  motionFor = () => undefined,
+}: PlayerHandProps) {
   const [raised, setRaised] = useState<CardId | null>(null);
   const choosing = choosable.length > 0;
   const raisedCard = raised !== null && choosable.includes(raised) ? raised : null;
 
   return (
     <div className="hand">
-      {cards.map((card) => {
+      {cards.map((card, index) => {
         const bower = bowerOf(card, trump);
         const badge = bower && <span className="bower-badge">{bower.split(' ')[0]}</span>;
         if (choosing && choosable.includes(card)) {
@@ -56,7 +66,7 @@ export function PlayerHand({ cards, trump, choosable, onChoose, oneTap = false }
               }}
             >
               {badge}
-              <Card card={card} className="hand-card" />
+              <Card card={card} className="hand-card" motion={motionFor(card, index)} />
             </button>
           );
         }
@@ -67,7 +77,7 @@ export function PlayerHand({ cards, trump, choosable, onChoose, oneTap = false }
             aria-disabled={choosing || undefined}
           >
             {badge}
-            <Card card={card} className="hand-card" />
+            <Card card={card} className="hand-card" motion={motionFor(card, index)} />
           </div>
         );
       })}

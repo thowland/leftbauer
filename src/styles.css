@@ -24,6 +24,8 @@ body {
 
 .app {
   height: 100%;
+  /* Cards in flight pass the screen edges; clip them, never scroll (SA-1). */
+  overflow: clip;
   color: var(--ink-on-felt);
   background: radial-gradient(
     ellipse at 50% 45%,
@@ -41,6 +43,9 @@ body {
 .table {
   --card-w: clamp(46px, min(17vw, 12.5dvh), 118px);
   --back-w: calc(var(--card-w) * 0.52);
+  /* How far a card travels between the center and a seat (SA-1). */
+  --reach-x: 38vw;
+  --reach-y: 34dvh;
 
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -86,19 +91,6 @@ body {
   white-space: nowrap;
 }
 
-/* Phones in portrait: the score needs the whole bar during play. */
-@media (max-width: 520px) {
-  .table .brand {
-    display: none;
-  }
-
-  .score {
-    flex: 1;
-    justify-content: space-between;
-    gap: 8px;
-  }
-}
-
 .score dt {
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -110,6 +102,41 @@ body {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
+}
+
+/* Phones in portrait: the score needs the whole bar during play. */
+@media (max-width: 520px) {
+  .table .brand {
+    display: none;
+  }
+
+  .score {
+    flex: 1;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .score div {
+    gap: 4px;
+  }
+
+  .score dt {
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+  }
+
+  .score dd {
+    font-size: 1.1rem;
+  }
+
+  .score-bar {
+    gap: 8px;
+  }
+
+  .score-controls {
+    gap: 6px;
+  }
 }
 
 .button {
@@ -138,6 +165,21 @@ body {
   padding: 0 12px;
   font-size: 0.85rem;
   white-space: nowrap;
+}
+
+.button-icon {
+  padding: 0 8px;
+}
+
+.sound-icon {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.score-controls {
+  display: flex;
+  gap: 8px;
 }
 
 .button:focus-visible {
@@ -313,6 +355,14 @@ body {
   position: absolute;
   right: 0;
   bottom: 0;
+}
+
+/* Phones in portrait: the trick fills the center's width; the empty felt is above it. */
+@media (max-width: 520px) {
+  .center-corner {
+    top: 0;
+    bottom: auto;
+  }
 }
 
 .kitty {
@@ -860,4 +910,66 @@ body {
   margin: 2px 0 0;
   font-size: 0.85rem;
   color: var(--ink-muted);
+}
+
+/*
+ * Animation (SA-1). The Presenter's cue adds these classes; durations come
+ * from themes/motion.ts as custom properties, and --dx/--dy point from the
+ * table's center toward a seat.
+ */
+.center-flight {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.flight-card {
+  width: var(--card-w);
+}
+
+@keyframes fly-in {
+  from {
+    transform: translate(calc(var(--dx) * var(--reach-x)), calc(var(--dy) * var(--reach-y)))
+      scale(0.8);
+    opacity: 0.3;
+  }
+}
+
+@keyframes fly-out {
+  to {
+    transform: translate(calc(var(--dx) * var(--reach-x)), calc(var(--dy) * var(--reach-y)))
+      scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes flip {
+  from {
+    transform: scaleX(0.05);
+  }
+}
+
+.fly-in {
+  animation: fly-in var(--flight) cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  animation-delay: calc(var(--step, 0) * var(--deal-stagger));
+}
+
+.fly-out {
+  animation: fly-out var(--flight) ease-in forwards;
+}
+
+.flip {
+  animation: flip var(--flip) ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fly-in,
+  .fly-out,
+  .flip {
+    animation: none;
+  }
 }

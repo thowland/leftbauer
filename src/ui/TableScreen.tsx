@@ -10,9 +10,11 @@ import { tricksWon } from '../engine/scoring';
 import { BidPanel } from './BidPanel';
 import { Card } from './Card';
 import { seatStatus, turnPrompt } from './describe';
+import type { Cue } from './game/presenter';
 import { LastTrickPeek } from './LastTrickPeek';
 import { PlayerHand } from './PlayerHand';
 import { namesOf, screenPosition, seatName, type SeatInfo } from './layout';
+import { dealt, flyFrom, flyTo, intoHand, type CardMotion } from './motion';
 import { SuitIcon } from './SuitIcon';
 
 interface TableScreenProps {
@@ -31,6 +33,8 @@ interface TableScreenProps {
   readonly oneTap?: boolean;
   /** The table was tapped away from any control: speed up the trick (GF-4). */
   readonly onHurry?: () => void;
+  /** The Presenter's current animation cue (SA-1). */
+  readonly cue?: Cue | null;
 }
 
 /** Taps on controls and cards are theirs, not a request to hurry. */
@@ -50,6 +54,7 @@ export function TableScreen({
   seats,
   oneTap = false,
   onHurry,
+  cue = null,
 }: TableScreenProps) {
   const human = view.seat;
   const us = teamOf(human);
@@ -97,7 +102,7 @@ export function TableScreen({
             </div>
           )}
         </dl>
-        {controls}
+        {controls !== undefined && <div className="score-controls">{controls}</div>}
       </header>
 
       {SEATS.filter((s) => s !== human).map((seat) => (
@@ -107,11 +112,12 @@ export function TableScreen({
           view={view}
           cards={revealed?.[seat] ?? null}
           info={seats?.[seat]}
+          cue={cue}
         />
       ))}
 
       <section className="center" aria-label="Table center">
-        <CenterContents view={view} />
+        <CenterContents view={view} cue={cue} />
         {view.phase === 'play' && (
           <div className="center-corner">
             <LastTrickPeek tricks={view.tricks} humanSeat={human} names={namesOf(seats)} />
@@ -141,6 +147,7 @@ export function TableScreen({
             choosable={choosable}
             onChoose={choose}
             oneTap={oneTap}
+            motionFor={(card, index) => dealt(cue, human, index, human) ?? intoHand(cue, card)}
           />
           {view.dealer === human && <DealerButton />}
         </div>
@@ -161,9 +168,10 @@ interface OtherSeatProps {
   readonly view: PlayerView;
   readonly cards: readonly CardId[] | null;
   readonly info: SeatInfo | undefined;
+  readonly cue: Cue | null;
 }
 
-function OtherSeat({ seat, view, cards, info }: OtherSeatProps) {
+function OtherSeat({ seat, view, cards, info, cue }: OtherSeatProps) {
   const position = screenPosition(seat, view.seat);
   const trump = view.contract?.trump ?? null;
   return (
@@ -176,11 +184,21 @@ function OtherSeat({ seat, view, cards, info }: OtherSeatProps) {
       <div className="seat-cards">
         <div className="backs">
           {cards
-            ? sortHand(cards, trump).map((card) => (
-                <Card key={card} card={card} className="back-card" />
+            ? sortHand(cards, trump).map((card, i) => (
+                <Card
+                  key={card}
+                  card={card}
+                  className="back-card"
+                  motion={dealt(cue, seat, i, view.seat)}
+                />
               ))
             : Array.from({ length: view.handSizes[seat] }, (_, i) => (
-                <Card key={i} card={null} className="back-card" />
+                <Card
+                  key={i}
+                  card={null}
+                  className="back-card"
+                  motion={dealt(cue, seat, i, view.seat)}
+                />
               ))}
         </div>
         {view.dealer === seat && <DealerButton />}
@@ -236,35 +254,86 @@ function DealerButton() {
 }
 
 /** The kitty while bidding; the trick (or the last one won) during play. */
-function CenterContents({ view }: { view: PlayerView }) {
+function CenterContents({ view, cue }: { view: PlayerView; cue: Cue | null }) {
+  const human = view.seat;
   if (view.phase === 'bidRound1' || view.phase === 'bidRound2') {
     const faceUp = view.upcardStatus === 'faceUp';
+    const deal = dealt(cue, null, 0, human);
     return (
       <>
         <div className="kitty">
           {[0, 1, 2].map((i) => (
-            <Card key={i} card={null} className="kitty-card" />
+            <Card key={i} card={null} className="kitty-card" motion={deal} />
           ))}
-          <Card card={faceUp ? view.upcard : null} className="upcard" />
+          <Card
+            card={faceUp ? view.upcard : null}
+            className="upcard"
+            motion={cue?.kind === 'turnDown' ? { className: 'flip', style: {} } : deal}
+          />
         </div>
         <p className="center-label">{faceUp ? 'Upcard' : 'Turned down'}</p>
       </>
     );
   }
   if (view.phase === 'dealerDiscard') {
-    return <p className="center-label">Dealer is discarding</p>;
+    return (
+      <>
+        {cue?.kind === 'pickup' && (
+          <div className="center-flight" aria-hidden="true">
+            <Card card={cue.card} className="flight-card" motion={flyTo(cue.dealer, human)} />
+          </div>
+        )}
+        <p className="center-label">Dealer is discarding</p>
+      </>
+    );
   }
   const trick = view.currentTrick ?? view.tricks.at(-1) ?? null;
-  return trick === null ? (
-    <p className="center-label">Lead</p>
-  ) : (
-    <TrickView trick={trick} humanSeat={view.seat} done={view.currentTrick === null} />
+  const previous = view.tricks.at(-1);
+  // Leading a new trick sweeps the last one to whoever won it.
+  const sweeping =
+    cue?.kind === 'play' && view.currentTrick?.plays.length === 1 && previous !== undefined
+      ? previous
+      : null;
+  return (
+    <>
+      {cue?.kind === 'discard' && (
+        <div className="center-flight" aria-hidden="true">
+          <Card card={null} className="flight-card" motion={flyFrom(cue.dealer, human)} />
+        </div>
+      )}
+      {sweeping !== null && sweeping.winner !== null && (
+        <div className="center-flight" aria-hidden="true">
+          <TrickView
+            trick={sweeping}
+            humanSeat={human}
+            done
+            motion={flyTo(sweeping.winner, human)}
+          />
+        </div>
+      )}
+      {trick === null ? (
+        <p className="center-label">Lead</p>
+      ) : (
+        <TrickView trick={trick} humanSeat={human} done={view.currentTrick === null} cue={cue} />
+      )}
+    </>
   );
 }
 
-function TrickView({ trick, humanSeat, done }: { trick: Trick; humanSeat: Seat; done: boolean }) {
+interface TrickViewProps {
+  readonly trick: Trick;
+  readonly humanSeat: Seat;
+  readonly done: boolean;
+  /** Animates the card just played. */
+  readonly cue?: Cue | null;
+  /** Moves the whole trick (the sweep). */
+  readonly motion?: CardMotion;
+}
+
+function TrickView({ trick, humanSeat, done, cue = null, motion }: TrickViewProps) {
+  const classes = ['trick', done && 'trick-done', motion?.className].filter(Boolean).join(' ');
   return (
-    <div className={`trick${done ? ' trick-done' : ''}`} aria-label={done ? 'Last trick' : 'Trick'}>
+    <div className={classes} style={motion?.style} aria-label={done ? 'Last trick' : 'Trick'}>
       {trick.plays.map(({ seat, card }) => (
         <div
           key={card}
@@ -272,7 +341,13 @@ function TrickView({ trick, humanSeat, done }: { trick: Trick; humanSeat: Seat; 
             trick.winner === seat ? ' trick-winner' : ''
           }`}
         >
-          <Card card={card} className="trick-card" />
+          <Card
+            card={card}
+            className="trick-card"
+            motion={
+              cue?.kind === 'play' && cue.card === card ? flyFrom(seat, humanSeat) : undefined
+            }
+          />
         </div>
       ))}
     </div>

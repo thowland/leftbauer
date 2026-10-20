@@ -1,8 +1,11 @@
 /**
  * Builds a table for one game from a `SavedGame`, new or resumed, with a
- * TableDriver to run it and a PersistenceSink to save it (PE-1).
+ * TableDriver to run it and its sinks: a PersistenceSink to save it
+ * (PE-1), an AudioSink for its sounds (SA-2) and the Presenter that
+ * animates it (SA-1).
  */
 
+import { AudioSink, type SoundPlayer } from '../../audio/audioSink';
 import { personaById } from '../../bots/personas';
 import type { GameEvent } from '../../engine/events';
 import { STANDARD_RULES } from '../../engine/rules';
@@ -25,7 +28,9 @@ import {
   type SavedGame,
 } from '../../state/savedGame';
 import { pacingFor, type Settings } from '../../state/settings';
+import type { Motion } from '../../themes/motion';
 import type { Rng } from '../../util/rng';
+import { Presenter } from './presenter';
 import type { SeatInfo } from '../layout';
 
 export interface TableOptions {
@@ -35,6 +40,10 @@ export interface TableOptions {
   readonly pacingMs: number;
   /** Where to save the game after every action; `null` to not save. */
   readonly storage: StorageLike | null;
+  /** Animation timing, or `null` for none (`?e2e`, reduced motion). */
+  readonly motion: Motion | null;
+  /** Where sounds play, or `null` for silence. */
+  readonly sound: SoundPlayer | null;
 }
 
 export interface GameTable {
@@ -47,6 +56,8 @@ export interface GameTable {
   readonly seats: readonly [SeatInfo, SeatInfo, SeatInfo, SeatInfo];
   /** With the driver's current state, everything needed to resume the game. */
   readonly setup: GameSetup;
+  /** The animation cue for the table (SA-1). */
+  readonly presenter: Presenter;
 }
 
 /** A new game with the current settings (GF-1). `seed` makes it reproducible. */
@@ -73,7 +84,7 @@ function buildTable(
   saved: SavedGame,
   shuffleRng: Rng,
   initialEvents: readonly GameEvent[],
-  { fast, pacingMs, storage }: TableOptions
+  { fast, pacingMs, storage, motion, sound }: TableOptions
 ): GameTable {
   const { seats } = saved;
   const runner = new InlineBotRunner();
@@ -90,7 +101,14 @@ function buildTable(
     return { name: persona.name, persona };
   };
   const setup: GameSetup = { seats, seed: saved.seed };
-  const sinks: EventSink[] = storage === null ? [] : [new PersistenceSink(storage, setup)];
+  const presenter = new Presenter(motion === null ? immediateScheduler : timerScheduler, motion);
+  // Save first, so a closed app loses nothing; then sound, which starts at
+  // once; then the Presenter, which holds the driver until cards land.
+  const sinks: EventSink[] = [
+    ...(storage === null ? [] : [new PersistenceSink(storage, setup)]),
+    ...(sound === null ? [] : [new AudioSink(sound)]),
+    presenter,
+  ];
 
   const driver = new TableDriver(
     {
@@ -109,5 +127,6 @@ function buildTable(
     initialEvents,
     seats: SEATS.map(infoAt) as unknown as GameTable['seats'],
     setup,
+    presenter,
   };
 }

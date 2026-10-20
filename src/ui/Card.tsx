@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { rankOf, suitOf, type CardId, type Rank, type Suit } from '../engine/cards';
 import { cardLabel, RANK_LABELS, suitColor, type DeckVariant } from '../assets/manifest';
+import type { CardMotion } from './motion';
 import { SuitIcon } from './SuitIcon';
 
 /** Card geometry in SVG user units (poker proportions, 2.5 × 3.5). */
@@ -29,13 +30,22 @@ interface CardProps {
   readonly card: CardId | null;
   readonly deck?: DeckVariant;
   readonly className?: string;
+  /** An animation from the Presenter's current cue (SA-1). */
+  readonly motion?: CardMotion | undefined;
 }
 
-export function Card({ card, deck = 'standard', className }: CardProps) {
-  const classes = ['card', className].filter(Boolean).join(' ');
+export function Card({ card, deck = 'standard', className, motion }: CardProps) {
+  const classes = ['card', className, motion?.className].filter(Boolean).join(' ');
+  const style = motion?.style;
   if (card === null) {
     return (
-      <svg className={classes} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Face-down card">
+      <svg
+        className={classes}
+        style={style}
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        aria-label="Face-down card"
+      >
         <CardBack />
       </svg>
     );
@@ -43,6 +53,7 @@ export function Card({ card, deck = 'standard', className }: CardProps) {
   return (
     <svg
       className={classes}
+      style={style}
       viewBox={`0 0 ${W} ${H}`}
       role="img"
       aria-label={cardLabel(card)}

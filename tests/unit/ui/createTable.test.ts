@@ -4,7 +4,13 @@ import { GAME_STORE } from '../../../src/state/savedGame';
 import { DEFAULT_SETTINGS, type Settings } from '../../../src/state/settings';
 import { newTable, resumeTable, type TableOptions } from '../../../src/ui/game/createTable';
 
-const FAST: TableOptions = { fast: true, pacingMs: 650, storage: null };
+const FAST: TableOptions = {
+  fast: true,
+  pacingMs: 650,
+  storage: null,
+  motion: null,
+  sound: null,
+};
 
 const settings = (change: Partial<Settings> = {}): Settings => ({ ...DEFAULT_SETTINGS, ...change });
 

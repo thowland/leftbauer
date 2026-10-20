@@ -141,7 +141,9 @@ export function SettingsScreen({
           />
           <span>
             Sound effects
-            <span className="settings-detail">Sound effects arrive in a coming update.</span>
+            <span className="settings-detail">
+              Shuffles, cards and the odd sting. Also on the table, beside Menu.
+            </span>
           </span>
         </label>
       </fieldset>
