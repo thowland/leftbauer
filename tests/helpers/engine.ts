@@ -1,9 +1,15 @@
 import type { Action } from '../../src/engine/actions';
 import { ALL_CARDS, type CardId } from '../../src/engine/cards';
-import { dealFrom } from '../../src/engine/deal';
+import { dealFrom, DEAL_PATTERN } from '../../src/engine/deal';
 import type { GameEvent } from '../../src/engine/events';
-import { applyAction, currentActor, dealNextHand, legalActions } from '../../src/engine/game';
-import { leftOf, type Seat } from '../../src/engine/seats';
+import {
+  applyAction,
+  currentActor,
+  dealNextHand,
+  handFromDeal,
+  legalActions,
+} from '../../src/engine/game';
+import { leftOf, seatsFrom, type Seat } from '../../src/engine/seats';
 import { STANDARD_RULES, type RuleSet } from '../../src/engine/rules';
 import type { GameState } from '../../src/engine/state';
 import type { Rng } from '../../src/util/rng';
@@ -21,27 +27,33 @@ export function gameFromDeck(
   dealer: Seat = 3,
   rules: RuleSet = STANDARD_RULES
 ): GameState {
-  const { hands, kitty } = dealFrom(deck, dealer);
   return {
     rules,
     score: [0, 0],
     dealer,
     handNumber: 1,
-    hand: {
-      dealer,
-      phase: { kind: 'bidRound1', toAct: leftOf(dealer) },
-      hands,
-      kitty,
-      upcardStatus: 'faceUp',
-      bids: [],
-      contract: null,
-      discard: null,
-      tricks: [],
-      currentTrick: null,
-    },
+    hand: handFromDeal(dealFrom(deck, dealer), dealer, rules),
     completedHands: [],
     winner: null,
   };
+}
+
+/**
+ * The deck order that deals exactly these hands (indexed by seat) and
+ * this kitty (upcard first) from `dealer`: the inverse of `dealFrom`.
+ */
+export function deckFor(
+  hands: readonly (readonly CardId[])[],
+  kitty: readonly CardId[],
+  dealer: Seat = 3
+): CardId[] {
+  const remaining = hands.map((h) => [...h]);
+  const order = seatsFrom(leftOf(dealer));
+  const deck: CardId[] = [];
+  for (const round of DEAL_PATTERN) {
+    round.forEach((size, i) => deck.push(...remaining[order[i]!]!.splice(0, size)));
+  }
+  return [...deck, ...kitty];
 }
 
 /** Apply an action that must be legal; collects events into `log` if given. */

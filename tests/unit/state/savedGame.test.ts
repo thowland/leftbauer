@@ -123,9 +123,49 @@ describe('isSavedGame', () => {
       tampered((b) => (b.game.hand.bids = null)),
       tampered((b) => (b.game.hand.tricks = null)),
       // Shaped right, but the engine cannot work with it.
-      tampered((b) => (b.game.rules.defendAlone = true)),
+      tampered((b) => (b.game.rules.farmersHand = null)),
+      tampered((b) => (b.game.hand.farmerSwap = { seat: 0, gave: ['ZZ'] })),
+      tampered((b) => (b.game.hand.contract = { trump: 'H' })),
+      tampered((b) => {
+        b.game.hand.phase = { kind: 'play', toAct: 0 };
+        b.game.hand.contract = { trump: 'H', maker: 0, round: 1, alone: false, loneDefender: null };
+        b.game.hand.currentTrick = { leader: 0, plays: null, winner: null };
+      }),
       tampered((b) => (b.game.hand.phase = { kind: 'mystery' })),
     ];
     corrupt.forEach((value, i) => expect(isSavedGame(value), `case ${i}`).toBe(false));
+  });
+});
+
+describe('saved game migrations', () => {
+  it('brings a version 1 save up to date', () => {
+    const current = saved();
+    const contract = { trump: 'H', maker: 1, round: 1, alone: false };
+    const v1 = JSON.parse(JSON.stringify(current));
+    v1.game.rules.farmersHand = null;
+    delete v1.game.hand.farmerSwap;
+    v1.game.hand.phase = { kind: 'play', toAct: 1 };
+    v1.game.hand.contract = contract;
+    const storage = memoryStorage();
+    storage.setItem(GAME_STORE.key, JSON.stringify({ schemaVersion: 1, ...v1 }));
+    const loaded = load(storage, GAME_STORE)!;
+    expect(loaded.game.rules).toEqual(STANDARD_RULES);
+    expect(loaded.game.hand.farmerSwap).toBeNull();
+    expect(loaded.game.hand.contract).toEqual({ ...contract, loneDefender: null });
+  });
+
+  it('keeps a version 1 save without a contract', () => {
+    const v1 = JSON.parse(JSON.stringify(saved()));
+    v1.game.rules.farmersHand = null;
+    delete v1.game.hand.farmerSwap;
+    const storage = memoryStorage();
+    storage.setItem(GAME_STORE.key, JSON.stringify({ schemaVersion: 1, ...v1 }));
+    expect(load(storage, GAME_STORE)?.game).toEqual(saved().game);
+  });
+
+  it('discards a version 1 blob with no game', () => {
+    const storage = memoryStorage();
+    storage.setItem(GAME_STORE.key, JSON.stringify({ schemaVersion: 1, seed: null }));
+    expect(load(storage, GAME_STORE)).toBeNull();
   });
 });

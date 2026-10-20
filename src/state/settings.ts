@@ -2,9 +2,10 @@
  * Settings — UI-1 (first pass), PE-3; Technical Spec §10.2.
  *
  * Stored under their own key, separately from the game (PE-3). Opponent
- * choice and difficulty apply when the next game starts; pacing and
- * one-tap play apply as soon as the table is next shown. Hints joined
- * in schema version 2; house rules and the deck join in Sprint 9.
+ * choice, difficulty and the house rules apply when the next game starts
+ * (a game keeps the rules it began with); pacing, one-tap play and the
+ * deck apply as soon as the table is next shown. Hints joined in schema
+ * version 2; house rules and the deck in version 3.
  *
  * Pure module: no DOM, no React, no storage.
  */
@@ -12,9 +13,13 @@
 import type { PersonaId, SkillLevel } from '../bots/bot';
 import { OPPONENT_IDS } from '../bots/personas';
 import { shuffle } from '../engine/deal';
+import { isRuleSet, STANDARD_RULES, type RuleSet } from '../engine/rules';
 import type { Pacing } from '../session/driver';
 import type { Rng } from '../util/rng';
 import { isRecord, type VersionedStore } from './persistence';
+
+/** The deck's suit colors; matches `assets/manifest` `DeckVariant`, which `state` may not import. */
+export type DeckChoice = 'standard' | 'fourColor';
 
 export type OpponentChoice = PersonaId | 'random';
 
@@ -37,6 +42,10 @@ export interface Settings {
   readonly soundOn: boolean;
   /** Show the Hint control (CO-3). */
   readonly hintsOn: boolean;
+  /** The house rules for the next new game (RU-10 to RU-16). */
+  readonly pendingRules: RuleSet;
+  /** Two-color or four-color suits (VP-3). */
+  readonly deck: DeckChoice;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -46,6 +55,8 @@ export const DEFAULT_SETTINGS: Settings = {
   oneTapPlay: false,
   soundOn: true,
   hintsOn: true,
+  pendingRules: STANDARD_RULES,
+  deck: 'standard',
 };
 
 export interface PacingOption {
@@ -105,16 +116,20 @@ export function isSettings(value: unknown): value is Settings {
     value.pacingMs <= 5000 &&
     typeof value.oneTapPlay === 'boolean' &&
     typeof value.soundOn === 'boolean' &&
-    typeof value.hintsOn === 'boolean'
+    typeof value.hintsOn === 'boolean' &&
+    isRuleSet(value.pendingRules) &&
+    (value.deck === 'standard' || value.deck === 'fourColor')
   );
 }
 
 export const SETTINGS_STORE: VersionedStore<Settings> = {
   key: 'leftbauer:settings',
-  schemaVersion: 2,
+  schemaVersion: 3,
   migrations: {
     // Version 2 added hints, on by default.
     1: (blob) => ({ ...blob, schemaVersion: 2, hintsOn: true }),
+    // Version 3 added house rules (standard to begin with) and the deck.
+    2: (blob) => ({ ...blob, schemaVersion: 3, pendingRules: STANDARD_RULES, deck: 'standard' }),
   },
   isValid: isSettings,
 };

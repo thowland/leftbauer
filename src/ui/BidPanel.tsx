@@ -18,6 +18,8 @@ const capitalize = (s: string) => s[0]!.toUpperCase() + s.slice(1);
 export function BidPanel({ legal, isDealer, onBid, hinted = null }: BidPanelProps) {
   const [alone, setAlone] = useState(false);
   const canOrder = legal.some((a) => a.type === 'orderUp');
+  // RU-14: the dealer's partner may order up only by going alone.
+  const orderAloneOnly = canOrder && !legal.some((a) => a.type === 'orderUp' && !a.alone);
   const callable = SUITS.filter((suit) =>
     legal.some((a) => a.type === 'callTrump' && a.suit === suit)
   );
@@ -32,9 +34,9 @@ export function BidPanel({ legal, isDealer, onBid, hinted = null }: BidPanelProp
         <button
           type="button"
           className={`button button-primary${mark(hinted?.type === 'orderUp')}`}
-          onClick={() => onBid({ type: 'orderUp', alone })}
+          onClick={() => onBid({ type: 'orderUp', alone: alone || orderAloneOnly })}
         >
-          {isDealer ? 'Pick it up' : 'Order it up'}
+          {isDealer ? 'Pick it up' : orderAloneOnly ? 'Order it up alone' : 'Order it up'}
         </button>
       )}
       {callable.map((suit: Suit) => (
@@ -52,7 +54,7 @@ export function BidPanel({ legal, isDealer, onBid, hinted = null }: BidPanelProp
           {capitalize(SUIT_NAMES[suit])}
         </button>
       ))}
-      {canGoAlone && (
+      {canGoAlone && !orderAloneOnly && (
         <label className={`alone-toggle${mark(hintedAlone)}`}>
           <input type="checkbox" checked={alone} onChange={(e) => setAlone(e.target.checked)} />
           Go alone

@@ -47,7 +47,8 @@ function table(ctx: DecisionContext): Table {
         ? null
         : { seat: winnerSeat, card: plays.find((p) => p.seat === winnerSeat)!.card },
     lastToPlay: plays.length + 1 === activeSeatCount(view.contract),
-    partnerStillToPlay: view.sittingOut !== partner && !plays.some((p) => p.seat === partner),
+    partnerStillToPlay:
+      !view.sittingOut.includes(partner) && !plays.some((p) => p.seat === partner),
   };
 }
 

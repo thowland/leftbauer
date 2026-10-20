@@ -76,6 +76,7 @@ How a game runs:
 4. Only `engine/cards.ts` decides a card's effective suit (the left bower).
 5. Nothing below `ui/` assumes the human sits in seat 0. `ui/layout.ts` `screenPosition` is the only seat-to-screen mapping.
 6. Tests never make sound (see Launch options). Unit and component tests use fake audio players.
+7. House rules never change mid-game: a `GameState` carries its own `RuleSet`, and `Settings.pendingRules` applies only to the next new game. The alone house rules are off while loners are off (`defendAloneActive`, `dealerPartnerMustGoAloneActive`).
 
 ## Sprint workflow
 

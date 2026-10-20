@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  assertSupportedRules,
+  dealerPartnerMustGoAloneActive,
+  defendAloneActive,
+  isRuleSet,
   STANDARD_RULES,
-  UnsupportedRuleError,
 } from '../../../src/engine/rules';
 
 describe('rule set', () => {
@@ -14,28 +15,25 @@ describe('rule set', () => {
       lonerSweepPoints: 4,
       defendAlone: false,
       dealerPartnerMustGoAlone: false,
-      farmersHand: null,
+      farmersHand: false,
     });
   });
 
-  it('accepts the rules implemented so far', () => {
-    expect(() =>
-      assertSupportedRules({
-        ...STANDARD_RULES,
-        stickTheDealer: true,
-        lonersAllowed: false,
-        lonerSweepPoints: 5,
-        targetScore: 5,
-      })
-    ).not.toThrow();
+  it('recognizes valid rule sets and rejects malformed ones', () => {
+    expect(isRuleSet(STANDARD_RULES)).toBe(true);
+    expect(isRuleSet({ ...STANDARD_RULES, targetScore: 5, lonerSweepPoints: 5 })).toBe(true);
+    expect(isRuleSet(null)).toBe(false);
+    expect(isRuleSet({ ...STANDARD_RULES, targetScore: 8 })).toBe(false);
+    expect(isRuleSet({ ...STANDARD_RULES, lonerSweepPoints: 3 })).toBe(false);
+    expect(isRuleSet({ ...STANDARD_RULES, farmersHand: null })).toBe(false);
   });
 
-  it.each(['defendAlone', 'dealerPartnerMustGoAlone'] as const)(
-    'rejects %s until Sprint 9',
-    (rule) => {
-      expect(() => assertSupportedRules({ ...STANDARD_RULES, [rule]: true })).toThrow(
-        UnsupportedRuleError
-      );
-    }
-  );
+  it('turns the alone house rules off along with loners (RU-16)', () => {
+    const all = { ...STANDARD_RULES, defendAlone: true, dealerPartnerMustGoAlone: true };
+    expect(defendAloneActive(all)).toBe(true);
+    expect(dealerPartnerMustGoAloneActive(all)).toBe(true);
+    const noLoners = { ...all, lonersAllowed: false };
+    expect(defendAloneActive(noLoners)).toBe(false);
+    expect(dealerPartnerMustGoAloneActive(noLoners)).toBe(false);
+  });
 });

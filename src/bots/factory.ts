@@ -12,6 +12,7 @@ import type { Bot, BotSpec } from './bot';
 import { conventionalBidding } from './conventions/bidding';
 import { conventionalCardPlay } from './conventions/cardPlay';
 import { conventionalDiscard } from './conventions/discard';
+import { conventionalFarmer } from './conventions/farmer';
 import { conventionalLoner } from './conventions/loner';
 import { HeuristicEvaluator } from './evaluate';
 import { personaById } from './personas';
@@ -24,6 +25,7 @@ import { SKILLS } from './skills';
 const CONVENTIONAL: PolicySet = {
   bidding: conventionalBidding,
   loner: conventionalLoner,
+  farmer: conventionalFarmer,
   discard: conventionalDiscard,
   cardPlay: conventionalCardPlay,
 };

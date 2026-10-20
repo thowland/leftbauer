@@ -48,7 +48,13 @@ describe('round one (RU-3)', () => {
   it('has the dealer pick up the upcard and discard when ordered up', () => {
     const log: GameEvent[] = [];
     let s = act(gameFromDeck(), 0, ORDER, log);
-    expect(s.hand.contract).toEqual({ trump: 'D', maker: 0, round: 1, alone: false });
+    expect(s.hand.contract).toEqual({
+      trump: 'D',
+      maker: 0,
+      round: 1,
+      alone: false,
+      loneDefender: null,
+    });
     expect(s.hand.upcardStatus).toBe('pickedUp');
     expect(s.hand.hands[3]).toHaveLength(6);
     expect(s.hand.hands[3]).toContain('JD');
@@ -84,13 +90,19 @@ describe("the dealer's partner going alone (RU-5, ADR-0004)", () => {
     const log: GameEvent[] = [];
     let s = act(gameFromDeck(), 0, PASS);
     s = act(s, 1, ORDER_ALONE, log);
-    expect(s.hand.contract).toEqual({ trump: 'D', maker: 1, round: 1, alone: true });
+    expect(s.hand.contract).toEqual({
+      trump: 'D',
+      maker: 1,
+      round: 1,
+      alone: true,
+      loneDefender: null,
+    });
     expect(s.hand.upcardStatus).toBe('setAside');
     expect(s.hand.hands[3]).not.toContain('JD');
     expect(s.hand.hands[3]).toHaveLength(5);
     expect(s.hand.phase).toEqual({ kind: 'play', toAct: 0 });
     expect(log.map((e) => e.type)).toEqual(['bidMade', 'trumpSet', 'upcardSetAside']);
-    expect(toPlayerView(s, 0).sittingOut).toBe(3);
+    expect(toPlayerView(s, 0).sittingOut).toEqual([3]);
   });
 
   it('still has the dealer pick up when an opponent goes alone', () => {
@@ -122,7 +134,13 @@ describe('round two (RU-4)', () => {
   it('starts play as soon as trump is named', () => {
     const log: GameEvent[] = [];
     const s = act(passRoundOne(), 0, { type: 'callTrump', suit: 'S', alone: false }, log);
-    expect(s.hand.contract).toEqual({ trump: 'S', maker: 0, round: 2, alone: false });
+    expect(s.hand.contract).toEqual({
+      trump: 'S',
+      maker: 0,
+      round: 2,
+      alone: false,
+      loneDefender: null,
+    });
     expect(s.hand.phase).toEqual({ kind: 'play', toAct: 0 });
     expect(s.hand.upcardStatus).toBe('turnedDown');
     expect(log.map((e) => e.type)).toEqual(['bidMade', 'trumpSet']);

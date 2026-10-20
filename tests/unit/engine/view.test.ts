@@ -18,8 +18,14 @@ describe('toPlayerView', () => {
   it('reports the contract, who sits out and the result', () => {
     let s = act(gameFromDeck(), 0, { type: 'pass' });
     s = act(s, 1, { type: 'orderUp', alone: true });
-    expect(toPlayerView(s, 2).contract).toEqual({ trump: 'D', maker: 1, round: 1, alone: true });
-    expect(toPlayerView(s, 2).sittingOut).toBe(3);
+    expect(toPlayerView(s, 2).contract).toEqual({
+      trump: 'D',
+      maker: 1,
+      round: 1,
+      alone: true,
+      loneDefender: null,
+    });
+    expect(toPlayerView(s, 2).sittingOut).toEqual([3]);
     expect(toPlayerView(s, 2).result).toBeNull();
     s = finishHand(s, (legal) => legal[0]!);
     const view = toPlayerView(s, 2);

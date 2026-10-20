@@ -15,8 +15,16 @@ interface PlayerHandProps {
   readonly oneTap?: boolean;
   /** How each card is animated for the current cue (SA-1). */
   readonly motionFor?: (card: CardId, index: number) => CardMotion | undefined;
-  /** The coach's suggested card (CO-1). */
-  readonly hinted?: CardId | null;
+  /** The coach's suggested cards (CO-1). */
+  readonly hinted?: readonly CardId[];
+  /**
+   * A farmer's hand (RU-15): every card toggles in and out of the three to
+   * swap, instead of being played.
+   */
+  readonly picking?: {
+    readonly picked: readonly CardId[];
+    readonly onToggle: (card: CardId) => void;
+  } | null;
 }
 
 function bowerOf(card: CardId, trump: Suit | null): 'Right bower' | 'Left bower' | null {
@@ -30,7 +38,8 @@ function bowerOf(card: CardId, trump: Suit | null): 'Right bower' | 'Left bower'
  * The human's hand — GF-2, UI-4. When a card must be chosen (to play or
  * discard), legal cards become buttons: tap once to raise, tap the raised
  * card again to commit (or commit on the first tap with one-tap play).
- * Illegal cards are dimmed. Bowers carry a badge.
+ * Illegal cards are dimmed. Bowers carry a badge. With a farmer's hand,
+ * tapping a card picks it for the swap instead.
  */
 export function PlayerHand({
   cards,
@@ -39,27 +48,43 @@ export function PlayerHand({
   onChoose,
   oneTap = false,
   motionFor = () => undefined,
-  hinted = null,
+  hinted = [],
+  picking = null,
 }: PlayerHandProps) {
   const [raised, setRaised] = useState<CardId | null>(null);
   const choosing = choosable.length > 0;
   const raisedCard = raised !== null && choosable.includes(raised) ? raised : null;
+  const hint = (card: CardId) => (hinted.includes(card) ? ' hinted' : '');
 
   return (
     <div className="hand" style={{ '--count': cards.length } as CSSProperties}>
       {cards.map((card, index) => {
         const bower = bowerOf(card, trump);
         const badge = bower && <span className="bower-badge">{bower.split(' ')[0]}</span>;
+        const label = bower ? `${cardLabel(card)}, ${bower.toLowerCase()}` : cardLabel(card);
+        if (picking !== null) {
+          const isPicked = picking.picked.includes(card);
+          return (
+            <button
+              key={card}
+              type="button"
+              className={`hand-slot hand-choice${isPicked ? ' raised' : ''}${hint(card)}`}
+              aria-label={label}
+              aria-pressed={isPicked}
+              onClick={() => picking.onToggle(card)}
+            >
+              <Card card={card} className="hand-card" motion={motionFor(card, index)} />
+            </button>
+          );
+        }
         if (choosing && choosable.includes(card)) {
           const isRaised = raisedCard === card;
           return (
             <button
               key={card}
               type="button"
-              className={`hand-slot hand-choice${isRaised ? ' raised' : ''}${
-                hinted === card ? ' hinted' : ''
-              }`}
-              aria-label={bower ? `${cardLabel(card)}, ${bower.toLowerCase()}` : cardLabel(card)}
+              className={`hand-slot hand-choice${isRaised ? ' raised' : ''}${hint(card)}`}
+              aria-label={label}
               aria-pressed={isRaised}
               onClick={() => {
                 if (isRaised || oneTap) {

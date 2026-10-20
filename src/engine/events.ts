@@ -30,6 +30,10 @@ export type GameEvent =
   | { readonly type: 'upcardTurnedDown'; readonly dealer: Seat }
   | { readonly type: 'upcardSetAside'; readonly dealer: Seat }
   | { readonly type: 'dealerDiscarded'; readonly dealer: Seat }
+  /** A farmer's hand was swapped with the kitty; the cards stay hidden (RU-15). */
+  | { readonly type: 'farmerSwapped'; readonly seat: Seat }
+  /** A defender's answer to defending alone (RU-13). */
+  | { readonly type: 'defendAloneChosen'; readonly seat: Seat; readonly accept: boolean }
   | {
       readonly type: 'cardPlayed';
       readonly seat: Seat;

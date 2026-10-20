@@ -61,7 +61,7 @@ Within each sprint, pure modules (engine, bots, coach, state) are written test-f
 | ~~When the dealer's partner goes alone, does the dealer still exchange with the upcard?~~ | Sprint 2 | **Decided:** no. The dealer lays down their hand, the upcard is turned over, and there is no discard. Recorded in ADR-0004. |
 | ~~Card art: code-drawn SVG faces, or an open-licensed deck~~ | Sprint 6 | **Decided:** keep and refine the code-drawn faces. Recorded in ADR-0005. |
 | ~~Sound sources (specific CC0 or open-licensed packs)~~ | Sprint 6 | **Decided:** Kenney's CC0 *Casino Audio* and *Music Jingles*. Recorded in ADR-0005. |
-| Farmer's hand mechanics | Sprint 9 | Off by default. It can slip to 1.1 if it stays undecided. |
+| Farmer's hand mechanics | Sprint 9 | Decided 2026-10-20: strict (five 9s and 10s), swap three with the kitty (ADR-0004). |
 | Domain and hosting account | Sprint 10 | |
 
 ## 4. Sprints

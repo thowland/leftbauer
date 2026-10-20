@@ -8,7 +8,6 @@
 import { AudioSink, type SoundPlayer } from '../../audio/audioSink';
 import { personaById } from '../../bots/personas';
 import type { GameEvent } from '../../engine/events';
-import { STANDARD_RULES } from '../../engine/rules';
 import { SEATS, type Seat } from '../../engine/seats';
 import { InlineBotRunner, type BotRunner } from '../../session/botRunner';
 import {
@@ -63,14 +62,14 @@ export interface GameTable {
   readonly presenter: Presenter;
 }
 
-/** A new game with the current settings (GF-1). `seed` makes it reproducible. */
+/** A new game with the current settings and house rules (GF-1). `seed` makes it reproducible. */
 export function newTable(
   settings: Settings,
   seed: number | null,
   options: TableOptions
 ): GameTable {
   const { saved, events, shuffleRng } = startGame({
-    rules: STANDARD_RULES,
+    rules: settings.pendingRules,
     skill: settings.skill,
     opponents: settings.opponents,
     seed,

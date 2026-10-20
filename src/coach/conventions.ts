@@ -34,6 +34,12 @@ const DESCRIPTIONS: Partial<Record<ReasonCode, string>> = {
   'bid-stuck': 'With “stick the dealer” on, a dealer who is stuck names its strongest suit.',
   'bid-pass-weak': 'Passes anything short of that.',
   'loner-strong': 'Goes alone only when its hand should take the tricks with no help.',
+  'bid-forced-alone':
+    'When the house rule says the dealer’s partner must go alone to order the dealer up, it orders up only on a hand that could win alone.',
+  'defend-alone-strong':
+    'Defends alone only when its hand should stop the makers with no help. Since the makers chose trump, that is rare.',
+  'farmer-swap':
+    'With a farmer’s hand, always swaps: it gives up its three lowest cards, keeping its tens and its longest suit.',
   'discard-make-void':
     'As dealer, discards a lone off-suit card (never an ace) to make a suit it can trump.',
   'discard-lowest': 'Otherwise discards its lowest card. It never throws a bower.',
@@ -61,6 +67,12 @@ const BIDDING: readonly ReasonCode[] = [
   'loner-strong',
 ];
 
+const HOUSE_RULES: readonly ReasonCode[] = [
+  'bid-forced-alone',
+  'defend-alone-strong',
+  'farmer-swap',
+];
+
 const summaries = (codes: readonly ReasonCode[]): ConventionSummary[] =>
   codes.flatMap((code) => {
     const text = DESCRIPTIONS[code];
@@ -75,6 +87,11 @@ export function partnerConventions(): readonly ConventionSection[] {
       intro:
         'Your partner counts how many tricks a hand should take. It calls a little more readily when the other side is one point from winning, and takes more chances when far behind.',
       conventions: summaries(BIDDING),
+    },
+    {
+      title: 'House rules',
+      intro: 'When these house rules are on, your partner plays them like this.',
+      conventions: summaries(HOUSE_RULES),
     },
     {
       title: 'The dealer’s discard',

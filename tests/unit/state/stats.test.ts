@@ -22,7 +22,7 @@ function after(contract: Contract): GameState {
   return { ...s, hand: { ...s.hand, contract } };
 }
 
-const mine: Contract = { trump: 'H', maker: 0, round: 1, alone: false };
+const mine: Contract = { trump: 'H', maker: 0, round: 1, alone: false, loneDefender: null };
 const partners: Contract = { ...mine, maker: 2 };
 const theirs: Contract = { ...mine, maker: 1 };
 

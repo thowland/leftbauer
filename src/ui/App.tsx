@@ -12,9 +12,9 @@ import {
   STATS_STORE,
   type Stats,
 } from '../state/stats';
-import { STANDARD_RULES } from '../engine/rules';
 import { CARD_ROOM, type Theme } from '../themes/cardRoom';
 import { MOTION, motionVars } from '../themes/motion';
+import { DeckContext } from './deck';
 import { DevApp } from './dev/DevApp';
 import { newTable, resumeTable, type GameTable, type TableOptions } from './game/createTable';
 import { GameScreen } from './GameScreen';
@@ -148,7 +148,7 @@ export function App({
           />
         );
       case 'rules':
-        return <RulesScreen rules={STANDARD_RULES} onDone={home} />;
+        return <RulesScreen rules={settings.pendingRules} onDone={home} />;
       case 'conventions':
         return <PartnerConventionsScreen onDone={home} />;
       case 'about':
@@ -170,6 +170,7 @@ export function App({
             settings={settings}
             onChange={changeSettings}
             doneLabel={screen.from === 'game' ? 'Back to the game' : 'Done'}
+            activeRules={screen.from === 'game' ? (paused?.game.rules ?? null) : null}
             onDone={() => (screen.from === 'game' ? resume(paused) : setScreen({ kind: 'home' }))}
           />
         );
@@ -200,7 +201,9 @@ export function App({
       data-theme={theme.id}
       style={{ ...theme.vars, ...motionVars(MOTION) } as CSSProperties}
     >
-      {dev ? <DevApp seed={seed} /> : content()}
+      <DeckContext.Provider value={settings.deck}>
+        {dev ? <DevApp seed={seed} /> : content()}
+      </DeckContext.Provider>
     </div>
   );
 }

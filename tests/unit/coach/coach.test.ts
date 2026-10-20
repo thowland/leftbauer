@@ -8,7 +8,8 @@ import { REASON_TEXT, renderReason } from '../../../src/coach/reasons';
 import { sameAction } from '../../../src/engine/actions';
 import { legalActions } from '../../../src/engine/game';
 import { toPlayerView } from '../../../src/engine/view';
-import { act, gameFromDeck } from '../../helpers/engine';
+import { STANDARD_RULES } from '../../../src/engine/rules';
+import { act, deckFor, gameFromDeck } from '../../helpers/engine';
 
 const bidding = gameFromDeck();
 const ordered = act(bidding, 0, { type: 'orderUp', alone: false });
@@ -50,6 +51,38 @@ describe('hintFor (CO-1)', () => {
       expect(legal.some((a) => sameAction(a, hint.action))).toBe(true);
       expect(hint.reasonText.length).toBeGreaterThan(10);
     }
+  });
+});
+
+describe('hintFor under house rules', () => {
+  it('suggests the farmer’s swap, defending alone and a forced loner', () => {
+    const farmer = gameFromDeck(
+      deckFor(
+        [
+          ['9S', 'TS', '9H', 'TH', '9C'],
+          ['JS', 'QS', 'KS', 'AS', 'TC'],
+          ['JH', 'QH', 'KH', 'AH', 'JC'],
+          ['QC', 'KC', 'AC', '9D', 'TD'],
+        ],
+        ['JD', 'QD', 'KD', 'AD']
+      ),
+      3,
+      { ...STANDARD_RULES, farmersHand: true }
+    );
+    expect(hintFor(toPlayerView(farmer, 0), legalActions(farmer, 0))).toMatchObject({
+      action: { type: 'farmerExchange', cards: ['9C', '9S', '9H'] },
+      code: 'farmer-swap',
+    });
+
+    const rules = { ...STANDARD_RULES, defendAlone: true, dealerPartnerMustGoAlone: true };
+    let s = act(gameFromDeck(undefined, 3, rules), 0, { type: 'orderUp', alone: false });
+    s = act(s, 3, { type: 'discard', card: 'AC' });
+    expect(hintFor(toPlayerView(s, 1), legalActions(s, 1)).code).toMatch(/^defend-alone-/);
+
+    const forced = act(gameFromDeck(undefined, 3, rules), 0, { type: 'pass' });
+    expect(hintFor(toPlayerView(forced, 1), legalActions(forced, 1)).code).toMatch(
+      /^bid-forced-alone|^bid-pass-weak/
+    );
   });
 });
 

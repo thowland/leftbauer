@@ -1,6 +1,7 @@
-import { useId, type ReactNode } from 'react';
+import { useContext, useId, type ReactNode } from 'react';
 import { rankOf, suitOf, type CardId, type Rank, type Suit } from '../engine/cards';
 import { cardLabel, RANK_LABELS, suitColor, type DeckVariant } from '../assets/manifest';
+import { DeckContext } from './deck';
 import type { CardMotion } from './motion';
 import { SuitIcon } from './SuitIcon';
 
@@ -28,13 +29,16 @@ function columnPips(): Pip[] {
 interface CardProps {
   /** The card to show, or `null` for a face-down card. */
   readonly card: CardId | null;
+  /** The deck to draw from; the app's chosen deck when omitted. */
   readonly deck?: DeckVariant;
   readonly className?: string;
   /** An animation from the Presenter's current cue (SA-1). */
   readonly motion?: CardMotion | undefined;
 }
 
-export function Card({ card, deck = 'standard', className, motion }: CardProps) {
+export function Card({ card, deck: chosen, className, motion }: CardProps) {
+  const appDeck = useContext(DeckContext);
+  const deck = chosen ?? appDeck;
   const classes = ['card', className, motion?.className].filter(Boolean).join(' ');
   const style = motion?.style;
   if (card === null) {

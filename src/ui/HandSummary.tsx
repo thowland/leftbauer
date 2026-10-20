@@ -29,6 +29,8 @@ export function HandSummary({ view, onContinue, names }: HandSummaryProps) {
         <p>
           {seatName(contract.maker, view.seat, names)} called {SUIT_NAMES[contract.trump]}
           {contract.alone ? ', alone' : ''}.
+          {contract.loneDefender !== null &&
+            ` ${seatName(contract.loneDefender, view.seat, names)} defended alone.`}
         </p>
       )}
       <p className="dialog-result">{describeResult(result, view.seat)}</p>

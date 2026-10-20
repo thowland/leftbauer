@@ -1,4 +1,4 @@
-import type { PointerEvent, ReactNode } from 'react';
+import { useState, type PointerEvent, type ReactNode } from 'react';
 import { isBidAction, type Action } from '../engine/actions';
 import { sortHand, type CardId } from '../engine/cards';
 import type { Hands } from '../engine/deal';
@@ -12,8 +12,10 @@ import { Card } from './Card';
 import { seatStatus, turnPrompt } from './describe';
 import type { Hint } from '../coach/hint';
 import type { Cue } from './game/presenter';
+import { DefendAlonePanel, FarmerPanel } from './HouseRulePanels';
 import { LastTrickPeek } from './LastTrickPeek';
 import { PlayerHand } from './PlayerHand';
+import { RulesChip } from './RulesChip';
 import { namesOf, screenPosition, seatName, type SeatInfo } from './layout';
 import { dealt, flyFrom, flyTo, intoHand, type CardMotion } from './motion';
 import { SuitIcon } from './SuitIcon';
@@ -73,6 +75,31 @@ export function TableScreen({
   );
   const choose = (card: CardId) =>
     onAction(view.phase === 'dealerDiscard' ? { type: 'discard', card } : { type: 'play', card });
+  // A farmer's hand: the cards picked to swap, for this hand only.
+  const farmer = legal?.some((a) => a.type === 'farmerExchange') ?? false;
+  const defending = legal?.some((a) => a.type === 'defendAlone') ?? false;
+  const [picks, setPicks] = useState<{ hand: number; cards: readonly CardId[] }>({
+    hand: 0,
+    cards: [],
+  });
+  const picked = farmer && picks.hand === view.handNumber ? picks.cards : [];
+  const togglePick = (card: CardId) =>
+    setPicks({
+      hand: view.handNumber,
+      cards: picked.includes(card)
+        ? picked.filter((c) => c !== card)
+        : picked.length < 3
+          ? [...picked, card]
+          : picked,
+    });
+  const hintedCards =
+    hint === null
+      ? []
+      : hint.action.type === 'play' || hint.action.type === 'discard'
+        ? [hint.action.card]
+        : hint.action.type === 'farmerExchange'
+          ? hint.action.cards
+          : [];
   const tricks = tricksWon(view.tricks);
   const hurry = (event: PointerEvent<HTMLElement>) => {
     if (!(event.target as Element).closest(CONTROLS)) onHurry?.();
@@ -125,6 +152,9 @@ export function TableScreen({
 
       <section className="center" aria-label="Table center">
         <CenterContents view={view} cue={cue} />
+        <div className="center-rules">
+          <RulesChip rules={view.rules} />
+        </div>
         <div className="center-corner">
           {onHint !== undefined && legal !== null && (
             <button
@@ -154,6 +184,20 @@ export function TableScreen({
             hinted={hint !== null && isBidAction(hint.action) ? hint.action : null}
           />
         )}
+        {farmer && (
+          <FarmerPanel
+            picked={picked}
+            onSwap={() => onAction({ type: 'farmerExchange', cards: picked })}
+            onKeep={() => onAction({ type: 'farmerExchange', cards: [] })}
+            hinted={hint?.action ?? null}
+          />
+        )}
+        {defending && (
+          <DefendAlonePanel
+            onChoose={(accept) => onAction({ type: 'defendAlone', accept })}
+            hinted={hint?.action ?? null}
+          />
+        )}
       </section>
 
       <section
@@ -170,11 +214,8 @@ export function TableScreen({
             onChoose={choose}
             oneTap={oneTap}
             motionFor={(card, index) => dealt(cue, human, index, human) ?? intoHand(cue, card)}
-            hinted={
-              hint !== null && (hint.action.type === 'play' || hint.action.type === 'discard')
-                ? hint.action.card
-                : null
-            }
+            hinted={hintedCards}
+            picking={farmer ? { picked, onToggle: togglePick } : null}
           />
           {view.dealer === human && <DealerButton />}
         </div>
@@ -186,7 +227,7 @@ export function TableScreen({
 function seatClasses(position: string, view: PlayerView, seat: Seat): string {
   const classes = ['seat', `seat-${position}`];
   if (view.toAct === seat) classes.push('seat-active');
-  if (view.sittingOut === seat) classes.push('seat-out');
+  if (view.sittingOut.includes(seat)) classes.push('seat-out');
   return classes.join(' ');
 }
 
@@ -283,7 +324,7 @@ function DealerButton() {
 /** The kitty while bidding; the trick (or the last one won) during play. */
 function CenterContents({ view, cue }: { view: PlayerView; cue: Cue | null }) {
   const human = view.seat;
-  if (view.phase === 'bidRound1' || view.phase === 'bidRound2') {
+  if (view.phase === 'farmer' || view.phase === 'bidRound1' || view.phase === 'bidRound2') {
     const faceUp = view.upcardStatus === 'faceUp';
     const deal = dealt(cue, null, 0, human);
     return (

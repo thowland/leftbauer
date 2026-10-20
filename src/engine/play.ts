@@ -2,7 +2,8 @@
  * Trick play — RU-5, RU-6, RU-7.
  *
  * Leading, following suit (the left bower counts as trump), resolving
- * tricks, and leading around a seat that sits out a loner.
+ * tricks, and leading around the seats that sit out a loner or a lone
+ * defence.
  *
  * Pure module: no DOM, no React, no storage.
  */
@@ -17,18 +18,28 @@ import { withSeatCards, type Contract, type HandState, type Trick } from './stat
 
 export const TRICKS_PER_HAND = 5;
 
-/** The seat sitting out this hand, if the maker went alone. */
-export function sittingOut(contract: Contract | null): Seat | null {
-  return contract?.alone ? partnerOf(contract.maker) : null;
+/**
+ * The seats sitting out this hand: the partner of a lone maker, and the
+ * partner of a lone defender (RU-13).
+ */
+export function sittingOut(contract: Contract | null): Seat[] {
+  if (contract === null) return [];
+  const out: Seat[] = [];
+  if (contract.alone) out.push(partnerOf(contract.maker));
+  if (contract.loneDefender !== null) out.push(partnerOf(contract.loneDefender));
+  return out;
 }
 
 export function activeSeatCount(contract: Contract | null): number {
-  return sittingOut(contract) === null ? 4 : 3;
+  return 4 - sittingOut(contract).length;
 }
 
 /** `seat` itself if it is playing this hand, otherwise the next active seat clockwise. */
 export function firstActiveFrom(seat: Seat, contract: Contract | null): Seat {
-  return seat === sittingOut(contract) ? leftOf(seat) : seat;
+  const out = sittingOut(contract);
+  let s = seat;
+  while (out.includes(s)) s = leftOf(s);
+  return s;
 }
 
 /** The next seat clockwise after `seat` that is playing this hand. */

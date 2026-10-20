@@ -14,7 +14,7 @@
 import type { SkillLevel } from '../bots/bot';
 import type { GameEvent } from '../engine/events';
 import { leftOf, teamOf, type Seat } from '../engine/seats';
-import type { GameState } from '../engine/state';
+import { EUCHRE_OUTCOMES, type GameState } from '../engine/state';
 import type { EventSink } from '../session/driver';
 import { isRecord, load, save, type StorageLike, type VersionedStore } from './persistence';
 import type { SeatSetup } from './savedGame';
@@ -84,7 +84,7 @@ export function applyToStats(
     if (event.type !== 'handScored' || event.result.kind !== 'scored') continue;
     const { result } = event;
     t.handsPlayed++;
-    const euchred = result.outcome === 'euchred' || result.outcome === 'euchredAlone';
+    const euchred = EUCHRE_OUTCOMES.includes(result.outcome);
     if (euchred) {
       if (result.makers === us) t.euchresTaken++;
       else t.euchresGiven++;

@@ -43,8 +43,8 @@ describe('leading (PB-4)', () => {
     expect(play(makeView({ myHand: hand })).reason).not.toBe('lead-boss-trump');
     const alone = makeView({
       myHand: hand,
-      contract: { trump: 'H', maker: 0, round: 2, alone: true },
-      sittingOut: 2,
+      contract: { trump: 'H', maker: 0, round: 2, alone: true, loneDefender: null },
+      sittingOut: [2],
     });
     expect(play(alone)).toEqual({ card: 'JH', reason: 'lead-boss-trump' });
   });
@@ -52,7 +52,7 @@ describe('leading (PB-4)', () => {
   it('leads trump back to a partner who called', () => {
     const view = makeView({
       myHand: ['TH', '9H', 'AS', '9C', 'KD'],
-      contract: { trump: 'H', maker: 2, round: 1, alone: false },
+      contract: { trump: 'H', maker: 2, round: 1, alone: false, loneDefender: null },
     });
     expect(play(view)).toEqual({ card: 'TH', reason: 'lead-trump-to-partner' });
   });
@@ -60,7 +60,7 @@ describe('leading (PB-4)', () => {
   it('cashes an off-suit ace, avoiding a suit an opponent is void in', () => {
     const view = makeView({
       myHand: ['AS', 'AC', '9D', 'TD'],
-      contract: { trump: 'H', maker: 1, round: 1, alone: false },
+      contract: { trump: 'H', maker: 1, round: 1, alone: false, loneDefender: null },
       handSizes: [4, 4, 4, 4],
       tricks: [
         {
@@ -81,7 +81,7 @@ describe('leading (PB-4)', () => {
   it('defends by leading low from the shortest plain suit', () => {
     const view = makeView({
       myHand: ['QS', 'KC', '9C', 'TH', 'QD'],
-      contract: { trump: 'H', maker: 1, round: 1, alone: false },
+      contract: { trump: 'H', maker: 1, round: 1, alone: false, loneDefender: null },
     });
     // Spades and diamonds are singletons; the queens tie, so either is fine but not trump.
     const { card, reason } = play(view);
@@ -102,7 +102,7 @@ describe('following (PB-4)', () => {
       myHand: ['AS', '9S', 'JH'],
       handSizes: [3, 3, 3, 3],
       currentTrick: trickOf([0, 'TS'], [1, 'AC'], [2, 'KS']),
-      contract: { trump: 'H', maker: 0, round: 1, alone: false },
+      contract: { trump: 'H', maker: 0, round: 1, alone: false, loneDefender: null },
     });
     // Seat 3's partner is seat 1, who is not winning; check with seat 1's view instead.
     const partnerWinning = makeView({
@@ -132,7 +132,7 @@ describe('following (PB-4)', () => {
       myHand: ['AS', 'TS', '9C'],
       handSizes: [3, 3, 3, 3],
       currentTrick: trickOf([0, '9S']),
-      contract: { trump: 'H', maker: 0, round: 1, alone: false },
+      contract: { trump: 'H', maker: 0, round: 1, alone: false, loneDefender: null },
     });
     expect(play(view)).toEqual({ card: 'AS', reason: 'follow-win-cheaply' });
   });
@@ -143,7 +143,7 @@ describe('following (PB-4)', () => {
       myHand: ['QH', '9H', 'AC'],
       handSizes: [3, 3, 3, 3],
       currentTrick: trickOf([0, 'AS'], [1, 'KS'], [2, '9S']),
-      contract: { trump: 'H', maker: 3, round: 1, alone: false },
+      contract: { trump: 'H', maker: 3, round: 1, alone: false, loneDefender: null },
     });
     expect(play(view)).toEqual({ card: '9H', reason: 'follow-win-cheaply' });
   });
@@ -154,7 +154,7 @@ describe('following (PB-4)', () => {
       myHand: ['QH', '9C', 'TD'],
       handSizes: [3, 3, 3, 3],
       currentTrick: trickOf([0, 'KS']),
-      contract: { trump: 'H', maker: 0, round: 1, alone: false },
+      contract: { trump: 'H', maker: 0, round: 1, alone: false, loneDefender: null },
     });
     expect(play(view, { defensiveCaution: SAVE_TRUMP_CAUTION })).toEqual({
       card: '9C',
@@ -172,7 +172,7 @@ describe('following (PB-4)', () => {
       myHand: ['9S', 'TS', 'JH'],
       handSizes: [3, 3, 3, 3],
       currentTrick: trickOf([0, 'AS'], [1, 'KS'], [2, 'QS']),
-      contract: { trump: 'H', maker: 1, round: 1, alone: false },
+      contract: { trump: 'H', maker: 1, round: 1, alone: false, loneDefender: null },
     });
     expect(play(view)).toEqual({ card: '9S', reason: 'follow-throw-low' });
   });

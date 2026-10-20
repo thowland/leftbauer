@@ -7,6 +7,7 @@ import { BY_THE_BOOK } from '../../../src/bots/personas';
 import { bestSelector } from '../../../src/bots/selectors';
 import { conventionalBidding } from '../../../src/bots/conventions/bidding';
 import { conventionalDiscard } from '../../../src/bots/conventions/discard';
+import { conventionalFarmer } from '../../../src/bots/conventions/farmer';
 import { conventionalLoner } from '../../../src/bots/conventions/loner';
 import { currentActor, legalActions } from '../../../src/engine/game';
 import { toPlayerView } from '../../../src/engine/view';
@@ -80,6 +81,7 @@ describe('PolicyBot', () => {
       policies: {
         bidding: conventionalBidding,
         loner: conventionalLoner,
+        farmer: conventionalFarmer,
         discard: conventionalDiscard,
         cardPlay: { play: () => [{ value: '9S', score: 1, reason: { code: 'lead-lowest' } }] },
       },

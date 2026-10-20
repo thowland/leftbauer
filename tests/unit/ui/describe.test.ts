@@ -65,7 +65,7 @@ describe('describeEvent', () => {
     expect(d({ type: 'gameOver', winner: 0, score: [10, 4] })).toBe('We win the game.');
     expect(d({ type: 'gameOver', winner: 1, score: [4, 10] })).toBe('They win the game.');
     const result = scoreHand(
-      { trump: 'H', maker: 1, round: 1, alone: false },
+      { trump: 'H', maker: 1, round: 1, alone: false, loneDefender: null },
       tricks(1, 3, 1, 0, 2),
       STANDARD_RULES
     );
@@ -74,16 +74,44 @@ describe('describeEvent', () => {
     );
   });
 
+  it('describes the house rules’ moments, but not a defender declining', () => {
+    expect(d({ type: 'farmerSwapped', seat: 1 })).toBe(
+      'Left opponent swaps a farmer’s hand: three cards for the kitty.'
+    );
+    expect(d({ type: 'farmerSwapped', seat: 0 })).toBe(
+      'You swap a farmer’s hand: three cards for the kitty.'
+    );
+    expect(d({ type: 'defendAloneChosen', seat: 0, accept: true })).toBe('You defend alone.');
+    expect(d({ type: 'defendAloneChosen', seat: 3, accept: false })).toBeNull();
+    const result = scoreHand(
+      { trump: 'H', maker: 1, round: 1, alone: false, loneDefender: 0 },
+      tricks(0, 0, 0, 1, 1),
+      STANDARD_RULES
+    );
+    expect(d({ type: 'handScored', result, score: [4, 0] })).toBe(
+      'They were euchred by a lone defender (tricks 3–2): 4 points to us.'
+    );
+  });
+
   it('stays quiet about events another line already covers', () => {
     expect(
-      d({ type: 'trumpSet', contract: { trump: 'H', maker: 0, round: 1, alone: false } })
+      d({
+        type: 'trumpSet',
+        contract: { trump: 'H', maker: 0, round: 1, alone: false, loneDefender: null },
+      })
     ).toBeNull();
     expect(d({ type: 'upcardPickedUp', dealer: 3 })).toBeNull();
   });
 });
 
 describe('describeResult', () => {
-  const contract = { trump: 'H' as const, maker: 0 as const, round: 1 as const, alone: false };
+  const contract = {
+    trump: 'H' as const,
+    maker: 0 as const,
+    round: 1 as const,
+    alone: false,
+    loneDefender: null,
+  };
 
   it('counts tricks from the human team’s side', () => {
     const result = scoreHand(contract, tricks(1, 1, 3, 0, 1), STANDARD_RULES);
@@ -161,7 +189,13 @@ describe('turnPrompt', () => {
 
 describe('gameHighlights', () => {
   it('tallies marches, loners and euchres for each team', () => {
-    const contract = { trump: 'H' as const, maker: 0 as const, round: 1 as const, alone: false };
+    const contract = {
+      trump: 'H' as const,
+      maker: 0 as const,
+      round: 1 as const,
+      alone: false,
+      loneDefender: null,
+    };
     const results = [
       scoreHand(contract, tricks(0, 0, 0, 2, 2), STANDARD_RULES), // our march
       scoreHand({ ...contract, alone: true }, tricks(0, 0, 0, 1, 0), STANDARD_RULES), // our loner
