@@ -19,8 +19,17 @@ describe('settings (UI-1, PE-3)', () => {
       pacingMs: 650,
       oneTapPlay: false,
       soundOn: true,
+      hintsOn: true,
     });
     expect(PACING_OPTIONS.map((p) => p.ms)).toContain(DEFAULT_SETTINGS.pacingMs);
+  });
+
+  it('migrates version 1 settings, turning hints on', () => {
+    const { hintsOn: _, ...v1 } = DEFAULT_SETTINGS;
+    const storage = memoryStorage({
+      'leftbauer:settings': JSON.stringify({ schemaVersion: 1, ...v1, oneTapPlay: true }),
+    });
+    expect(load(storage, SETTINGS_STORE)).toEqual({ ...DEFAULT_SETTINGS, oneTapPlay: true });
   });
 
   it('round-trips through storage', () => {

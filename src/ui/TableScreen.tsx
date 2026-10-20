@@ -10,6 +10,7 @@ import { tricksWon } from '../engine/scoring';
 import { BidPanel } from './BidPanel';
 import { Card } from './Card';
 import { seatStatus, turnPrompt } from './describe';
+import type { Hint } from '../coach/hint';
 import type { Cue } from './game/presenter';
 import { LastTrickPeek } from './LastTrickPeek';
 import { PlayerHand } from './PlayerHand';
@@ -35,6 +36,10 @@ interface TableScreenProps {
   readonly onHurry?: () => void;
   /** The Presenter's current animation cue (SA-1). */
   readonly cue?: Cue | null;
+  /** Ask the coach (CO-1); the Hint control is hidden when omitted (CO-3). */
+  readonly onHint?: (() => void) | undefined;
+  /** The coach's suggestion for this turn, shown in place. */
+  readonly hint?: Hint | null;
 }
 
 /** Taps on controls and cards are theirs, not a request to hurry. */
@@ -55,6 +60,8 @@ export function TableScreen({
   oneTap = false,
   onHurry,
   cue = null,
+  onHint,
+  hint = null,
 }: TableScreenProps) {
   const human = view.seat;
   const us = teamOf(human);
@@ -118,19 +125,34 @@ export function TableScreen({
 
       <section className="center" aria-label="Table center">
         <CenterContents view={view} cue={cue} />
-        {view.phase === 'play' && (
-          <div className="center-corner">
+        <div className="center-corner">
+          {onHint !== undefined && legal !== null && (
+            <button
+              type="button"
+              className="button button-small"
+              onClick={onHint}
+              disabled={hint !== null}
+            >
+              Hint
+            </button>
+          )}
+          {view.phase === 'play' && (
             <LastTrickPeek tricks={view.tricks} humanSeat={human} names={namesOf(seats)} />
-          </div>
-        )}
+          )}
+        </div>
       </section>
 
       <section className="action-bar" aria-label="Your turn">
-        <p className="turn-prompt" aria-live="polite">
-          {turnPrompt(view, legal, namesOf(seats))}
+        <p className={`turn-prompt${hint ? ' hint-text' : ''}`} aria-live="polite">
+          {hint ? `Hint: ${hint.reasonText}` : turnPrompt(view, legal, namesOf(seats))}
         </p>
         {bids.length > 0 && (
-          <BidPanel legal={bids} isDealer={view.dealer === human} onBid={onAction} />
+          <BidPanel
+            legal={bids}
+            isDealer={view.dealer === human}
+            onBid={onAction}
+            hinted={hint !== null && isBidAction(hint.action) ? hint.action : null}
+          />
         )}
       </section>
 
@@ -148,6 +170,11 @@ export function TableScreen({
             onChoose={choose}
             oneTap={oneTap}
             motionFor={(card, index) => dealt(cue, human, index, human) ?? intoHand(cue, card)}
+            hinted={
+              hint !== null && (hint.action.type === 'play' || hint.action.type === 'discard')
+                ? hint.action.card
+                : null
+            }
           />
           {view.dealer === human && <DealerButton />}
         </div>

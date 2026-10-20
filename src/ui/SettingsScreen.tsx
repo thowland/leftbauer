@@ -135,6 +135,23 @@ export function SettingsScreen({
       </fieldset>
 
       <fieldset className="settings-group">
+        <legend>Coach</legend>
+        <label className="settings-choice">
+          <input
+            type="checkbox"
+            checked={settings.hintsOn}
+            onChange={(e) => set({ hintsOn: e.target.checked })}
+          />
+          <span>
+            Hints
+            <span className="settings-detail">
+              A Hint button on your turn shows what your partner would do, and why.
+            </span>
+          </span>
+        </label>
+      </fieldset>
+
+      <fieldset className="settings-group">
         <legend>Sound</legend>
         <label className="settings-choice">
           <input

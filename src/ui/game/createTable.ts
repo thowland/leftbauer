@@ -1,8 +1,8 @@
 /**
  * Builds a table for one game from a `SavedGame`, new or resumed, with a
  * TableDriver to run it and its sinks: a PersistenceSink to save it
- * (PE-1), an AudioSink for its sounds (SA-2) and the Presenter that
- * animates it (SA-1).
+ * (PE-1), a StatsSink to count it (PE-2), an AudioSink for its sounds
+ * (SA-2) and the Presenter that animates it (SA-1).
  */
 
 import { AudioSink, type SoundPlayer } from '../../audio/audioSink';
@@ -28,6 +28,7 @@ import {
   type SavedGame,
 } from '../../state/savedGame';
 import { pacingFor, type Settings } from '../../state/settings';
+import { opponentSkill, StatsSink } from '../../state/stats';
 import type { Motion } from '../../themes/motion';
 import type { Rng } from '../../util/rng';
 import { Presenter } from './presenter';
@@ -106,7 +107,12 @@ function buildTable(
   // Save first, so a closed app loses nothing; then sound, which starts at
   // once; then the Presenter, which holds the driver until cards land.
   const sinks: EventSink[] = [
-    ...(storage === null ? [] : [new PersistenceSink(storage, setup)]),
+    ...(storage === null
+      ? []
+      : [
+          new PersistenceSink(storage, setup),
+          new StatsSink(storage, seats.humanSeat, opponentSkill(seats)),
+        ]),
     ...(sound === null ? [] : [new AudioSink(sound)]),
     presenter,
   ];

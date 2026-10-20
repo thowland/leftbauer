@@ -3,8 +3,8 @@
  *
  * Stored under their own key, separately from the game (PE-3). Opponent
  * choice and difficulty apply when the next game starts; pacing and
- * one-tap play apply as soon as the table is next shown. Hints, house
- * rules and the deck join in Sprints 8 and 9, each with a migration.
+ * one-tap play apply as soon as the table is next shown. Hints joined
+ * in schema version 2; house rules and the deck join in Sprint 9.
  *
  * Pure module: no DOM, no React, no storage.
  */
@@ -33,8 +33,10 @@ export interface Settings {
   readonly pacingMs: number;
   /** Play a card on the first tap instead of raising it (GF-2). */
   readonly oneTapPlay: boolean;
-  /** Sound effects (SA-3); wired up in Sprint 6. */
+  /** Sound effects (SA-3). */
   readonly soundOn: boolean;
+  /** Show the Hint control (CO-3). */
+  readonly hintsOn: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -43,6 +45,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pacingMs: 650,
   oneTapPlay: false,
   soundOn: true,
+  hintsOn: true,
 };
 
 export interface PacingOption {
@@ -101,13 +104,17 @@ export function isSettings(value: unknown): value is Settings {
     value.pacingMs >= 0 &&
     value.pacingMs <= 5000 &&
     typeof value.oneTapPlay === 'boolean' &&
-    typeof value.soundOn === 'boolean'
+    typeof value.soundOn === 'boolean' &&
+    typeof value.hintsOn === 'boolean'
   );
 }
 
 export const SETTINGS_STORE: VersionedStore<Settings> = {
   key: 'leftbauer:settings',
-  schemaVersion: 1,
-  migrations: {},
+  schemaVersion: 2,
+  migrations: {
+    // Version 2 added hints, on by default.
+    1: (blob) => ({ ...blob, schemaVersion: 2, hintsOn: true }),
+  },
   isValid: isSettings,
 };
