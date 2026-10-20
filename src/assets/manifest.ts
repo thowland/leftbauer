@@ -62,3 +62,53 @@ export function suitColor(suit: Suit, variant: DeckVariant): string {
 export function cardLabel(card: CardId): string {
   return `${RANK_NAMES[rankOf(card)]} of ${SUIT_NAMES[suitOf(card)]}`;
 }
+
+/** Every sound the table can make (SA-2). */
+export type SoundId = 'shuffle' | 'deal' | 'card' | 'sweep' | 'trump' | 'euchre' | 'flourish';
+
+export interface SoundAsset {
+  /** Path under the site root (`public/`). */
+  readonly file: string;
+  /** Playback gain, 0 to 1, balancing the sounds against each other. */
+  readonly gain: number;
+}
+
+export const SOUNDS: Record<SoundId, SoundAsset> = {
+  shuffle: { file: 'sounds/shuffle.mp3', gain: 0.7 },
+  deal: { file: 'sounds/deal.mp3', gain: 0.6 },
+  card: { file: 'sounds/card.mp3', gain: 0.8 },
+  sweep: { file: 'sounds/sweep.mp3', gain: 0.6 },
+  trump: { file: 'sounds/trump.mp3', gain: 0.5 },
+  euchre: { file: 'sounds/euchre.mp3', gain: 0.6 },
+  flourish: { file: 'sounds/flourish.mp3', gain: 0.6 },
+};
+
+export interface AssetCredit {
+  readonly work: string;
+  readonly author: string;
+  readonly url: string;
+  readonly license: string;
+  readonly licenseUrl: string;
+  /** What the project uses it for. */
+  readonly usedFor: string;
+}
+
+/** Shown in About (Sprint 8); mirrored in CREDITS.md (VP-2, ADR-0005). */
+export const CREDITS: readonly AssetCredit[] = [
+  {
+    work: 'Casino Audio',
+    author: 'Kenney Vleugels (kenney.nl)',
+    url: 'https://kenney.nl/assets/casino-audio',
+    license: 'CC0 1.0',
+    licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
+    usedFor: 'Shuffle, deal, card and trick sweep sounds',
+  },
+  {
+    work: 'Music Jingles',
+    author: 'Kenney Vleugels (kenney.nl)',
+    url: 'https://kenney.nl/assets/music-jingles',
+    license: 'CC0 1.0',
+    licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
+    usedFor: 'Trump call, euchre sting and loner or march flourish',
+  },
+];
