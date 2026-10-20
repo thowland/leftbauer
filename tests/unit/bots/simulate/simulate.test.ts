@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createBot } from '../../../../src/bots/factory';
 import { buildKnowledge } from '../../../../src/bots/knowledge';
 import { simulatedCardPlay } from '../../../../src/bots/simulate/cardPlay';
 import { rollout } from '../../../../src/bots/simulate/rollout';
@@ -187,5 +188,22 @@ describe('simulatedCardPlay (Sharp)', () => {
     const simulated = options.find((o) => o.reason.code === 'play-simulated');
     if (simulated) expect(simulated.reason.params?.samples).toBe(1);
     expect(options.length).toBeGreaterThan(1);
+  });
+});
+
+describe('Sharp decision time (NF-2)', () => {
+  it('decides every card within the 300 ms budget', () => {
+    const bot = createBot({ role: 'partner', personaId: 'partner', skill: 'sharp' });
+    const times: number[] = [];
+    for (const { state, seat } of positions().slice(0, 60)) {
+      const legal = legalActions(state, seat);
+      if (legal.length < 2) continue;
+      const start = performance.now();
+      bot.decide(toPlayerView(state, seat), legal);
+      times.push(performance.now() - start);
+    }
+    expect(times.length).toBeGreaterThan(20);
+    // The time budget (250 ms) stops sampling early on a slow device.
+    expect(Math.max(...times)).toBeLessThan(300);
   });
 });
