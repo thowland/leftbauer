@@ -8,6 +8,7 @@
  */
 
 import type { SkillLevel } from './bot';
+import type { SimulationBudget } from './simulate/cardPlay';
 
 export interface SkillProfile {
   readonly cardPlay: 'conventional' | 'simulated';
@@ -16,6 +17,8 @@ export interface SkillProfile {
     | { readonly kind: 'noisy'; readonly mistakeRate: number; readonly maxRankDrop: number };
   /** Up to ± this many tricks of jitter on the evaluator's estimates. */
   readonly evaluationNoise: number;
+  /** For simulated card play (Sharp). */
+  readonly simulation?: SimulationBudget;
 }
 
 export const SKILLS: Record<SkillLevel, SkillProfile> = {
@@ -29,10 +32,10 @@ export const SKILLS: Record<SkillLevel, SkillProfile> = {
     selector: { kind: 'best' },
     evaluationNoise: 0,
   },
-  // Simulated card play arrives in Sprint 7; until then Sharp plays as Standard.
   sharp: {
-    cardPlay: 'conventional',
+    cardPlay: 'simulated',
     selector: { kind: 'best' },
     evaluationNoise: 0,
+    simulation: { samples: 80, timeBudgetMs: 250 },
   },
 };

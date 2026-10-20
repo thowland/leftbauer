@@ -52,6 +52,11 @@ export interface MatchOptions {
   readonly games: number;
   readonly seed: number;
   readonly rules?: RuleSet;
+  /**
+   * The number of the first game. A match split across processes gives
+   * each a range of game numbers; merged, the shards equal one long run.
+   */
+  readonly firstGame?: number;
 }
 
 function emptyStats(label: string): TeamStats {
@@ -109,7 +114,8 @@ export async function runMatch(
   let hands = 0;
   let redeals = 0;
 
-  for (let game = 0; game < options.games; game++) {
+  const first = options.firstGame ?? 0;
+  for (let game = first; game < first + options.games; game++) {
     const aFirst = game % 2 === 0;
     const [even, odd] = aFirst ? [a, b] : [b, a];
     const specs = [even.specs[0], odd.specs[0], even.specs[1], odd.specs[1]] as const;
@@ -136,6 +142,27 @@ export async function runMatch(
     redeals += tally(end.completedHands, ofTeam);
   }
   return { games: options.games, hands, redeals, ...stats };
+}
+
+/** Combine shards of one match (the same two teams, disjoint games). */
+export function mergeReports(reports: readonly MatchReport[]): MatchReport {
+  const sum = (pick: (r: MatchReport) => TeamStats): TeamStats => {
+    const total = emptyStats(pick(reports[0]!).label);
+    for (const r of reports) {
+      const s = pick(r);
+      for (const key of Object.keys(total) as (keyof TeamStats)[]) {
+        if (key !== 'label') total[key] += s[key];
+      }
+    }
+    return total;
+  };
+  return {
+    games: reports.reduce((n, r) => n + r.games, 0),
+    hands: reports.reduce((n, r) => n + r.hands, 0),
+    redeals: reports.reduce((n, r) => n + r.redeals, 0),
+    a: sum((r) => r.a),
+    b: sum((r) => r.b),
+  };
 }
 
 const pct = (n: number, d: number) =>

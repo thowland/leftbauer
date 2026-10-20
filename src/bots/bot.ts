@@ -45,7 +45,9 @@ export type ReasonCode =
   | 'follow-partner-winning'
   | 'follow-save-trump'
   | 'follow-win-cheaply'
-  | 'follow-throw-low';
+  | 'follow-throw-low'
+  /** Sharp: simulation preferred a different card to the conventions' choice. */
+  | 'play-simulated';
 
 export interface Reason {
   readonly code: ReasonCode;
