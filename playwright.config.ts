@@ -18,7 +18,11 @@ export default defineConfig({
     { name: 'iphone', use: { ...devices['iPhone 14'] } },
     { name: 'iphone-landscape', use: { ...devices['iPhone 14 landscape'] } },
     { name: 'ipad', use: { ...devices['iPad (gen 7)'] } },
-    { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'] } },
+    // `?e2e` already keeps the app silent; Chrome is muted as well. WebKit has no such switch.
+    {
+      name: 'desktop-chrome',
+      use: { ...devices['Desktop Chrome'], launchOptions: { args: ['--mute-audio'] } },
+    },
   ],
   webServer: {
     command: 'npm run build && npm run preview',

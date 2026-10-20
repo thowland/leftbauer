@@ -8,6 +8,7 @@ describe('parseLaunchOptions', () => {
       seed: null,
       fast: false,
       motion: true,
+      sound: true,
     });
   });
 
@@ -27,5 +28,7 @@ describe('parseLaunchOptions ?e2e', () => {
     expect(parseLaunchOptions('?seed=3').fast).toBe(false);
     expect(parseLaunchOptions('?e2e').motion).toBe(false);
     expect(parseLaunchOptions('?e2e&motion').motion).toBe(true);
+    expect(parseLaunchOptions('?e2e').sound).toBe(false);
+    expect(parseLaunchOptions('?e2e&sound').sound).toBe(true);
   });
 });
