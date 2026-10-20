@@ -5,12 +5,16 @@ import { GameMenu } from './GameMenu';
 import { GameOver } from './GameOver';
 import { HandSummary } from './HandSummary';
 import { namesOf } from './layout';
+import { SoundToggle } from './SoundToggle';
 import { TableScreen } from './TableScreen';
 
 interface GameScreenProps {
   readonly table: GameTable;
   /** Play a card on the first tap (GF-2). */
   readonly oneTap?: boolean;
+  /** Sound effects on (SA-3). */
+  readonly soundOn?: boolean;
+  readonly onToggleSound?: () => void;
   readonly onPlayAgain: () => void;
   /** Leave the game; it stays saved to continue later. */
   readonly onHome: () => void;
@@ -29,6 +33,8 @@ interface GameScreenProps {
 export function GameScreen({
   table,
   oneTap = false,
+  soundOn = false,
+  onToggleSound = () => {},
   onPlayAgain,
   onHome,
   onSettings,
@@ -37,15 +43,25 @@ export function GameScreen({
 }: GameScreenProps) {
   const { driver, human, humanSeat } = table;
   const snapshot = useSyncExternalStore(driver.subscribe, driver.snapshot);
-  const started = useRef(false);
+  const cue = useSyncExternalStore(table.presenter.subscribe, table.presenter.cue);
+  // The first deal's events, until the driver has been started with them.
+  const pending = useRef(table.initialEvents);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Initial events are emitted once, even if React restarts the effect.
-    void driver.start(started.current ? [] : table.initialEvents);
-    started.current = true;
-    return () => driver.stop();
-  }, [driver, table.initialEvents]);
+    // Start after StrictMode's mount, unmount and remount, so the first
+    // deal is presented once, and in full.
+    let live = true;
+    queueMicrotask(() => {
+      if (!live) return;
+      void driver.start(pending.current);
+      pending.current = [];
+    });
+    return () => {
+      live = false;
+      driver.stop();
+    };
+  }, [driver]);
 
   const view = toPlayerView(snapshot.state, humanSeat);
   const legal = snapshot.awaiting?.seat === humanSeat ? snapshot.awaiting.legal : null;
@@ -59,10 +75,14 @@ export function GameScreen({
         seats={table.seats}
         oneTap={oneTap}
         onHurry={driver.hurry}
+        cue={cue}
         controls={
-          <button type="button" className="button button-small" onClick={() => setMenuOpen(true)}>
-            Menu
-          </button>
+          <>
+            <SoundToggle on={soundOn} onToggle={onToggleSound} />
+            <button type="button" className="button button-small" onClick={() => setMenuOpen(true)}>
+              Menu
+            </button>
+          </>
         }
       />
       {snapshot.status === 'handComplete' && (

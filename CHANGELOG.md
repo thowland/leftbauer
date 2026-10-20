@@ -2,6 +2,21 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Sprint 6 — Animation and sound
+
+### Added
+
+- Animation (SA-1): the deal flies from the dealer to each seat in turn, the upcard is picked up into the dealer's hand or turned down, the dealer's discard is laid face down, each card flies from its seat to the trick, and leading a new trick sweeps the last one to its winner. The Presenter holds the game until the cards land. Durations are theme tokens shared by the code and the CSS.
+- Sound (SA-2): shuffle, card, deal and sweep sounds, a trump call, a sting when a team is euchred and a flourish for a march or loner sweep, from Kenney's CC0 packs (`CREDITS.md`, ADR-0005).
+- A Sound toggle on the table beside Menu (SA-3), saved with the settings. Audio starts on the first tap, as iOS requires.
+- Court cards now carry emblems: a crown for kings, a coronet for queens and the Bauer's hat for jacks. The 9 and 10 have tighter pip columns.
+- `?motion` keeps animation on under `?e2e`, for the animation tests. Animation is off when the device asks for reduced motion.
+
+### Fixed
+
+- The first deal of a game is presented in full in development, where React's StrictMode restarts the table.
+- Cards in flight can no longer scroll the page; the score bar fits on phones with the new control, and the Last trick button sits above the trick on phones instead of over it.
+
 ## Sprint 5 — Persistence, settings and table controls
 
 ### Added

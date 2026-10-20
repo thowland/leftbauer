@@ -1,8 +1,10 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
+import type { AudioEngine } from '../audio/audioEngine';
 import { clear, load, memoryStorage, save, type StorageLike } from '../state/persistence';
 import { GAME_STORE, type SavedGame } from '../state/savedGame';
 import { DEFAULT_SETTINGS, SETTINGS_STORE, type Settings } from '../state/settings';
 import { CARD_ROOM, type Theme } from '../themes/cardRoom';
+import { MOTION, motionVars } from '../themes/motion';
 import { DevApp } from './dev/DevApp';
 import { newTable, resumeTable, type GameTable, type TableOptions } from './game/createTable';
 import { GameScreen } from './GameScreen';
@@ -19,6 +21,10 @@ interface AppProps {
   readonly theme?: Theme;
   /** Where the game and settings are kept (PE-1, PE-3); in memory when omitted. */
   readonly storage?: StorageLike;
+  /** Animate the table (SA-1); off for `?e2e` and reduced motion. */
+  readonly motion?: boolean;
+  /** Sound playback (SA-2); silent when omitted. */
+  readonly audio?: AudioEngine | null;
 }
 
 type Screen =
@@ -32,6 +38,8 @@ export function App({
   fast = false,
   theme = CARD_ROOM,
   storage,
+  motion = false,
+  audio = null,
 }: AppProps) {
   const [store] = useState(() => storage ?? memoryStorage());
   const [settings, setSettings] = useState(() => load(store, SETTINGS_STORE) ?? DEFAULT_SETTINGS);
@@ -40,7 +48,17 @@ export function App({
   const [screen, setScreen] = useState<Screen>({ kind: 'home' });
   const [games, setGames] = useState(0);
 
-  const options: TableOptions = { fast, pacingMs: settings.pacingMs, storage: store };
+  // Browsers only start audio inside a gesture (SA-3).
+  useEffect(() => audio?.unlockOn(window), [audio]);
+  useEffect(() => audio?.setMuted(!settings.soundOn), [audio, settings.soundOn]);
+
+  const options: TableOptions = {
+    fast,
+    pacingMs: settings.pacingMs,
+    storage: store,
+    motion: motion ? MOTION : null,
+    sound: audio,
+  };
 
   const play = (table: GameTable) => {
     setScreen({ kind: 'game', id: games, table });
@@ -104,6 +122,8 @@ export function App({
             key={screen.id}
             table={table}
             oneTap={settings.oneTapPlay}
+            soundOn={settings.soundOn}
+            onToggleSound={() => changeSettings({ ...settings, soundOn: !settings.soundOn })}
             onPlayAgain={newGame}
             onHome={() => leave(table, { kind: 'home' })}
             onSettings={() => leave(table, { kind: 'settings', from: 'game' })}
@@ -116,7 +136,11 @@ export function App({
   };
 
   return (
-    <div className="app" data-theme={theme.id} style={theme.vars as CSSProperties}>
+    <div
+      className="app"
+      data-theme={theme.id}
+      style={{ ...theme.vars, ...motionVars(MOTION) } as CSSProperties}
+    >
       {dev ? <DevApp seed={seed} /> : content()}
     </div>
   );

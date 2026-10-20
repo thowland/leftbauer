@@ -1,6 +1,7 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import { rankOf, suitOf, type CardId, type Rank, type Suit } from '../engine/cards';
 import { cardLabel, RANK_LABELS, suitColor, type DeckVariant } from '../assets/manifest';
+import type { CardMotion } from './motion';
 import { SuitIcon } from './SuitIcon';
 
 /** Card geometry in SVG user units (poker proportions, 2.5 × 3.5). */
@@ -9,8 +10,8 @@ const H = 350;
 
 type Pip = readonly [x: number, y: number];
 
-const COLUMN_L = 72;
-const COLUMN_R = 178;
+const COLUMN_L = 80;
+const COLUMN_R = 170;
 const CENTER_X = 125;
 const ROWS = [78, 136, 214, 272] as const;
 
@@ -29,13 +30,22 @@ interface CardProps {
   readonly card: CardId | null;
   readonly deck?: DeckVariant;
   readonly className?: string;
+  /** An animation from the Presenter's current cue (SA-1). */
+  readonly motion?: CardMotion | undefined;
 }
 
-export function Card({ card, deck = 'standard', className }: CardProps) {
-  const classes = ['card', className].filter(Boolean).join(' ');
+export function Card({ card, deck = 'standard', className, motion }: CardProps) {
+  const classes = ['card', className, motion?.className].filter(Boolean).join(' ');
+  const style = motion?.style;
   if (card === null) {
     return (
-      <svg className={classes} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Face-down card">
+      <svg
+        className={classes}
+        style={style}
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        aria-label="Face-down card"
+      >
         <CardBack />
       </svg>
     );
@@ -43,6 +53,7 @@ export function Card({ card, deck = 'standard', className }: CardProps) {
   return (
     <svg
       className={classes}
+      style={style}
       viewBox={`0 0 ${W} ${H}`}
       role="img"
       aria-label={cardLabel(card)}
@@ -83,7 +94,7 @@ function CardFace({ card, deck }: { card: CardId; deck: DeckVariant }) {
             suit={suit}
             x={x}
             y={y}
-            size={50}
+            size={46}
             color={color}
             inverted={y > H / 2}
           />
@@ -113,10 +124,47 @@ function CornerIndex({ rank, color }: { rank: Rank; color: string }) {
   );
 }
 
-/** Jacks, queens and kings: a framed panel with the rank and suit. */
+/**
+ * Each court card's emblem, drawn in a 100 × 100 box: a crown for the
+ * king, a coronet for the queen and, for the jack, the Bauer's hat (the
+ * farmer the left bower is named for). Bands are cut out in card stock.
+ */
+const EMBLEMS: Partial<Record<Rank, (color: string) => ReactNode>> = {
+  K: (color) => (
+    <>
+      <path d="M12 78 L12 40 L31 58 L50 24 L69 58 L88 40 L88 78 Z" fill={color} />
+      <rect x="12" y="78" width="76" height="12" rx="2" fill={color} />
+      <rect x="18" y="81" width="64" height="5" rx="2" fill="var(--card-stock)" />
+      {[12, 50, 88].map((x, i) => (
+        <circle key={x} cx={x} cy={i === 1 ? 22 : 38} r="6" fill={color} />
+      ))}
+    </>
+  ),
+  Q: (color) => (
+    <>
+      <path d="M16 80 Q14 56 24 50 L36 64 L50 40 L64 64 L76 50 Q86 56 84 80 Z" fill={color} />
+      <rect x="16" y="80" width="68" height="10" rx="2" fill={color} />
+      <circle cx="50" cy="66" r="6" fill="var(--card-stock)" />
+      {[24, 50, 76].map((x, i) => (
+        <circle key={x} cx={x} cy={i === 1 ? 36 : 46} r="5.5" fill={color} />
+      ))}
+    </>
+  ),
+  J: (color) => (
+    <>
+      <path d="M66 50 Q84 24 94 8 Q88 32 72 54 Z" fill={color} opacity="0.8" />
+      <path d="M28 76 Q28 40 50 38 Q72 40 72 76 Z" fill={color} />
+      <rect x="29" y="64" width="42" height="7" fill="var(--card-stock)" />
+      <ellipse cx="50" cy="78" rx="44" ry="9" fill={color} />
+    </>
+  ),
+};
+
+/** Jacks, queens and kings: a tinted, double-framed panel with an emblem, rank and suit. */
 function CourtPanel({ rank, suit, color }: { rank: Rank; suit: Suit; color: string }) {
   return (
     <g>
+      <rect x="62" y="64" width="126" height="222" rx="10" fill={color} opacity="0.07" />
       <rect
         x="62"
         y="64"
@@ -128,18 +176,30 @@ function CourtPanel({ rank, suit, color }: { rank: Rank; suit: Suit; color: stri
         strokeWidth="4"
         opacity="0.75"
       />
+      <rect
+        x="70"
+        y="72"
+        width="110"
+        height="206"
+        rx="6"
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        opacity="0.45"
+      />
+      <g transform="translate(83 78) scale(0.84)">{EMBLEMS[rank]?.(color)}</g>
       <text
         x={CENTER_X}
-        y="170"
+        y="222"
         textAnchor="middle"
         fontFamily="Georgia, 'Times New Roman', serif"
         fontWeight="700"
-        fontSize="92"
+        fontSize="78"
         fill={color}
       >
         {RANK_LABELS[rank]}
       </text>
-      <SuitIcon suit={suit} x={CENTER_X} y={230} size={58} color={color} />
+      <SuitIcon suit={suit} x={CENTER_X} y={254} size={36} color={color} />
     </g>
   );
 }
