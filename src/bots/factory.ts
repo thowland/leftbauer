@@ -15,6 +15,7 @@ import { conventionalDiscard } from './conventions/discard';
 import { conventionalLoner } from './conventions/loner';
 import { HeuristicEvaluator } from './evaluate';
 import { personaById } from './personas';
+import { simulatedCardPlay } from './simulate/cardPlay';
 import type { PolicySet } from './policies';
 import { PolicyBot } from './policyBot';
 import { bestSelector, noisySelector } from './selectors';
@@ -34,7 +35,13 @@ export function createBot(spec: BotSpec): Bot {
   const skill = SKILLS[spec.skill];
   return new PolicyBot({
     spec,
-    policies: { ...CONVENTIONAL, ...persona.overrides },
+    policies: {
+      ...CONVENTIONAL,
+      ...persona.overrides,
+      ...(skill.cardPlay === 'simulated' && skill.simulation
+        ? { cardPlay: simulatedCardPlay(skill.simulation) }
+        : {}),
+    },
     style: persona.style,
     selector:
       skill.selector.kind === 'best'

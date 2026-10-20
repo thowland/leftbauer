@@ -19,7 +19,10 @@ interface SettingsScreenProps {
 const SKILL_TEXT: Record<SkillLevel, { label: string; detail: string }> = {
   casual: { label: 'Casual', detail: 'Opponents slip up now and then.' },
   standard: { label: 'Standard', detail: 'Opponents play sound, conventional Euchre.' },
-  sharp: { label: 'Sharp', detail: 'Opponents look ahead.' },
+  sharp: {
+    label: 'Sharp',
+    detail: 'Opponents think through how the cards may lie, as your partner does.',
+  },
 };
 
 const SIDES = [

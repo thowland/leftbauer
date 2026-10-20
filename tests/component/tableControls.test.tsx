@@ -221,9 +221,9 @@ describe('SettingsScreen (UI-1)', () => {
     expect(screen.getByRole('radio', { name: 'Brisk' })).toBeChecked();
   });
 
-  it('offers only the levels that play differently', () => {
+  it('offers all three levels (OP-2)', () => {
     renderSettings();
-    expect(screen.getAllByRole('radio', { name: /Casual|Standard|Sharp/ })).toHaveLength(2);
+    expect(screen.getAllByRole('radio', { name: /Casual|Standard|Sharp/ })).toHaveLength(3);
   });
 
   it('labels the way back', async () => {

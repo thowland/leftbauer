@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { AudioEngine } from '../audio/audioEngine';
+import type { BotRunner } from '../session/botRunner';
 import { clear, load, memoryStorage, save, type StorageLike } from '../state/persistence';
 import { GAME_STORE, type SavedGame } from '../state/savedGame';
 import { DEFAULT_SETTINGS, SETTINGS_STORE, type Settings } from '../state/settings';
@@ -25,6 +26,8 @@ interface AppProps {
   readonly motion?: boolean;
   /** Sound playback (SA-2); silent when omitted. */
   readonly audio?: AudioEngine | null;
+  /** Where bots decide (the Web Worker); inline when omitted. */
+  readonly botRunner?: BotRunner;
 }
 
 type Screen =
@@ -40,6 +43,7 @@ export function App({
   storage,
   motion = false,
   audio = null,
+  botRunner,
 }: AppProps) {
   const [store] = useState(() => storage ?? memoryStorage());
   const [settings, setSettings] = useState(() => load(store, SETTINGS_STORE) ?? DEFAULT_SETTINGS);
@@ -58,6 +62,7 @@ export function App({
     storage: store,
     motion: motion ? MOTION : null,
     sound: audio,
+    ...(botRunner === undefined ? {} : { runner: botRunner }),
   };
 
   const play = (table: GameTable) => {

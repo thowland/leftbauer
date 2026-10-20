@@ -22,6 +22,7 @@ export default defineConfig({
       exclude: [
         'src/main.tsx', // React bootstrap: mounts into the real DOM; covered by E2E
         'src/**/*.d.ts', // type declarations only
+        'src/workers/bot.worker.ts', // Web Worker entry shim: runs only in a worker; its logic is botHost.ts, covered by E2E
       ],
       thresholds: {
         lines: 80,

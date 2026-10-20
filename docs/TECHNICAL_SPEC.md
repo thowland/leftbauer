@@ -519,6 +519,8 @@ These are stateless services used by policies. Each is cohesive and replaceable 
 
 `SimulatedCardPlay` scores each legal card by sampling N consistent deals, rolling each out with `ConventionalCardPlay` for every seat, and averaging the hand outcome. It stops at whichever comes first: `samples` or `timeBudgetMs` (NF-2).
 
+*As built (Sprint 7):* `simulate/sampler.ts`, `rollout.ts` and `cardPlay.ts`. Sharp samples 80 deals per decision with a 250 ms budget. The sample count decides; the budget is only a guard for a slow device, so a decision stays reproducible (PB-3) whenever the budget is not hit. Every legal card is rolled out over the same deals. The sampler honors hand sizes and voids, and gives the dealer a picked-up upcard unless the dealer has shown out of its suit or has no cards left. A rollout's value is the hand's points to the seat's team (negative when they go to the other team), plus 0.01 per trick taken to break ties. Rollouts play every seat by the partner's conventions and run on the engine's own `applyPlay`. A forced play skips the simulation. When simulation overrules the conventions, the decision's reason is `play-simulated`. Bidding, loners and the discard are unchanged from Standard. With 80 samples, Sharp's slowest decision measured about 20 ms on a desktop (p95 about 18 ms); 160 samples added nothing measurable.
+
 ### 6.7 Conventions as an ordered rule chain
 
 `ConventionalCardPlay`, `ConventionalBidding` and `ConventionalDiscard` are each implemented as an ordered list of small convention rules (chain of responsibility):
@@ -735,6 +737,8 @@ interface BotRunner {
 - `WorkerBotRunner` posts `{ spec, view, legal }` to `src/workers/bot.worker.ts`, which calls `createBot(spec).decide(...)` and caches bots by spec. All inputs are plain data.
 - `InlineBotRunner` calls the bot synchronously. It is used in tests and the tournament harness, and as a fallback if the worker cannot start.
 
+*As built (Sprint 7):* every level's decisions go through the worker in the app (`ui/game/botRunner.ts`). The request and reply types (`bots/protocol.ts`) are shared by `session/workerRunner.ts` and `workers/botHost.ts`, so neither layer imports the other. An aborted request is forgotten. If the worker cannot start or raises an error, the runner answers everything it owed inline and stays inline.
+
 Decisions for Casual and Standard are cheap. The worker exists for Sharp's simulation, which keeps the main thread free for 60 fps animation (NF-2, NF-3).
 
 ### 9.5 Assets and themes
@@ -814,6 +818,8 @@ interface Settings {
 ### 11.3 Tournament harness
 
 `runMatch` in `src/session/tournament.ts` (wrapped by `scripts/tournament.ts`, run with `npm run tournament`) runs `TableDriver` headless with four `BotSeatController`s over `InlineBotRunner`, seeded shuffles and no presentation sinks. It reports win, make, euchre, march and loner rates per pairing and confirms the difficulty ordering (Sharp > Standard > Casual) and the partner's strength (§9 acceptance criteria in the requirements). A small fixed-seed version runs in CI as a regression gate on bot strength.
+
+*As built (Sprint 7):* `runMatch` takes a `firstGame`, so `scripts/tournament.ts` splits each match into ranges of games, one per child process (`--jobs`), and `mergeReports` combines them into exactly the result of one long run. Each match is reported with a 95% confidence interval on the win rate, and `--out` writes the report (`docs/tournaments/sprint-07.md`). The suite's gates: Standard beats Casual over 200 games, and the partner at Sharp beats Standard over 40 games, each at a fixed seed.
 
 ## 12. Multiplayer readiness
 

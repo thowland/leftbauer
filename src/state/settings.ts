@@ -56,8 +56,8 @@ export const PACING_OPTIONS: readonly PacingOption[] = [
   { label: 'Brisk', ms: 350 },
 ];
 
-/** Skill levels offered in settings. Sharp joins in Sprint 7, when it plays differently. */
-export const SKILL_OPTIONS: readonly SkillLevel[] = ['casual', 'standard'];
+/** Skill levels offered in settings (OP-2). */
+export const SKILL_OPTIONS: readonly SkillLevel[] = ['casual', 'standard', 'sharp'];
 
 /** The pause after a trick scales with the pause between actions. */
 const TRICK_PAUSE_RATIO = 900 / 650;

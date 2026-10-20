@@ -2,6 +2,19 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Sprint 7 — Sharp level and the Web Worker
+
+### Added
+
+- **Sharp** (OP-2): card play by simulation. Each legal card is scored over 80 deals of the unseen cards that fit everything the seat knows (hand sizes, voids, the dealer's upcard). Each deal is played out by the conventions, and the card with the best average points wins. Bidding is unchanged. The partner plays at Sharp (PB-2). Settings now offer all three levels.
+- A bot **Web Worker**: every bot decision runs off the main thread, falling back to the main thread if the worker cannot start or fails (NF-2, NF-3).
+- **Tournament:** `npm run tournament` splits each match across processes (`--jobs`), reports a 95% confidence interval, and writes the report with `--out`. Over 10,000 games per match, Sharp beats Standard 66.3%, Standard beats Casual 66.3%, Sharp beats Casual 78.0%, and the partner at Sharp beats every Standard opponent by 66.8% to 72.6%. Full report: `docs/tournaments/sprint-07.md`.
+- Gates in the suite: the partner at Sharp beats Standard at a fixed seed; Sharp decisions fit the 300 ms budget (NF-2); a full Sharp game plays in the worker in E2E with no stalled frames.
+
+### Fixed
+
+- The deal sampler no longer gives a dealer with no cards left the upcard they discarded.
+
 ## Sprint 6 — Animation and sound
 
 ### Added

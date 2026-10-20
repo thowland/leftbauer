@@ -10,7 +10,7 @@ import { personaById } from '../../bots/personas';
 import type { GameEvent } from '../../engine/events';
 import { STANDARD_RULES } from '../../engine/rules';
 import { SEATS, type Seat } from '../../engine/seats';
-import { InlineBotRunner } from '../../session/botRunner';
+import { InlineBotRunner, type BotRunner } from '../../session/botRunner';
 import {
   BotSeatController,
   HumanSeatController,
@@ -44,6 +44,8 @@ export interface TableOptions {
   readonly motion: Motion | null;
   /** Where sounds play, or `null` for silence. */
   readonly sound: SoundPlayer | null;
+  /** Where bots decide (the Web Worker in the app); inline when omitted. */
+  readonly runner?: BotRunner;
 }
 
 export interface GameTable {
@@ -84,10 +86,9 @@ function buildTable(
   saved: SavedGame,
   shuffleRng: Rng,
   initialEvents: readonly GameEvent[],
-  { fast, pacingMs, storage, motion, sound }: TableOptions
+  { fast, pacingMs, storage, motion, sound, runner = new InlineBotRunner() }: TableOptions
 ): GameTable {
   const { seats } = saved;
-  const runner = new InlineBotRunner();
   const human = new HumanSeatController();
   const reportIllegal = (action: unknown) => console.error('Bot chose an illegal action', action);
   const controllerAt = (seat: Seat): SeatController => {

@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AudioEngine, browserAudioDeps } from './audio/audioEngine';
 import { App } from './ui/App';
+import { browserBotRunner } from './ui/game/botRunner';
 import { browserStorage } from './ui/browserStorage';
 import { parseLaunchOptions } from './ui/launchOptions';
 import './styles.css';
@@ -19,6 +20,7 @@ createRoot(document.getElementById('root')!).render(
       fast={fast}
       motion={motion && !reducedMotion}
       audio={audio}
+      botRunner={browserBotRunner()}
       storage={browserStorage()}
     />
   </StrictMode>
