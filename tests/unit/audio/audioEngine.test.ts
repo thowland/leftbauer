@@ -181,7 +181,10 @@ describe('AudioSink', () => {
     sink.handle(
       [
         { type: 'handDealt', dealer: 3, handNumber: 1, upcard: 'JD' },
-        { type: 'trumpSet', contract: { trump: 'H', maker: 0, round: 1, alone: false } },
+        {
+          type: 'trumpSet',
+          contract: { trump: 'H', maker: 0, round: 1, alone: false, loneDefender: null },
+        },
       ],
       gameFromDeck()
     );

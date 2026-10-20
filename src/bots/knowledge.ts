@@ -45,6 +45,8 @@ export function buildKnowledge(view: PlayerView): CardKnowledge {
 
   const known = new Set<CardId>([...view.myHand, ...played]);
   if (view.myDiscard) known.add(view.myDiscard);
+  // Cards I swapped away for a farmer's hand are under the upcard, out of play.
+  for (const card of view.myFarmerSwap ?? []) known.add(card);
   // A refused or set-aside upcard stays in the kitty, out of play.
   if (view.upcardStatus === 'turnedDown' || view.upcardStatus === 'setAside') {
     known.add(view.upcard);

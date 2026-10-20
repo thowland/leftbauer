@@ -26,8 +26,17 @@ export const REASON_TEXT: Record<ReasonCode, Render> = {
     'Call your strongest suit: with your partner’s help it should take three tricks.',
   'bid-stuck': () => 'The dealer is stuck and must call: name the strongest suit.',
   'bid-pass-weak': () => 'Pass: even with your partner’s help, this hand is short of three tricks.',
+  'bid-forced-alone': () =>
+    'Your partner deals, so you may order it up only by going alone: do it only with a hand that can win alone.',
   'loner-strong': () => 'Go alone: this hand can take the tricks without your partner.',
   'loner-not-strong-enough': () => 'Play with your partner: this hand needs the help.',
+  'defend-alone-strong': () =>
+    'Defend alone: this hand can stop the makers by itself, and a lone euchre scores 4.',
+  'defend-alone-not-strong-enough': () =>
+    'Defend with your partner: stopping the makers will take you both.',
+  'farmer-swap': () =>
+    'Swap your three lowest cards: almost any three cards beat a hand of 9s and 10s.',
+  'farmer-keep': () => 'Keep your hand.',
   'discard-make-void': () => 'Discard a lone card to empty that suit, so you can trump it later.',
   'discard-lowest': () => 'Discard your lowest card, and keep your trump.',
   'lead-boss-trump': (_r, view) =>

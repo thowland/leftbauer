@@ -21,6 +21,7 @@ export function soundsFor(event: GameEvent, state: GameState): readonly SoundId[
     case 'upcardPickedUp':
     case 'upcardTurnedDown':
     case 'dealerDiscarded':
+    case 'farmerSwapped':
       return ['deal'];
     case 'cardPlayed': {
       const leading = state.hand.currentTrick?.plays.length === 1;
@@ -31,6 +32,7 @@ export function soundsFor(event: GameEvent, state: GameState): readonly SoundId[
       switch (event.result.outcome) {
         case 'euchred':
         case 'euchredAlone':
+        case 'euchredByLoneDefender':
           return ['euchre'];
         case 'march':
         case 'lonerSweep':

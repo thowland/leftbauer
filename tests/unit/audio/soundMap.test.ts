@@ -35,7 +35,10 @@ describe('soundsFor (SA-2)', () => {
     ]);
     expect(
       soundsFor(
-        { type: 'trumpSet', contract: { trump: 'H', maker: 0, round: 1, alone: false } },
+        {
+          type: 'trumpSet',
+          contract: { trump: 'H', maker: 0, round: 1, alone: false, loneDefender: null },
+        },
         base
       )
     ).toEqual(['trump']);

@@ -17,7 +17,11 @@ export type BidAction =
 
 export type Action =
   | BidAction
+  /** A farmer's hand (RU-15): the three cards to swap for the kitty, or none to keep the hand. */
+  | { readonly type: 'farmerExchange'; readonly cards: readonly CardId[] }
   | { readonly type: 'discard'; readonly card: CardId }
+  /** A defender's choice whether to play alone against the makers (RU-13). */
+  | { readonly type: 'defendAlone'; readonly accept: boolean }
   | { readonly type: 'play'; readonly card: CardId };
 
 /** A canonical string for an action, used for equality and React keys. */
@@ -29,8 +33,12 @@ export function actionKey(action: Action): string {
       return `orderUp${action.alone ? ':alone' : ''}`;
     case 'callTrump':
       return `callTrump:${action.suit}${action.alone ? ':alone' : ''}`;
+    case 'farmerExchange':
+      return `farmerExchange:${[...action.cards].sort().join(',')}`;
     case 'discard':
       return `discard:${action.card}`;
+    case 'defendAlone':
+      return `defendAlone:${action.accept ? 'yes' : 'no'}`;
     case 'play':
       return `play:${action.card}`;
   }

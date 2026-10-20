@@ -36,6 +36,8 @@ export interface Contract {
   readonly maker: Seat;
   readonly round: 1 | 2;
   readonly alone: boolean;
+  /** A defender playing alone against the makers (RU-13), else `null`. */
+  readonly loneDefender: Seat | null;
 }
 
 export interface TrickPlay {
@@ -51,7 +53,21 @@ export interface Trick {
 }
 
 export type HandOutcome =
-  'made' | 'march' | 'lonerMade' | 'lonerSweep' | 'euchred' | 'euchredAlone';
+  | 'made'
+  | 'march'
+  | 'lonerMade'
+  | 'lonerSweep'
+  | 'euchred'
+  | 'euchredAlone'
+  /** Euchred by a defender playing alone (RU-13). */
+  | 'euchredByLoneDefender';
+
+/** Every outcome in which the makers were euchred. */
+export const EUCHRE_OUTCOMES: readonly HandOutcome[] = [
+  'euchred',
+  'euchredAlone',
+  'euchredByLoneDefender',
+];
 
 export type HandResult =
   | {
@@ -65,11 +81,20 @@ export type HandResult =
   | { readonly kind: 'redeal' };
 
 export type HandPhase =
+  /** A farmer's hand may be swapped with the kitty before bidding (RU-15). */
+  | { readonly kind: 'farmer'; readonly seat: Seat }
   | { readonly kind: 'bidRound1'; readonly toAct: Seat }
   | { readonly kind: 'dealerDiscard' }
   | { readonly kind: 'bidRound2'; readonly toAct: Seat }
+  /** Each defender in turn may choose to defend alone (RU-13). */
+  | { readonly kind: 'defendAlone'; readonly toAct: Seat }
   | { readonly kind: 'play'; readonly toAct: Seat }
   | { readonly kind: 'complete'; readonly result: HandResult };
+
+export interface FarmerSwap {
+  readonly seat: Seat;
+  readonly gave: readonly CardId[];
+}
 
 export interface HandState {
   readonly dealer: Seat;
@@ -77,9 +102,15 @@ export interface HandState {
   readonly hands: Hands;
   /**
    * The four undealt cards as dealt; `kitty[0]` is the upcard. Never
-   * changes: a picked-up upcard is also in the dealer's hand.
+   * changes: a picked-up upcard is also in the dealer's hand, and cards
+   * swapped for a farmer's hand are recorded in `farmerSwap`.
    */
   readonly kitty: readonly CardId[];
+  /**
+   * A farmer's hand swap: the seat took `kitty[1..3]` and put `gave`
+   * face down in their place. Hidden from every other seat.
+   */
+  readonly farmerSwap: FarmerSwap | null;
   readonly upcardStatus: UpcardStatus;
   readonly bids: readonly BidEntry[];
   readonly contract: Contract | null;

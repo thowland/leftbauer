@@ -39,6 +39,7 @@ export function rollout(
     phase: { kind: 'play', toAct: view.seat },
     hands,
     kitty: [view.upcard],
+    farmerSwap: null,
     upcardStatus: view.upcardStatus,
     bids: view.bids,
     contract,

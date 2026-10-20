@@ -1090,3 +1090,59 @@ body {
   max-width: 340px;
   margin-top: 8px;
 }
+
+/* House rules (Sprint 9). The Rules chip sits in the corner opposite Hint. */
+.center-rules {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.rules-chip {
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+
+.rules-chip-short {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .center-rules {
+    top: 0;
+    bottom: auto;
+  }
+
+  .rules-chip-long {
+    display: none;
+  }
+
+  .rules-chip-short {
+    display: inline;
+  }
+}
+
+.dialog-body .rules-list {
+  text-align: left;
+}
+
+.settings-group select:disabled,
+.settings-choice input:disabled + span {
+  opacity: 0.55;
+}
+
+.settings-group > .button-small {
+  justify-self: start;
+  margin-top: 4px;
+}
+
+.deck-preview {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.deck-preview-card {
+  width: 44px;
+  height: auto;
+}

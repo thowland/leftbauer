@@ -113,6 +113,8 @@ const STANDARD_RULES: RuleSet;                     // the defaults above
 
 A `GameState` carries its own copy of the `RuleSet`, taken when the game starts. Settings edit a separate pending `RuleSet`, so a change cannot take effect mid-game, by construction rather than by a check.
 
+*As built (Sprint 9):* every rule is implemented, and `farmersHand` is a plain boolean now that its mechanics are settled (ADR-0004, decisions 7 to 11). `defendAloneActive` and `dealerPartnerMustGoAloneActive` return false while loners are off. `isRuleSet` validates a stored rule set; `UnsupportedRuleError` is gone. `TARGET_SCORES` lists the four targets for settings.
+
 ### 4.3 Game and hand state
 
 ```ts
@@ -178,6 +180,8 @@ Seats that sit out a loner are derived (`activeSeats(hand)`) rather than stored,
 
 `'setAside'` covers the case where the dealer's partner orders up alone in round one. The dealer sits out and does not pick up the upcard, which is turned over. Trump is still the upcard's suit, and the hand goes straight to play (or to `defendAlone`), skipping `dealerDiscard`. This is distinct from `'turnedDown'`, which means the upcard was refused in round one and its suit cannot be named in round two.
 
+*As built (Sprint 9):* `Contract.loneDefender` is as above. The farmer phase is `{ kind: 'farmer'; seat }` and `HandState.farmerSwap: { seat, gave } | null` records a swap (the cards taken are `kitty[1..3]`), so `kitty` still records the deal. `play.ts` `sittingOut(contract)` returns a list: the partner of a lone maker and the partner of a lone defender. `EUCHRE_OUTCOMES` adds `euchredByLoneDefender` (4 points, `LONE_DEFENCE_POINTS`). `game.ts` exports `handFromDeal`, which opens the farmer phase when a seat qualifies.
+
 ### 4.4 Actions
 
 Every player action, human or bot, is one of these values. Actions are small and serializable, which makes them the wire format for multiplayer later (§12).
@@ -195,6 +199,8 @@ type Action =
   | { type: 'farmerExchange'; cards: readonly CardId[] } // shape provisional until RU-15 is settled
   | { type: 'play'; card: CardId };
 ```
+
+*As built (Sprint 9):* `farmerExchange.cards` holds the three cards given up, or none to keep the hand; `actionKey` sorts them, so their order does not matter. Its legal actions are the ten three-card sets plus keeping the hand (`engine/farmer.ts`). The events add `farmerSwapped { seat }` (keeping the hand is silent) and `defendAloneChosen { seat, accept }`. `PlayerView` adds `myFarmerSwap`, the cards a seat gave up, shown only to that seat, and `sittingOut` becomes a list.
 
 ### 4.5 Engine API
 
@@ -369,6 +375,8 @@ interface DecisionContext {
   readonly rng: Rng;                       // seeded per §5
 }
 ```
+
+*As built (Sprint 9):* `LonerPolicy.defendAlone` scores defending alone against a threshold of 3.3 expected tricks (moved by the persona's `lonerThreshold`), counting a picked-up upcard against it when the makers dealt. `PolicySet.farmer` (`conventions/farmer.ts`) always swaps the three cheapest cards, so tens and the longest suit are kept. Where only a lone order-up is legal (RU-14), round-one bidding scores it as a loner, without the upcard (`bid-forced-alone`). A loner sweep worth 5 lowers the loner threshold by 0.15. Defending alone, like going alone, always uses the best selector. A seat that swapped knows its three cards are out of play (`buildKnowledge`).
 
 ### 6.3 The composite bot
 
@@ -779,11 +787,13 @@ Saving after every action is cheap (a Euchre game is a few hundred actions). Bec
 
 `PersistenceSink` is the `EventSink` that writes the game, so the driver has no persistence code. It clears the save once the game is won.
 
+As built (Sprint 9): the game store is at schema version 2. Its migration from version 1 sets `farmersHand: false`, `farmerSwap: null` and, when there is a contract, `loneDefender: null`.
+
 As built (Sprint 5): `persistence.ts` is a generic `VersionedStore<T>` (`key`, `schemaVersion`, `migrations`, `isValid`) with guarded `load`/`save`/`clear`, so a full or blocked `localStorage` never breaks a game. `SavedGame` also records the `seed` of a `?seed=N` game; a resumed seeded game deals later hands from a stream derived from the seed and hand number, and a crypto game keeps using crypto. A save is validated structurally and then by asking the engine about it; anything it cannot answer is discarded.
 
 ### 10.2 Settings
 
-As built in Sprint 8, `Settings` (schema version 2) holds `opponents`, `skill`, `pacingMs`, `oneTapPlay`, `soundOn` and `hintsOn`; the version 1 → 2 migration adds `hintsOn: true`. Rules, deck and theme arrive in Sprint 9, each with a migration. The target shape:
+As built in Sprint 9, `Settings` (schema version 3) holds `opponents`, `skill`, `pacingMs`, `oneTapPlay`, `soundOn`, `hintsOn`, `pendingRules` and `deck`. The version 1 → 2 migration adds `hintsOn: true`; 2 → 3 adds standard rules and the two-color deck. `deck` is typed structurally (`DeckChoice`), since `state/` may not import `assets/`. A game keeps the rules it started with; Settings notes when the pending rules differ from the game in progress, and the table's `RulesChip` shows the game's own rules. The deck reaches every card through `ui/deck.ts` `DeckContext`. The theme is not yet a setting. The target shape:
 
 ```ts
 interface Settings {

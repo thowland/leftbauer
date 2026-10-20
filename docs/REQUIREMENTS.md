@@ -73,9 +73,9 @@ The rules engine is the single source of truth for legality and scoring. The UI 
 - **RU-10 Stick the dealer.** When on, the dealer must name trump in round two. When off (the default), four passes in round two cause a redeal.
 - **RU-11 Target score:** 5, 7, 10 or 11.
 - **RU-12 Loner sweep value:** 4 (default) or 5.
-- **RU-13 Defending alone:** a defender may play alone against the makers, and euchring the makers alone scores 4.
+- **RU-13 Defending alone:** a defender may play alone against the makers, whatever the contract (decided 2026-10-20), and euchring the makers alone scores 4.
 - **RU-14 Dealer's partner must go alone** when ordering the dealer up. Regional names for this rule vary, and the setting label must describe the rule rather than rely on a name.
-- **RU-15 Farmer's hand:** a player dealt three or more 9s and 10s (variant thresholds to be confirmed) may exchange them with the kitty before bidding.
+- **RU-15 Farmer's hand:** a player dealt five 9s and 10s may, before bidding, swap any three of them for the three face-down kitty cards, sight unseen (decided 2026-10-20; ADR-0004).
 - **RU-16 Loners allowed:** on by default. Off removes the loner option entirely.
 
 House-rule settings take effect at the start of the next game, never mid-hand. The active rule set is visible from the table (for example, a "Rules" chip that opens a summary).
@@ -332,7 +332,7 @@ Matchmaking with strangers, rankings and leaderboards; accounts; advertising and
 ## 10. Open questions and risks
 
 - [x] **Default rules.** Decided: standard rules, with every optional rule (including stick the dealer and farmer's hand) off by default and configurable.
-- [ ] **Farmer's hand details.** Off by default (decided). The thresholds and the exchange mechanics vary widely, so settle on one version before implementing RU-15.
+- [x] **Farmer's hand details.** Decided: off by default; strict (five 9s and 10s only); the holder may swap any three for the face-down kitty cards before bidding.
 - [ ] **Bauer spelling.** Is the About screen enough, or should the explanation appear on first launch?
 - [x] **Persona names.** Decided: Soopy, Shrubs, Rusty and Smooth.
 - [x] **Persona tendencies and avatars.** Decided: Soopy is the cautious defender, Shrubs the loner hunter, Rusty the bold caller and Smooth plays by the book. Avatars are monogram badges in v1.

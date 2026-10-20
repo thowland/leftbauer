@@ -1,4 +1,9 @@
-import type { RuleSet } from '../engine/rules';
+import {
+  dealerPartnerMustGoAloneActive,
+  defendAloneActive,
+  LONE_DEFENCE_POINTS,
+  type RuleSet,
+} from '../engine/rules';
 import { Card } from './Card';
 import { Page, Section } from './Page';
 
@@ -17,6 +22,13 @@ export function RulesScreen({ rules, onDone }: RulesScreenProps) {
           other. The deck has 24 cards, the nine through the ace of each suit. Each player gets five
           cards, and the dealer turns the top card of the four left over face up.
         </p>
+        {rules.farmersHand && (
+          <p>
+            <strong>Farmer’s hand.</strong> A player dealt nothing but 9s and 10s may, before
+            bidding, swap any three of them for the three face-down cards under the upcard, sight
+            unseen.
+          </p>
+        )}
       </Section>
 
       <Section title="Bidding">
@@ -64,6 +76,18 @@ export function RulesScreen({ rules, onDone }: RulesScreenProps) {
             A player who names trump may go alone: their partner sits the hand out, and they play
             against both opponents by themselves for a bigger score.
           </p>
+          {dealerPartnerMustGoAloneActive(rules) && (
+            <p>
+              The dealer’s partner may order the dealer up only by going alone. The dealer then sits
+              out, and the upcard is set aside.
+            </p>
+          )}
+          {defendAloneActive(rules) && (
+            <p>
+              Once trump is named, either defender may also choose to play alone against the makers,
+              and their partner sits out.
+            </p>
+          )}
         </Section>
       )}
 
@@ -74,6 +98,9 @@ export function RulesScreen({ rules, onDone }: RulesScreenProps) {
           <li>Makers take fewer than three: they are euchred, and the other team scores 2.</li>
           {rules.lonersAllowed && (
             <li>A loner who takes all five: {rules.lonerSweepPoints} points.</li>
+          )}
+          {defendAloneActive(rules) && (
+            <li>A lone defender who euchres the makers: {LONE_DEFENCE_POINTS} points.</li>
           )}
         </ul>
         <p>The first team to {rules.targetScore} points wins.</p>

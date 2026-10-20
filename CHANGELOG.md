@@ -2,6 +2,23 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Sprint 9 — House rules and the four-color deck
+
+### Added
+
+- **House rules** in Settings, applied from the next game (RU-10 to RU-16): the target score (5, 7, 10 or 11), stick the dealer, loners on or off, a loner sweep worth 4 or 5, defending alone, the dealer's partner having to go alone, and the farmer's hand. "Back to standard rules" resets them. A game keeps the rules it started with, and Settings says so when they differ.
+- **Farmer's hand** (RU-15): a player dealt five 9s and 10s may, before bidding, swap any three of them for the three face-down kitty cards, sight unseen. Tap three cards, then Swap these three, or Keep my hand.
+- **Defending alone** (RU-13), against any contract: once trump is set, each defender in turn may play alone; a lone euchre scores 4.
+- **The dealer's partner must go alone** (RU-14): in round one, the dealer's partner may order the dealer up only alone.
+- A **Rules chip** on the table shows the game's rules ("Rules · to 10", or "House rules" when any are on) and opens a summary. How to play describes the house rules in play.
+- **Four-color deck** (VP-3): spades black, hearts red, diamonds blue, clubs green, with a preview in Settings.
+- Bots play every house rule: they always take a farmer's swap (giving up the lowest three), defend alone only on a hand that can stop the makers, judge a forced order-up as a loner, and go alone a little more readily when a sweep is worth 5. The coach hints for each, and How your partner plays has a House rules section.
+
+### Changed
+
+- Settings move to schema version 3, and saved games to version 2, each with a migration, so saved settings and a game in progress carry over.
+- ADR-0004 records the farmer's hand and defending alone as decided; every rule in the engine is now implemented.
+
 ## Sprint 8 — Coach and supporting screens
 
 ### Added

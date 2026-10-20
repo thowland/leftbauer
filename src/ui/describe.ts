@@ -7,7 +7,7 @@
 import type { Action, BidAction } from '../engine/actions';
 import type { GameEvent } from '../engine/events';
 import type { Seat } from '../engine/seats';
-import type { HandOutcome, HandResult } from '../engine/state';
+import { EUCHRE_OUTCOMES, type HandOutcome, type HandResult } from '../engine/state';
 import type { PlayerView } from '../engine/view';
 import { cardLabel, SUIT_NAMES } from '../assets/manifest';
 import { seatName, teamName, type SeatNames } from './layout';
@@ -19,6 +19,7 @@ const OUTCOME_TEXT: Record<HandOutcome, string> = {
   lonerSweep: 'swept it alone',
   euchred: 'were euchred',
   euchredAlone: 'were euchred alone',
+  euchredByLoneDefender: 'were euchred by a lone defender',
 };
 
 /** A verb agreeing with its subject: "plays" for others, "play" for "You". */
@@ -78,6 +79,10 @@ export function describeEvent(
       return `${name(event.dealer)} ${v(event.dealer)('sits')} out, and the upcard is set aside.`;
     case 'dealerDiscarded':
       return `${name(event.dealer)} ${v(event.dealer)('discards')}.`;
+    case 'farmerSwapped':
+      return `${name(event.seat)} ${v(event.seat)('swaps')} a farmer’s hand: three cards for the kitty.`;
+    case 'defendAloneChosen':
+      return event.accept ? `${name(event.seat)} ${v(event.seat)('defends')} alone.` : null;
     case 'cardPlayed':
       return `${name(event.seat)} ${v(event.seat)('plays')} the ${cardLabel(event.card)}.`;
     case 'trickWon':
@@ -93,9 +98,10 @@ export function describeEvent(
 
 /** A short status chip for a seat: its bid this round, the contract, or sitting out. */
 export function seatStatus(view: PlayerView, seat: Seat): string | null {
-  if (view.sittingOut === seat) return 'Sitting out';
+  if (view.sittingOut.includes(seat)) return 'Sitting out';
   const { contract } = view;
   if (contract !== null) {
+    if (contract.loneDefender === seat) return 'Defending alone';
     if (contract.maker !== seat) return null;
     return `Called ${SUIT_NAMES[contract.trump]}${contract.alone ? ' · alone' : ''}`;
   }
@@ -117,7 +123,14 @@ export function turnPrompt(
       : `${seatName(view.toAct, view.seat, names)} is thinking…`;
   }
   switch (view.phase) {
+    case 'farmer':
+      return 'A farmer’s hand! Choose three cards to swap with the kitty, or keep your hand.';
+    case 'defendAlone':
+      return 'Defend alone against the makers? A euchre alone scores 4.';
     case 'bidRound1':
+      if (!legal.some((a) => a.type === 'orderUp' && !a.alone) && legal.length > 1) {
+        return 'Your partner deals: order it up only by going alone, or pass.';
+      }
       return view.dealer === view.seat
         ? 'Pick up the upcard, or pass.'
         : 'Order up the upcard, or pass.';
@@ -158,6 +171,6 @@ export function gameHighlights(results: readonly HandResult[], humanSeat: Seat):
   return [
     count('Marches', (r) => r.outcome === 'march', 'makers'),
     count('Loners made', (r) => r.outcome === 'lonerMade' || r.outcome === 'lonerSweep', 'makers'),
-    count('Euchres', (r) => r.outcome === 'euchred' || r.outcome === 'euchredAlone', 'pointsTo'),
+    count('Euchres', (r) => EUCHRE_OUTCOMES.includes(r.outcome), 'pointsTo'),
   ];
 }

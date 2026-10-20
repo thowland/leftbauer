@@ -12,7 +12,7 @@ import type { CardId } from '../../../src/engine/cards';
 import type { Seat } from '../../../src/engine/seats';
 import type { Contract, Trick } from '../../../src/engine/state';
 
-const TEAM: Contract = { trump: 'H', maker: 0, round: 1, alone: false };
+const TEAM: Contract = { trump: 'H', maker: 0, round: 1, alone: false, loneDefender: null };
 const ALONE: Contract = { ...TEAM, alone: true };
 
 function trick(...cards: [Seat, CardId][]): Trick {
@@ -25,11 +25,21 @@ function trick(...cards: [Seat, CardId][]): Trick {
 
 describe('seats in play (RU-5)', () => {
   it('has the maker’s partner sit out a loner', () => {
-    expect(sittingOut(TEAM)).toBeNull();
-    expect(sittingOut(null)).toBeNull();
-    expect(sittingOut(ALONE)).toBe(2);
+    expect(sittingOut(TEAM)).toEqual([]);
+    expect(sittingOut(null)).toEqual([]);
+    expect(sittingOut(ALONE)).toEqual([2]);
     expect(activeSeatCount(ALONE)).toBe(3);
     expect(activeSeatCount(TEAM)).toBe(4);
+  });
+
+  it('has a lone defender’s partner sit out too (RU-13)', () => {
+    expect(sittingOut({ ...TEAM, loneDefender: 1 })).toEqual([3]);
+    expect(sittingOut({ ...ALONE, loneDefender: 3 })).toEqual([2, 1]);
+    expect(activeSeatCount({ ...ALONE, loneDefender: 3 })).toBe(2);
+    // Seats 1 and 2 are out: from seat 1 the next to play is 3, then 0.
+    expect(firstActiveFrom(1, { ...ALONE, loneDefender: 3 })).toBe(3);
+    expect(nextActiveSeat(3, { ...ALONE, loneDefender: 3 })).toBe(0);
+    expect(nextActiveSeat(0, { ...ALONE, loneDefender: 3 })).toBe(3);
   });
 
   it('skips the seat sitting out', () => {

@@ -1,10 +1,10 @@
 /**
- * Hand and game scoring — RU-8, RU-9.
+ * Hand and game scoring — RU-8, RU-9, RU-12, RU-13.
  *
  * Pure module: no DOM, no React, no storage.
  */
 
-import type { RuleSet } from './rules';
+import { LONE_DEFENCE_POINTS, type RuleSet } from './rules';
 import { teamOf, type Team } from './seats';
 import type { Contract, HandResult, Score, Trick } from './state';
 
@@ -30,6 +30,14 @@ export function scoreHand(
   const base = { kind: 'scored', makers, tricksWon: won } as const;
 
   if (made < 3) {
+    if (contract.loneDefender !== null) {
+      return {
+        ...base,
+        outcome: 'euchredByLoneDefender',
+        points: LONE_DEFENCE_POINTS,
+        pointsTo: defenders,
+      };
+    }
     const outcome = contract.alone ? 'euchredAlone' : 'euchred';
     return { ...base, outcome, points: 2, pointsTo: defenders };
   }

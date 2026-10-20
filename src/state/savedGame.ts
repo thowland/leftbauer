@@ -14,7 +14,7 @@ import { PERSONAS } from '../bots/personas';
 import { isCardId } from '../engine/cards';
 import type { GameEvent } from '../engine/events';
 import { currentActor, legalActions, newGame } from '../engine/game';
-import { assertSupportedRules, type RuleSet } from '../engine/rules';
+import { isRuleSet, type RuleSet } from '../engine/rules';
 import { leftOf, partnerOf, SEATS, type Seat } from '../engine/seats';
 import type { GameState, HandPhase } from '../engine/state';
 import { toPlayerView } from '../engine/view';
@@ -127,9 +127,11 @@ function isSeatSetup(value: unknown): value is SeatSetup {
 }
 
 const PHASE_KINDS: readonly unknown[] = [
+  'farmer',
   'bidRound1',
   'dealerDiscard',
   'bidRound2',
+  'defendAlone',
   'play',
   'complete',
 ] satisfies HandPhase['kind'][];
@@ -141,7 +143,7 @@ const isCardList = (v: unknown): boolean => Array.isArray(v) && v.every(isCardId
  * cannot answer questions about is not loaded.
  */
 function isGameState(value: unknown): value is GameState {
-  if (!isRecord(value) || !isRecord(value.rules) || !isRecord(value.hand)) return false;
+  if (!isRecord(value) || !isRuleSet(value.rules) || !isRecord(value.hand)) return false;
   const { hand, score } = value;
   const shaped =
     Array.isArray(score) &&
@@ -159,12 +161,13 @@ function isGameState(value: unknown): value is GameState {
     hand.hands.every(isCardList) &&
     isCardList(hand.kitty) &&
     (hand.kitty as unknown[]).length === 4 &&
+    (hand.farmerSwap === null || (isRecord(hand.farmerSwap) && isCardList(hand.farmerSwap.gave))) &&
+    (hand.contract === null || (isRecord(hand.contract) && 'loneDefender' in hand.contract)) &&
     Array.isArray(hand.bids) &&
     Array.isArray(hand.tricks);
   if (!shaped) return false;
   const state = value as unknown as GameState;
   try {
-    assertSupportedRules(state.rules);
     const actor = currentActor(state);
     if (actor !== null) legalActions(state, actor);
     SEATS.forEach((seat) => toPlayerView(state, seat));
@@ -183,9 +186,30 @@ export function isSavedGame(value: unknown): value is SavedGame {
   );
 }
 
+/**
+ * Version 2 (Sprint 9) settled the last house rules: the farmer's hand
+ * became a plain on/off rule, a hand records any farmer's swap, and a
+ * contract records any lone defender. A version 1 game had none of them.
+ */
+function addSprint9Fields(blob: Record<string, unknown>): Record<string, unknown> {
+  const game = isRecord(blob.game) ? blob.game : {};
+  const rules = isRecord(game.rules) ? game.rules : {};
+  const hand = isRecord(game.hand) ? game.hand : {};
+  const contract = isRecord(hand.contract) ? { ...hand.contract, loneDefender: null } : null;
+  return {
+    ...blob,
+    schemaVersion: 2,
+    game: {
+      ...game,
+      rules: { ...rules, farmersHand: false },
+      hand: { ...hand, farmerSwap: null, contract },
+    },
+  };
+}
+
 export const GAME_STORE: VersionedStore<SavedGame> = {
   key: 'leftbauer:game',
-  schemaVersion: 1,
-  migrations: {},
+  schemaVersion: 2,
+  migrations: { 1: addSprint9Fields },
   isValid: isSavedGame,
 };

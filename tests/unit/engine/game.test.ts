@@ -8,7 +8,7 @@ import {
   legalActions,
   newGame,
 } from '../../../src/engine/game';
-import { STANDARD_RULES, UnsupportedRuleError } from '../../../src/engine/rules';
+import { STANDARD_RULES } from '../../../src/engine/rules';
 import type { GameState } from '../../../src/engine/state';
 import { seededRng } from '../../../src/util/rng';
 import { act, finishHand, gameFromDeck, playRandomGame } from '../../helpers/engine';
@@ -26,12 +26,6 @@ describe('newGame', () => {
     expect(events).toEqual([
       { type: 'handDealt', dealer: 2, handNumber: 1, upcard: state.hand.kitty[0] },
     ]);
-  });
-
-  it('refuses house rules that are not implemented yet', () => {
-    expect(() => newGame({ ...STANDARD_RULES, defendAlone: true }, 0, seededRng(1))).toThrow(
-      UnsupportedRuleError
-    );
   });
 });
 

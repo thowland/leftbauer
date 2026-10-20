@@ -3,8 +3,9 @@
  *
  * The information visible from one seat. It is the only input a bot or
  * the coach ever receives, and what the UI renders for the human. It
- * never contains another seat's cards, the unseen kitty, or (except to
- * the dealer) the dealer's discard.
+ * never contains another seat's cards, the unseen kitty, (except to the
+ * dealer) the dealer's discard, or (except to the farmer) the cards
+ * swapped for a farmer's hand.
  *
  * Pure module: no DOM, no React, no storage.
  */
@@ -45,7 +46,10 @@ export interface PlayerView {
   readonly contract: Contract | null;
   readonly tricks: readonly Trick[];
   readonly currentTrick: Trick | null;
-  readonly sittingOut: Seat | null;
+  /** The partners of a lone maker and of a lone defender. */
+  readonly sittingOut: readonly Seat[];
+  /** Only when this seat swapped a farmer's hand: the three cards it gave up. */
+  readonly myFarmerSwap: readonly CardId[] | null;
   /** Set once the hand is over. */
   readonly result: HandResult | null;
   readonly gameWinner: GameState['winner'];
@@ -76,6 +80,7 @@ export function toPlayerView(state: GameState, seat: Seat): PlayerView {
     tricks: hand.tricks,
     currentTrick: hand.currentTrick,
     sittingOut: sittingOut(hand.contract),
+    myFarmerSwap: hand.farmerSwap?.seat === seat ? hand.farmerSwap.gave : null,
     result: hand.phase.kind === 'complete' ? hand.phase.result : null,
     gameWinner: state.winner,
   };

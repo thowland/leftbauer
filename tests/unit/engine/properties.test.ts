@@ -13,16 +13,16 @@ import { SEATS, type Seat } from '../../../src/engine/seats';
 import type { GameState } from '../../../src/engine/state';
 import { toPlayerView } from '../../../src/engine/view';
 import { seededRng } from '../../../src/util/rng';
-import { playRandomGame } from '../../helpers/engine';
+import { deckFor, gameFromDeck, playRandomGame } from '../../helpers/engine';
 
 const rulesArb: fc.Arbitrary<RuleSet> = fc.record({
   targetScore: fc.constantFrom(5 as const, 7 as const, 10 as const, 11 as const),
   stickTheDealer: fc.boolean(),
   lonersAllowed: fc.boolean(),
   lonerSweepPoints: fc.constantFrom(4 as const, 5 as const),
-  defendAlone: fc.constant(false),
-  dealerPartnerMustGoAlone: fc.constant(false),
-  farmersHand: fc.constant(null),
+  defendAlone: fc.boolean(),
+  dealerPartnerMustGoAlone: fc.boolean(),
+  farmersHand: fc.boolean(),
 });
 
 interface GameRun {
@@ -30,14 +30,31 @@ interface GameRun {
   readonly dealer: Seat;
   readonly dealSeed: number;
   readonly playSeed: number;
+  /** Deal the first hand from this deck instead of the seed. */
+  readonly farmerDeck?: readonly CardId[];
 }
 
-const gameArb: fc.Arbitrary<GameRun> = fc.record({
+const randomGameArb: fc.Arbitrary<GameRun> = fc.record({
   rules: rulesArb,
   dealer: fc.constantFrom(...SEATS),
   dealSeed: fc.integer(),
   playSeed: fc.integer(),
 });
+
+/** One run in four opens with a farmer's hand, with the rule on. */
+const gameArb: fc.Arbitrary<GameRun> = fc.oneof(
+  { weight: 3, arbitrary: randomGameArb },
+  {
+    weight: 1,
+    arbitrary: randomGameArb.chain((run) =>
+      farmerDeckArb(run.dealer).map((farmerDeck) => ({
+        ...run,
+        rules: { ...run.rules, farmersHand: true },
+        farmerDeck,
+      }))
+    ),
+  }
+);
 
 function playedCards(s: GameState): CardId[] {
   const tricks = [...s.hand.tricks, ...(s.hand.currentTrick ? [s.hand.currentTrick] : [])];
@@ -49,10 +66,39 @@ function forEachState(
   run: GameRun,
   check: (s: GameState, events: readonly GameEvent[]) => void
 ): GameState {
-  const start = newGame(run.rules, run.dealer, seededRng(run.dealSeed));
+  const start = run.farmerDeck
+    ? { state: gameFromDeck(run.farmerDeck, run.dealer, run.rules), events: [] }
+    : newGame(run.rules, run.dealer, seededRng(run.dealSeed));
   check(start.state, start.events);
   return playRandomGame(start.state, seededRng(run.playSeed), check);
 }
+
+const NINES_AND_TENS = ALL_CARDS.filter((c) => c[0] === '9' || c[0] === 'T');
+
+/**
+ * A first deal in which `seat` holds a farmer's hand, so the rare swap
+ * (about one hand in 170) is exercised on every run.
+ */
+const farmerDeckArb = (dealer: Seat) =>
+  fc
+    .record({
+      farmer: fc.constantFrom(...SEATS),
+      farmerCards: fc.shuffledSubarray(NINES_AND_TENS, { minLength: 5, maxLength: 5 }),
+      seed: fc.integer(),
+    })
+    .map(({ farmer, farmerCards, seed }) => {
+      const rest = ALL_CARDS.filter((c) => !farmerCards.includes(c));
+      const rng = seededRng(seed);
+      for (let i = rest.length - 1; i > 0; i--) {
+        const j = rng.nextInt(i + 1);
+        [rest[i], rest[j]] = [rest[j]!, rest[i]!];
+      }
+      const others = SEATS.filter((s) => s !== farmer);
+      const hands: CardId[][] = [[], [], [], []];
+      hands[farmer] = farmerCards;
+      others.forEach((s, i) => (hands[s] = rest.slice(i * 5, i * 5 + 5)));
+      return deckFor(hands, rest.slice(15), dealer);
+    });
 
 const CARD_TOKEN = /"([9TJQKA][CDHS])"/g;
 
@@ -64,9 +110,11 @@ describe('engine invariants', () => {
           const held = [...s.hand.hands.flat(), ...playedCards(s)];
           if (s.hand.discard) held.push(s.hand.discard);
           expect(new Set(held).size).toBe(held.length);
-          const buried = s.hand.kitty.slice(1);
+          // A farmer's swap replaces the three face-down kitty cards.
+          const buried = s.hand.farmerSwap?.gave ?? s.hand.kitty.slice(1);
+          expect(buried).toHaveLength(3);
           expect(held.some((c) => buried.includes(c))).toBe(false);
-          expect(new Set([...held, ...s.hand.kitty])).toEqual(new Set(ALL_CARDS));
+          expect(new Set([...held, s.hand.kitty[0]!, ...buried])).toEqual(new Set(ALL_CARDS));
           expect(held.includes(s.hand.kitty[0]!)).toBe(s.hand.upcardStatus === 'pickedUp');
         });
       }),
@@ -121,6 +169,7 @@ describe('engine invariants', () => {
             const view = toPlayerView(s, seat);
             const visible = new Set<string>([...publicCards, ...view.myHand]);
             if (view.myDiscard) visible.add(view.myDiscard);
+            for (const card of view.myFarmerSwap ?? []) visible.add(card);
             const shown = [...JSON.stringify(view).matchAll(CARD_TOKEN)].map((m) => m[1]!);
             for (const card of shown) expect(visible.has(card)).toBe(true);
           }

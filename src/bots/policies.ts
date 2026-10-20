@@ -29,6 +29,13 @@ export interface BiddingPolicy {
 
 export interface LonerPolicy {
   goAlone(ctx: DecisionContext, trump: Suit): ScoredOption<boolean>[];
+  /** Whether to defend alone against the makers (RU-13). */
+  defendAlone(ctx: DecisionContext): ScoredOption<boolean>[];
+}
+
+/** A farmer's hand (RU-15): the three cards to swap, or none to keep the hand. */
+export interface FarmerPolicy {
+  exchange(ctx: DecisionContext): ScoredOption<readonly CardId[]>[];
 }
 
 export interface DiscardPolicy {
@@ -42,6 +49,7 @@ export interface CardPlayPolicy {
 export interface PolicySet {
   readonly bidding: BiddingPolicy;
   readonly loner: LonerPolicy;
+  readonly farmer: FarmerPolicy;
   readonly discard: DiscardPolicy;
   readonly cardPlay: CardPlayPolicy;
 }

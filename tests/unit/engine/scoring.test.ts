@@ -9,7 +9,7 @@ function tricks(...winners: Seat[]): Trick[] {
   return winners.map((winner) => ({ leader: 0, plays: [], winner }));
 }
 
-const MAKER_0: Contract = { trump: 'H', maker: 0, round: 1, alone: false };
+const MAKER_0: Contract = { trump: 'H', maker: 0, round: 1, alone: false, loneDefender: null };
 const ALONE_0: Contract = { ...MAKER_0, alone: true };
 
 describe('tricksWon', () => {

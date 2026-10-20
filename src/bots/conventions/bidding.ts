@@ -3,7 +3,8 @@
  *
  * A call is worth making when the hand's expected tricks, plus what a
  * partner usually contributes, clear a threshold. The threshold moves
- * with the persona's appetite, the seat and the score.
+ * with the persona's appetite, the seat and the score. Where a house rule
+ * allows ordering up only alone (RU-14), the call is judged as a loner.
  *
  * Pure module: no DOM, no React, no storage.
  */
@@ -11,9 +12,9 @@
 import type { BidAction } from '../../engine/actions';
 import { sisterSuit, suitOf, type Suit } from '../../engine/cards';
 import { leftOf } from '../../engine/seats';
-import { seatFacts, type DecisionContext } from '../context';
-import type { UpcardTaker } from '../evaluate';
+import { seatFacts, upcardTaker, type DecisionContext } from '../context';
 import type { BiddingPolicy, ScoredOption } from '../policies';
+import { lonerThreshold } from './loner';
 
 /** Expected tricks a side needs before calling (three wins the hand). */
 export const BASE_CALL_THRESHOLD = 3.1;
@@ -44,12 +45,6 @@ export function callThreshold(ctx: DecisionContext, round: 1 | 2): number {
   return threshold;
 }
 
-/** Who takes the upcard if its suit becomes trump in round one. */
-export function upcardTaker(ctx: DecisionContext): UpcardTaker {
-  const f = seatFacts(ctx.view);
-  return f.isDealer ? 'me' : f.partnerIsDealer ? 'partner' : 'opponent';
-}
-
 function teamTricks(ctx: DecisionContext, trump: Suit, round: 1 | 2): number {
   const { view, evaluator } = ctx;
   const context =
@@ -66,7 +61,19 @@ function passOption(ctx: DecisionContext): ScoredOption<BidAction>[] {
 export const conventionalBidding: BiddingPolicy = {
   round1(ctx) {
     const options = passOption(ctx);
-    if (ctx.legal.some((a) => a.type === 'orderUp')) {
+    const plainOrder = ctx.legal.some((a) => a.type === 'orderUp' && !a.alone);
+    if (!plainOrder && ctx.legal.some((a) => a.type === 'orderUp')) {
+      // RU-14: the dealer's partner may order up only alone, and the upcard is then set aside.
+      const own = ctx.evaluator.expectedTricks(ctx.view.myHand, suitOf(ctx.view.upcard), {
+        upcard: null,
+        taker: null,
+      });
+      options.unshift({
+        value: { type: 'orderUp', alone: true },
+        score: own - lonerThreshold(ctx),
+        reason: { code: 'bid-forced-alone', params: { tricks: round2(own) } },
+      });
+    } else if (plainOrder) {
       const tricks = teamTricks(ctx, suitOf(ctx.view.upcard), 1);
       options.unshift({
         value: { type: 'orderUp', alone: false },

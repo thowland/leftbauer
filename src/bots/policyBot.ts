@@ -48,9 +48,18 @@ export class PolicyBot implements Bot {
           view.phase === 'bidRound1' ? policies.bidding.round1(ctx) : policies.bidding.round2(ctx);
         return this.bid(ctx, selector.select(options, ctx.rng));
       }
+      case 'farmer': {
+        const chosen = selector.select(policies.farmer.exchange(ctx), ctx.rng);
+        return this.legalDecision(legal, { type: 'farmerExchange', cards: chosen.value }, chosen);
+      }
       case 'dealerDiscard': {
         const chosen = selector.select(policies.discard.discard(ctx), ctx.rng);
         return this.legalDecision(legal, { type: 'discard', card: chosen.value }, chosen);
+      }
+      case 'defendAlone': {
+        // Like going alone, this follows the evaluation, never a random slip.
+        const chosen = bestSelector.select(policies.loner.defendAlone(ctx), ctx.rng);
+        return this.legalDecision(legal, { type: 'defendAlone', accept: chosen.value }, chosen);
       }
       default: {
         const chosen = selector.select(policies.cardPlay.play(ctx), ctx.rng);
@@ -62,7 +71,8 @@ export class PolicyBot implements Bot {
   /** A chosen call, then the separate decision whether to go alone. */
   private bid(ctx: DecisionContext, chosen: ScoredOption<BidAction>): Decision {
     const bid = chosen.value;
-    if (bid.type === 'pass') return this.legalDecision(ctx.legal, bid, chosen);
+    // A pass, or a call that can only be made alone (RU-14), needs no loner decision.
+    if (bid.type === 'pass' || bid.alone) return this.legalDecision(ctx.legal, bid, chosen);
     const trump: Suit = bid.type === 'orderUp' ? suitOf(ctx.view.upcard) : bid.suit;
     const alone = { ...bid, alone: true };
     if (ctx.legal.some((a) => sameAction(a, alone))) {

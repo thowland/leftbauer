@@ -13,7 +13,7 @@ import type { BotSpec } from '../bots/bot';
 import { newGame } from '../engine/game';
 import { STANDARD_RULES, type RuleSet } from '../engine/rules';
 import type { Seat, Team } from '../engine/seats';
-import type { HandResult } from '../engine/state';
+import { EUCHRE_OUTCOMES, type HandResult } from '../engine/state';
 import { hashSeed, seededRng } from '../util/rng';
 import { InlineBotRunner } from './botRunner';
 import { BotSeatController } from './controllers';
@@ -87,7 +87,7 @@ function tally(results: readonly HandResult[], ofTeam: (t: Team) => TeamStats): 
     const alone =
       r.outcome === 'lonerMade' || r.outcome === 'lonerSweep' || r.outcome === 'euchredAlone';
     if (alone) makers.lonerAttempts++;
-    if (r.outcome === 'euchred' || r.outcome === 'euchredAlone') {
+    if (EUCHRE_OUTCOMES.includes(r.outcome)) {
       makers.euchredAsMakers++;
       ofTeam(r.pointsTo).euchresInflicted++;
     } else {

@@ -10,11 +10,12 @@
  */
 
 import { sameAction, type Action } from './actions';
-import { applyBid, applyDiscard, biddingLegalActions } from './bidding';
-import { deal } from './deal';
+import { applyBid, applyDefendAlone, applyDiscard, biddingLegalActions } from './bidding';
+import { deal, type Deal } from './deal';
 import type { GameEvent, HandStep } from './events';
+import { applyFarmerExchange, farmerLegalActions, farmerSeat } from './farmer';
 import { applyPlay, playLegalActions } from './play';
-import { assertSupportedRules, type RuleSet } from './rules';
+import type { RuleSet } from './rules';
 import { addResult, gameWinner } from './scoring';
 import { leftOf, type Seat } from './seats';
 import type { GameState, HandState } from './state';
@@ -33,13 +34,26 @@ export interface Rejection {
   readonly reason: RejectionReason;
 }
 
-function dealHand(dealer: Seat, rng: Rng): HandState {
-  const { hands, kitty } = deal(rng, dealer);
+function dealHand(dealer: Seat, rng: Rng, rules: RuleSet): HandState {
+  return handFromDeal(deal(rng, dealer), dealer, rules);
+}
+
+/** A freshly dealt hand: bidding opens, unless a farmer's hand is offered its swap first. */
+export function handFromDeal(
+  { hands, kitty }: Pick<Deal, 'hands' | 'kitty'>,
+  dealer: Seat,
+  rules: RuleSet
+): HandState {
+  const farmer = farmerSeat(hands, dealer, rules);
   return {
     dealer,
-    phase: { kind: 'bidRound1', toAct: leftOf(dealer) },
+    phase:
+      farmer === null
+        ? { kind: 'bidRound1', toAct: leftOf(dealer) }
+        : { kind: 'farmer', seat: farmer },
     hands,
     kitty,
+    farmerSwap: null,
     upcardStatus: 'faceUp',
     bids: [],
     contract: null,
@@ -59,13 +73,12 @@ function dealtEvent(state: GameState): GameEvent {
 }
 
 export function newGame(rules: RuleSet, firstDealer: Seat, rng: Rng): Applied {
-  assertSupportedRules(rules);
   const state: GameState = {
     rules,
     score: [0, 0],
     dealer: firstDealer,
     handNumber: 1,
-    hand: dealHand(firstDealer, rng),
+    hand: dealHand(firstDealer, rng, rules),
     completedHands: [],
     winner: null,
   };
@@ -85,7 +98,7 @@ export function dealNextHand(state: GameState, rng: Rng): Applied {
     ...state,
     dealer,
     handNumber: state.handNumber + 1,
-    hand: dealHand(dealer, rng),
+    hand: dealHand(dealer, rng, state.rules),
   };
   return { ok: true, state: next, events: [dealtEvent(next)] };
 }
@@ -94,8 +107,11 @@ export function dealNextHand(state: GameState, rng: Rng): Applied {
 export function currentActor(state: GameState): Seat | null {
   const { phase } = state.hand;
   switch (phase.kind) {
+    case 'farmer':
+      return phase.seat;
     case 'bidRound1':
     case 'bidRound2':
+    case 'defendAlone':
     case 'play':
       return phase.toAct;
     case 'dealerDiscard':
@@ -107,9 +123,14 @@ export function currentActor(state: GameState): Seat | null {
 
 export function legalActions(state: GameState, seat: Seat): readonly Action[] {
   if (state.winner !== null) return [];
-  return state.hand.phase.kind === 'play'
-    ? playLegalActions(state.hand, seat)
-    : biddingLegalActions(state.hand, state.rules, seat);
+  switch (state.hand.phase.kind) {
+    case 'farmer':
+      return farmerLegalActions(state.hand, seat);
+    case 'play':
+      return playLegalActions(state.hand, seat);
+    default:
+      return biddingLegalActions(state.hand, state.rules, seat);
+  }
 }
 
 export function applyAction(state: GameState, seat: Seat, action: Action): Applied | Rejection {
@@ -128,9 +149,13 @@ function stepHand(state: GameState, seat: Seat, action: Action): HandStep {
     case 'play':
       return applyPlay(state.hand, seat, action.card, state.rules);
     case 'discard':
-      return applyDiscard(state.hand, action.card);
+      return applyDiscard(state.hand, action.card, state.rules);
+    case 'farmerExchange':
+      return applyFarmerExchange(state.hand, seat, action.cards);
+    case 'defendAlone':
+      return applyDefendAlone(state.hand, seat, action.accept);
     default:
-      return applyBid(state.hand, seat, action);
+      return applyBid(state.hand, seat, action, state.rules);
   }
 }
 
