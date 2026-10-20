@@ -2,6 +2,14 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Fix — A steady table
+
+### Fixed
+
+- Nothing on the table moves during a hand any more. Before, the center and the trick jumped when the last cards left the hands, when a "Called…" or "Pass" chip appeared, and when the bid buttons came and went.
+- On phones in portrait, round-two bids fit on one row (the suit buttons show only the suit), and the trick no longer overlaps the prompt or the Last trick button.
+- On iPhone in landscape, the kitty and the trick now fit: the partner's and your names sit beside the cards, and the trick is a little smaller.
+
 ## Sprint 9 — House rules and the four-color deck
 
 ### Added

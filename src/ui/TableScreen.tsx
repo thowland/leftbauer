@@ -176,28 +176,30 @@ export function TableScreen({
         <p className={`turn-prompt${hint ? ' hint-text' : ''}`} aria-live="polite">
           {hint ? `Hint: ${hint.reasonText}` : turnPrompt(view, legal, namesOf(seats))}
         </p>
-        {bids.length > 0 && (
-          <BidPanel
-            legal={bids}
-            isDealer={view.dealer === human}
-            onBid={onAction}
-            hinted={hint !== null && isBidAction(hint.action) ? hint.action : null}
-          />
-        )}
-        {farmer && (
-          <FarmerPanel
-            picked={picked}
-            onSwap={() => onAction({ type: 'farmerExchange', cards: picked })}
-            onKeep={() => onAction({ type: 'farmerExchange', cards: [] })}
-            hinted={hint?.action ?? null}
-          />
-        )}
-        {defending && (
-          <DefendAlonePanel
-            onChoose={(accept) => onAction({ type: 'defendAlone', accept })}
-            hinted={hint?.action ?? null}
-          />
-        )}
+        <div className="action-panel">
+          {bids.length > 0 && (
+            <BidPanel
+              legal={bids}
+              isDealer={view.dealer === human}
+              onBid={onAction}
+              hinted={hint !== null && isBidAction(hint.action) ? hint.action : null}
+            />
+          )}
+          {farmer && (
+            <FarmerPanel
+              picked={picked}
+              onSwap={() => onAction({ type: 'farmerExchange', cards: picked })}
+              onKeep={() => onAction({ type: 'farmerExchange', cards: [] })}
+              hinted={hint?.action ?? null}
+            />
+          )}
+          {defending && (
+            <DefendAlonePanel
+              onChoose={(accept) => onAction({ type: 'defendAlone', accept })}
+              hinted={hint?.action ?? null}
+            />
+          )}
+        </div>
       </section>
 
       <section
