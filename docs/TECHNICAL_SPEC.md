@@ -714,11 +714,15 @@ The UI reads table state with `useSyncExternalStore(driver.subscribe, driver.sna
 
 `Presenter` is an `EventSink` that turns events into a queue of animation steps (deal, card to trick, trick sweep, upcard pickup, discard) and resolves each `handle` promise when its steps finish. It owns all timing for SA-1. Components animate stable-identity SVG card elements via CSS transforms, following gammon's ADR-0015 approach. Durations are theme tokens.
 
+*As built (Sprint 6):* `ui/game/presenter.ts` publishes one `Cue` at a time (`deal`, `pickup`, `turnDown`, `discard`, `play`) through `subscribe`/`cue`, and awaits the matching duration from `themes/motion.ts` before the driver moves on. The same tokens reach CSS as custom properties (`--deal-stagger`, `--flight`, `--flip`). `ui/motion.ts` turns a cue into a CSS class and a unit vector toward a seat (`--dx`, `--dy`), which the table scales by its reach, so no layout is measured. Leading a trick sweeps the last one to its winner; the hand's last trick stays on the table until the summary. Motion is off under `?e2e` (restored by `?motion`) and when the user prefers reduced motion. Sinks run in the order persistence, audio, Presenter, so the game is saved and the sound starts before the driver waits on an animation.
+
 ### 9.3 Audio (`src/audio/`)
 
 - `soundMap.ts` is a pure function from `GameEvent` to `SoundId[]` (for example, `handScored` with a `euchred` outcome maps to `euchre-sting`). It is unit-tested without audio.
 - `AudioEngine` handles Web Audio playback, preloading from the asset manifest, the mute setting and unlocking audio on the first gesture (SA-3).
 - `AudioSink` is the `EventSink` that connects the two.
+
+*As built (Sprint 6):* sounds are small mono MP3s in `public/sounds/` (ADR-0005). `AudioEngine.unlockOn(window)` resumes the context on every tap or key press, so audio also recovers after iOS suspends it; sounds load on the first unlock and any that have not loaded are skipped, never played late. `AudioSink` matches `EventSink` structurally, since `audio/` may not import `session/`. The mute control is a Sound toggle beside Menu, stored as `Settings.soundOn`.
 
 ### 9.4 Bot runner and worker
 
