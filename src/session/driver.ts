@@ -188,14 +188,18 @@ export class TableDriver {
     }
   }
 
-  /** Pause before a bot acts, so the human can follow along. `hurry` cuts it short. */
+  /**
+   * Pause before a bot acts, so the human can follow along, and after the
+   * hand's last trick, so it stays on the table before the summary covers
+   * it. `hurry` cuts it short.
+   */
   private async paceBot(
     next: Seat | null,
     ms: number,
     signal: AbortSignal,
     skip = this.hurried
   ): Promise<void> {
-    if (next === null || ms <= 0 || skip || this.deps.controllers[next].kind !== 'bot') return;
+    if (ms <= 0 || skip || (next !== null && this.deps.controllers[next].kind !== 'bot')) return;
     const pause = new AbortController();
     const forward = () => pause.abort();
     signal.addEventListener('abort', forward, { once: true });
