@@ -224,11 +224,12 @@ Within each sprint, pure modules (engine, bots, coach, state) are written test-f
 
 **Code and infrastructure:**
 - `vite-plugin-pwa`: precaching, the offline shell, the manifest, icons and the iOS install flow (NF-5, ADR from gammon's ADR-0017).
+- **A favicon and app icon set**, drawn for Left Bauer: an SVG favicon, PNG icons for the manifest (192, 512 and a maskable 512), an `apple-touch-icon` (180), and a `theme-color`. They must read clearly at 16 px in a browser tab and on an iPhone home screen.
 - The AWS S3 and CloudFront stack adapted from gammon's `infra/`, plus `scripts/deploy.sh`.
 - Performance checks: cold launch to a dealt hand (NF-1), bundle size (NF-4), 60 fps on device (NF-3).
 - Release `0.1.0`. A short beta guide for friends: how to install, plus the questions you want answered.
 
-**E2E:** the app works offline after the first load (Playwright's `context.setOffline`), the manifest and service worker are valid, and a full regression run passes.
+**E2E:** the app works offline after the first load (Playwright's `context.setOffline`), the manifest and service worker are valid, every icon the manifest and `index.html` name loads, and a full regression run passes.
 
 **Review:** install it from the public URL on your phone, then share it with the first friends. The partner review in PB-6 happens here.
 
