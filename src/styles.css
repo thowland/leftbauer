@@ -134,7 +134,8 @@ body {
 .score .trump dd {
   display: grid;
   place-items: center;
-  min-width: 1.1rem;
+  /* As wide as the dash or a suit, whichever is wider, so naming trump never moves the bar. */
+  inline-size: max(1em, 1.1rem);
 }
 
 .score-target {

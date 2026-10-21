@@ -41,6 +41,24 @@ describe('startGame', () => {
     expect(botAt(seats, 3)?.personaId).toBe('soopy');
   });
 
+  it('gives Johnny Blue a disguise for the game, the same one for the same seed', () => {
+    const johnny = (seed: number) =>
+      botAt(
+        startGame({ ...OPTIONS, opponents: { left: 'johnny', right: 'johnny' }, seed }).saved.seats,
+        1
+      );
+    const disguises = new Set<string>();
+    for (let seed = 0; seed < 40; seed++) {
+      const spec = johnny(seed)!;
+      expect(spec.personaId).toBe('johnny');
+      expect(johnny(seed)).toEqual(spec);
+      disguises.add(spec.playsAs!);
+    }
+    expect([...disguises].sort()).toEqual(['rusty', 'shrubs', 'smooth', 'soopy']);
+    // Nobody else wears one.
+    expect(botAt(saved().seats, 1)!.playsAs).toBeUndefined();
+  });
+
   it('seats around a human in any seat', () => {
     const { seats } = startGame({ ...OPTIONS, humanSeat: 2 }).saved;
     expect(botAt(seats, 2)).toBeNull();
@@ -105,6 +123,9 @@ describe('isSavedGame', () => {
       tampered((b) => delete b.seats.bots[1]),
       tampered((b) => (b.seats.bots[1].role = 'boss')),
       tampered((b) => (b.seats.bots[1].personaId = 'nobody')),
+      tampered((b) => (b.seats.bots[1].personaId = 'johnny')),
+      tampered((b) => (b.seats.bots[1].playsAs = 'soopy')),
+      tampered((b) => Object.assign(b.seats.bots[1], { personaId: 'johnny', playsAs: 'partner' })),
       tampered((b) => (b.seats.bots[1].skill = 'grandmaster')),
       tampered((b) => (b.game = null)),
       tampered((b) => (b.game.rules = null)),

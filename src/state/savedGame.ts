@@ -10,7 +10,7 @@
 
 import type { BotSpec, PersonaId, SkillLevel } from '../bots/bot';
 import { PARTNER_SPEC } from '../bots/factory';
-import { PERSONAS } from '../bots/personas';
+import { DISGUISES, PERSONAS } from '../bots/personas';
 import { isCardId } from '../engine/cards';
 import type { GameEvent } from '../engine/events';
 import { currentActor, legalActions, newGame } from '../engine/game';
@@ -67,7 +67,16 @@ export function startGame({
   // A separate stream for opponent choice, so it never changes the deal.
   const pickRng = seed === null ? cryptoRng() : seededRng(hashSeed('opponents', seed));
   const [left, right] = resolveOpponents(opponents, pickRng);
-  const opponent = (personaId: PersonaId): BotSpec => ({ role: 'opponent', personaId, skill });
+  // Johnny Blue's disguise comes from the same stream, after both seats are chosen.
+  const opponent = (personaId: PersonaId): BotSpec =>
+    personaId === 'johnny'
+      ? {
+          role: 'opponent',
+          personaId,
+          skill,
+          playsAs: DISGUISES[pickRng.nextInt(DISGUISES.length)]!,
+        }
+      : { role: 'opponent', personaId, skill };
 
   const firstDealer = shuffleRng.nextInt(4) as Seat;
   const { state, events } = newGame(rules, firstDealer, shuffleRng);
@@ -116,7 +125,11 @@ function isBotSpec(value: unknown): value is BotSpec {
     isRecord(value) &&
     (value.role === 'partner' || value.role === 'opponent' || value.role === 'coach') &&
     PERSONAS.some((p) => p.id === value.personaId) &&
-    (value.skill === 'casual' || value.skill === 'standard' || value.skill === 'sharp')
+    (value.skill === 'casual' || value.skill === 'standard' || value.skill === 'sharp') &&
+    // Johnny Blue always has a disguise, and nobody else has one.
+    (value.personaId === 'johnny'
+      ? DISGUISES.includes(value.playsAs as PersonaId)
+      : value.playsAs === undefined)
   );
 }
 

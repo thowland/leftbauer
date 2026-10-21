@@ -43,9 +43,12 @@ async function passUntil(page: Page, done: () => Promise<boolean>): Promise<void
 }
 
 test('stick the dealer: the dealer cannot pass in round two (RU-10)', async ({ page }) => {
-  await newGameWith(page, '/?seed=127&e2e', () =>
-    page.getByRole('checkbox', { name: /Stick the dealer/ }).check()
-  );
+  // The seed's deal needs these two opponents' bids to reach a stuck dealer.
+  await newGameWith(page, '/?seed=127&e2e', async () => {
+    await page.getByLabel('Left opponent').selectOption('soopy');
+    await page.getByLabel('Right opponent').selectOption('smooth');
+    await page.getByRole('checkbox', { name: /Stick the dealer/ }).check();
+  });
   await page.getByRole('button', { name: 'Menu' }).click();
   await expect(page.getByRole('button', { name: 'House rules · to 10' })).toBeVisible();
   await page.getByRole('button', { name: 'Back to the game' }).click();

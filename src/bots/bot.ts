@@ -11,8 +11,8 @@
 import type { Action } from '../engine/actions';
 import type { PlayerView } from '../engine/view';
 
-/** The partner, and the four named opponents (OP-3). */
-export type PersonaId = 'partner' | 'soopy' | 'shrubs' | 'rusty' | 'smooth';
+/** The partner, the four named opponents (OP-3), and Johnny Blue, who plays as one of them. */
+export type PersonaId = 'partner' | 'soopy' | 'shrubs' | 'rusty' | 'smooth' | 'johnny';
 
 export type SkillLevel = 'casual' | 'standard' | 'sharp';
 
@@ -21,6 +21,8 @@ export interface BotSpec {
   readonly role: 'partner' | 'opponent' | 'coach';
   readonly personaId: PersonaId;
   readonly skill: SkillLevel;
+  /** Johnny Blue's persona for this game (and only his): the style he plays. */
+  readonly playsAs?: PersonaId;
 }
 
 /**
@@ -76,5 +78,6 @@ export interface Bot {
 
 /** A stable string for a spec, for caching and seeding. */
 export function specKey(spec: BotSpec): string {
-  return `${spec.role}/${spec.personaId}/${spec.skill}`;
+  const persona = spec.playsAs === undefined ? spec.personaId : `${spec.personaId}:${spec.playsAs}`;
+  return `${spec.role}/${persona}/${spec.skill}`;
 }

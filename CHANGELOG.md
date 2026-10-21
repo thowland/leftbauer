@@ -2,6 +2,16 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Johnny Blue
+
+### Added
+
+- **Johnny Blue**, a fifth opponent. Each game he quietly plays as one of the other four (Soopy, Shrubs, Rusty or Smooth), and the game never says which. Choose him in Settings, or a random seat may draw him. A saved game keeps his disguise.
+
+### Fixed
+
+- The score bar no longer moves a pixel when trump is named on iPhone in landscape: the Trump slot is as wide as its widest value.
+
 ## Fix — Home without a tagline
 
 ### Removed

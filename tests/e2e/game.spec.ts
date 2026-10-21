@@ -44,7 +44,7 @@ test.describe('playing a game', () => {
     }
     await expect(page.getByTitle('Dealer')).toHaveCount(1);
     // Two different named opponents and the partner (OP-4).
-    const names = /Soopy|Shrubs|Rusty|Smooth/;
+    const names = /Soopy|Shrubs|Rusty|Smooth|Johnny Blue/;
     const left = await page.getByRole('region', { name: 'Left opponent' }).innerText();
     const right = await page.getByRole('region', { name: 'Right opponent' }).innerText();
     expect(left).toMatch(names);

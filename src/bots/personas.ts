@@ -5,6 +5,8 @@
  * thresholds) plus presentation. Adding an opponent means adding an
  * entry here. A persona whose style is a different *way* of thinking
  * rather than a different appetite would supply policy overrides.
+ * Johnny Blue has no style of his own: each game he plays as one of the
+ * others (`DISGUISES`), drawn when the game starts and never shown.
  *
  * Pure module: no DOM, no React, no storage.
  */
@@ -25,15 +27,20 @@ export interface StyleProfile {
   readonly scoreAwareness: number;
 }
 
+/** Who sits at the table: what the player sees. */
 export interface Persona {
   readonly id: PersonaId;
   readonly name: string;
   readonly tagline: string;
   /** A CSS custom property from the theme, for the monogram badge. */
   readonly colorToken: `--${string}`;
-  readonly style: StyleProfile;
+  /** How the persona plays; absent for Johnny Blue, who borrows another's. */
+  readonly style?: StyleProfile;
   readonly overrides?: Partial<PolicySet>;
 }
+
+/** A persona with a style of its own, which a bot can play. */
+export type PlayingPersona = Persona & { readonly style: StyleProfile };
 
 /** The partner's conventions (PB-4): the neutral baseline, fully score-aware. */
 export const BY_THE_BOOK: StyleProfile = {
@@ -80,6 +87,13 @@ export const PERSONAS: readonly Persona[] = [
     colorToken: '--persona-smooth',
     style: BY_THE_BOOK,
   },
+  {
+    id: 'johnny',
+    name: 'Johnny Blue',
+    tagline:
+      'Plays like one of the others, a different one each game. Which one is up to you to work out.',
+    colorToken: '--persona-johnny',
+  },
 ];
 
 /** The opponents a player can face (everyone but the partner). */
@@ -87,8 +101,25 @@ export const OPPONENT_IDS: readonly PersonaId[] = PERSONAS.filter((p) => p.id !=
   (p) => p.id
 );
 
+/** The personas Johnny Blue can play as: every opponent with a style of its own. */
+export const DISGUISES: readonly PersonaId[] = PERSONAS.filter(
+  (p) => p.id !== 'partner' && p.style !== undefined
+).map((p) => p.id);
+
 export function personaById(id: PersonaId): Persona {
   const persona = PERSONAS.find((p) => p.id === id);
   if (persona === undefined) throw new Error(`Unknown persona: ${id}`);
   return persona;
+}
+
+/** The persona a spec actually plays: Johnny Blue's disguise, or the persona itself. */
+export function playingPersona(spec: {
+  personaId: PersonaId;
+  playsAs?: PersonaId;
+}): PlayingPersona {
+  const persona = personaById(spec.playsAs ?? spec.personaId);
+  if (persona.style === undefined) {
+    throw new Error(`${persona.name} needs a persona to play as`);
+  }
+  return persona as PlayingPersona;
 }

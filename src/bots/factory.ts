@@ -15,7 +15,7 @@ import { conventionalDiscard } from './conventions/discard';
 import { conventionalFarmer } from './conventions/farmer';
 import { conventionalLoner } from './conventions/loner';
 import { HeuristicEvaluator } from './evaluate';
-import { personaById } from './personas';
+import { playingPersona } from './personas';
 import { simulatedCardPlay } from './simulate/cardPlay';
 import type { PolicySet } from './policies';
 import { PolicyBot } from './policyBot';
@@ -33,7 +33,7 @@ const CONVENTIONAL: PolicySet = {
 const evaluator = new HeuristicEvaluator();
 
 export function createBot(spec: BotSpec): Bot {
-  const persona = personaById(spec.personaId);
+  const persona = playingPersona(spec);
   const skill = SKILLS[spec.skill];
   return new PolicyBot({
     spec,
