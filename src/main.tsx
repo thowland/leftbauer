@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AudioEngine, browserAudioDeps } from './audio/audioEngine';

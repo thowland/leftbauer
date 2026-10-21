@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 export interface LaunchOptions {
   readonly dev: boolean;
   readonly seed: number | null;

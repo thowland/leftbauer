@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Tim Howland
+
 # Source this from a deploy script to load `deploy.env` if present.
 # Lines look like KEY=VALUE; blank lines and `#` comments are ignored.
 #

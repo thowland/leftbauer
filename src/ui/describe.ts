@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Plain-language descriptions of game events and seat status, from the
  * human's point of view. Used by the dev panel now and by the table's

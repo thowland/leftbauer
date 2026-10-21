@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { useState, type PointerEvent, type ReactNode } from 'react';
 import { isBidAction, type Action } from '../engine/actions';
 import { sortHand, type CardId } from '../engine/cards';

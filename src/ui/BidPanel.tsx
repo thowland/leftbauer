@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { useState } from 'react';
 import type { Action, BidAction } from '../engine/actions';
 import { SUITS, type Suit } from '../engine/cards';

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /** Raised by any session wait that is cancelled through its AbortSignal. */
 export class AbortedError extends Error {
   constructor() {

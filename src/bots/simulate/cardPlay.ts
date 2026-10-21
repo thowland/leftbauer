@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Simulated card play: the Sharp level — OP-2, PB-2; Technical Spec §6.4.
  *

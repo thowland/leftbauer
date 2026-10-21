@@ -1,4 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Tim Howland
+
 # ----------------------------------------------------------------------------
 # Left Bauer static hosting (ADR-0006), adapted from gammon's gammon-pwa.yaml.
 #

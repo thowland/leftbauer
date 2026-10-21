@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { useState, type CSSProperties } from 'react';
 import { isLeftBower, isRightBower, type CardId, type Suit } from '../engine/cards';
 import { cardLabel } from '../assets/manifest';

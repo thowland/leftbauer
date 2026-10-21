@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { useState } from 'react';
 import { STAT_LEVELS, totalOf, type Stats, type Tally } from '../state/stats';
 import { Dialog } from './Dialog';

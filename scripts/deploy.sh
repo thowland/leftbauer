@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Tim Howland
+
 # Build and publish the site to the left-bauer stack (ADR-0006).
 #
 #   1. Run `npm run verify`, then build dist/ (SKIP_VERIFY=1 skips the gate).

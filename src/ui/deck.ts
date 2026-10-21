@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { createContext } from 'react';
 import type { DeckVariant } from '../assets/manifest';
 

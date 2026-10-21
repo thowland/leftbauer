@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * "How your partner plays" — UI-6, PB-4; Technical Spec §7.
  *

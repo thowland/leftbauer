@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * The active rules in plain words — UI-2, RU-10 to RU-16. Used by the
  * table's Rules chip and the settings screen.

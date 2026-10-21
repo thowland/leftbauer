@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Bidding and the dealer's discard — RU-3, RU-4, RU-5.
  *

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Shuffling and dealing — RU-1, RU-2; Technical Spec §4.5.
  *

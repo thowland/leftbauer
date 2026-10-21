@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * The dev panel's table session (`?dev`). Advances the engine one action
  * at a time with a seeded random choice, so hands can be watched and

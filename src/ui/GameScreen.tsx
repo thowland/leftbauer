@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { hintFor, type Hint } from '../coach/hint';
 import { toPlayerView } from '../engine/view';

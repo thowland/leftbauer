@@ -1,7 +1,7 @@
 # Left Bauer — Implementation Plan
 
-**Status:** Draft v1
-**Last updated:** 2026-10-19
+**Status:** Complete through Sprint 10; v1 released as 0.1.0 on 2026-10-21
+**Last updated:** 2026-10-21
 **Builds on:** [Requirements](./REQUIREMENTS.md) · [Technical Specification](./TECHNICAL_SPEC.md)
 
 ## 1. Approach
@@ -15,7 +15,7 @@ The plan puts something visible in front of you after the first sprint and a pla
 | **Real Euchre** | Sprint 4 | Play against conventional bots: your partner and the four named opponents |
 | **Feels like a table** | Sprint 6 | Animation, sound, resume and settings |
 | **v1 feature-complete** | Sprint 9 | All Must and Should requirements |
-| **Friends beta** | Sprint 10 | Installed PWA on a public URL |
+| **Friends beta** | Sprint 10 | Installed PWA on a public URL (released as 0.1.0, 2026-10-21) |
 
 ## 2. Working agreement
 

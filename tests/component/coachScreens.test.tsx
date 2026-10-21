@@ -105,7 +105,7 @@ describe('reading screens (UI-2, UI-3, UI-6)', () => {
     expect(screen.getByText(/leads trump back to you/)).toBeInTheDocument();
   });
 
-  it('tells the Bauer story, credits the sounds and shows the version', async () => {
+  it('tells the Bauer story, credits the sounds, states the license and shows the version', async () => {
     const onDone = vi.fn();
     render(<AboutScreen onDone={onDone} />);
     expect(screen.getByText(/German-speaking settlers in Pennsylvania/)).toBeInTheDocument();
@@ -113,6 +113,12 @@ describe('reading screens (UI-2, UI-3, UI-6)', () => {
       'href',
       'https://kenney.nl/assets/casino-audio'
     );
+    expect(screen.getByText('Copyright © 2026 Tim Howland.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'source code' })).toHaveAttribute(
+      'href',
+      'https://github.com/thowland/leftbauer'
+    );
+    expect(screen.getByRole('link', { name: 'GNU General Public License' })).toBeInTheDocument();
     expect(screen.getByText(/^Version \d+\.\d+\.\d+$/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Done' }));
     expect(onDone).toHaveBeenCalledOnce();

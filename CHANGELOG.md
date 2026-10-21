@@ -1,24 +1,28 @@
 # Changelog
 
-All notable changes to this project are recorded here, one section per sprint.
+All notable changes to this project are recorded here, one section per sprint or fix. The first release is 0.1.0.
 
-## Johnny Blue
+## Unreleased
 
-### Added
+### Johnny Blue
+
+#### Added
 
 - **Johnny Blue**, a fifth opponent. Each game he quietly plays as one of the other four (Soopy, Shrubs, Rusty or Smooth), and the game never says which. Choose him in Settings, or a random seat may draw him. A saved game keeps his disguise.
 
-### Fixed
+#### Fixed
 
 - The score bar no longer moves a pixel when trump is named on iPhone in landscape: the Trump slot is as wide as its widest value.
 
-## Fix — Home without a tagline
+### Home without a tagline
 
-### Removed
+#### Removed
 
 - The tagline under the title on Home.
 
-## Sprint 10 — The installable app (0.1.0)
+## 0.1.0 — Sprint 10, the installable app (2026-10-21)
+
+The first release, deployed to https://leftbauer.beta-site.us.
 
 ### Added
 

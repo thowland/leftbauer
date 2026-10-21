@@ -68,5 +68,14 @@
   },
   "engines": {
     "node": ">=22.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thowland/leftbauer.git"
+  },
+  "homepage": "https://leftbauer.beta-site.us",
+  "bugs": {
+    "url": "https://github.com/thowland/leftbauer/issues"
+  },
+  "author": "Tim Howland"
 }

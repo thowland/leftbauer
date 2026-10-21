@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Skill: difficulty as strategy selection — OP-2; Technical Spec §6.5.
  *

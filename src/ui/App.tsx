@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { AudioEngine } from '../audio/audioEngine';
 import type { BotRunner } from '../session/botRunner';

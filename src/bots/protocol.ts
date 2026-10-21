@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Messages to and from a bot running elsewhere (the Web Worker) —
  * Technical Spec §9.4. Plain data only, so they cross any boundary.
