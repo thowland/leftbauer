@@ -6,9 +6,9 @@
 
 ## 1. Purpose and scope
 
-This document defines the object model and the major application components for Left Bauer v1. It specifies how the code is divided, what each part owns, and the interfaces between the parts. It does not prescribe internal algorithms beyond what is needed to fix those interfaces. Bot tuning values, the exact calling thresholds and the farmer's-hand mechanics are left to implementation and to ADRs.
+This document defines the object model and the major application components for Left Bauer v1. It specifies how the code is divided, what each part owns, and the interfaces between the parts. It does not prescribe internal algorithms beyond what is needed to fix those interfaces. Bot tuning values, the exact calling thresholds and the farmer's-hand mechanics were left to implementation and to ADRs. Sections marked *As built* record what was implemented where it differs from or completes the original design.
 
-The design follows gammon's layering and conventions (pure core, React on top, ESLint-enforced boundaries, schema-versioned `localStorage`). Where it deliberately departs from gammon, §13 says so.
+The design follows gammon's layering and conventions (gammon is the author's earlier single-player backgammon PWA, a separate project; its ADR numbers below refer to that repository) (pure core, React on top, ESLint-enforced boundaries, schema-versioned `localStorage`). Where it deliberately departs from gammon, §13 says so.
 
 ## 2. Design principles
 
@@ -31,7 +31,7 @@ The design follows gammon's layering and conventions (pure core, React on top, E
         v                                        |
 +----------------------------------------------------------------------+
 |                      Session  (src/session/)                         |
-|   TableDriver   SeatControllers   EventBus   Scheduler   BotRunner   |
+|   TableDriver   SeatControllers   EventSinks  Scheduler   BotRunner   |
 +----------------------------------------------------------------------+
      |            |                 |                   |
      v            v                 v                   v
@@ -53,16 +53,16 @@ The design follows gammon's layering and conventions (pure core, React on top, E
 | Util | `src/util/` | nothing | Yes | `Rng`, hashing, small helpers |
 | Engine | `src/engine/` | `util` | Yes | Euchre rules, game state, legal actions, player views, events, scoring |
 | Bots | `src/bots/` | `engine`, `util` | Yes | `Bot` interface, decision policies, knowledge tracking, simulation, personas, skill levels |
-| Coach | `src/coach/` | `bots`, `engine` | Yes | Hints and rendering reasons as text |
-| Session | `src/session/` | `engine`, `bots` (types and runner), `util` | No DOM | Running a table: turn order, seat controllers, pacing, event fan-out |
-| State | `src/state/` | `engine`, `bots` (types, personas), `session` (types), `util` | Yes (storage injected) | Persistence, migrations, settings, stats |
-| Audio | `src/audio/` | `engine` (event types), `assets` | No | Mapping events to sounds, playback, iOS unlock |
-| Assets | `src/assets/` | `engine` (types) | Data | Card art and sound manifests, deck variants |
-| Themes | `src/themes/` | nothing | Data | CSS-variable palettes |
-| Workers | `src/workers/` | `bots`, `engine` | No DOM | The bot Web Worker entry point |
+| Coach | `src/coach/` | `bots`, `engine`, `util` | Yes | Hints and rendering reasons as text |
+| Session | `src/session/` | `engine`, `bots`, `util` | Yes | Running a table: turn order, seat controllers, pacing, event fan-out |
+| State | `src/state/` | `engine`, `bots`, `session`, `util` | Yes (storage injected) | Persistence, migrations, settings, stats |
+| Audio | `src/audio/` | `engine`, `assets`, `util` | No | Mapping events to sounds, playback, iOS unlock |
+| Assets | `src/assets/` | `engine` | Yes (data) | Card art and sound manifests, deck variants |
+| Themes | `src/themes/` | nothing | Yes (data) | CSS-variable palettes |
+| Workers | `src/workers/` | `bots`, `engine`, `util` | Yes | The bot Web Worker's logic (`botHost.ts`); the entry shim only binds it to `self` |
 | UI | `src/ui/` | everything | No | React components, presentation, wiring |
 
-The rules are enforced with ESLint `no-restricted-imports` and `no-restricted-globals`, scoped per folder as in gammon. Pure folders may not import React or touch `window`, `document` or `localStorage`.
+The rules are enforced with ESLint `no-restricted-imports` and `no-restricted-globals`, scoped per folder (`LAYERS` in `eslint.config.js`). Pure folders may not import React or touch `window`, `document` or `localStorage`.
 
 ## 4. Engine object model (`src/engine/`)
 
@@ -105,7 +105,7 @@ interface RuleSet {
   readonly lonerSweepPoints: 4 | 5;                // RU-12, default 4
   readonly defendAlone: boolean;                   // RU-13, default false
   readonly dealerPartnerMustGoAlone: boolean;      // RU-14, default false
-  readonly farmersHand: FarmersHandRule | null;    // RU-15, default null (mechanics TBD)
+  readonly farmersHand: boolean;                   // RU-15, default false (ADR-0004)
 }
 
 const STANDARD_RULES: RuleSet;                     // the defaults above
@@ -196,7 +196,7 @@ type Action =
   | BidAction
   | { type: 'discard'; card: CardId }
   | { type: 'defendAlone'; accept: boolean }
-  | { type: 'farmerExchange'; cards: readonly CardId[] } // shape provisional until RU-15 is settled
+  | { type: 'farmerExchange'; cards: readonly CardId[] } // the three cards given up, or none
   | { type: 'play'; card: CardId };
 ```
 
@@ -259,7 +259,7 @@ interface PlayerView {
   readonly contract: Contract | null;
   readonly tricks: readonly Trick[];
   readonly currentTrick: Trick | null;
-  readonly sittingOut: Seat | null;               // at most one seat sits out
+  readonly sittingOut: readonly Seat[];           // a lone maker's partner, and a lone defender's
   readonly result: HandResult | null;              // set once the hand is over
   readonly gameWinner: Team | null;
 }
@@ -278,10 +278,11 @@ type GameEvent =
   | { type: 'upcardTurnedDown'; dealer: Seat }
   | { type: 'upcardSetAside'; dealer: Seat }               // dealer sits out a partner's loner
   | { type: 'dealerDiscarded'; dealer: Seat }              // the card stays hidden
-  | { type: 'defendAloneDeclared'; seat: Seat }
+  | { type: 'farmerSwapped'; seat: Seat }                // the cards stay hidden
+  | { type: 'defendAloneChosen'; seat: Seat; accept: boolean }
   | { type: 'cardPlayed'; seat: Seat; card: CardId; trickIndex: number }
   | { type: 'trickWon'; seat: Seat; trickIndex: number }
-  | { type: 'handScored'; result: HandResult }             // includes euchres, marches, loner sweeps
+  | { type: 'handScored'; result: HandResult; score: Score } // includes euchres, marches, loner sweeps
   | { type: 'redeal'; nextDealer: Seat }
   | { type: 'gameOver'; winner: Team; score: readonly [number, number] };
 ```
@@ -462,7 +463,7 @@ decide(view, legal) {
 
 ### 6.4 Style: personas as strategy configuration
 
-A persona is **data**, not a class. It is a `StyleProfile` plus optional policy overrides. This keeps the four v1 opponents to a few lines each, and adding a persona means adding a registry entry (OP-3).
+A persona is **data**, not a class. It is a `StyleProfile` plus optional policy overrides. This keeps each opponent to a few lines, and adding a persona means adding a registry entry (OP-3).
 
 ```ts
 interface StyleProfile {
@@ -490,10 +491,11 @@ interface Persona {
 | `shrubs` | Loner hunter | Much lower `lonerThreshold` |
 | `rusty` | Bold caller | Lower `callThreshold`, high `stickAggression` |
 | `smooth` | By the book | Same profile as `partner` |
+| `johnny` | Johnny Blue, a disguise | No profile of his own: plays one of the four above, drawn each game |
 
 **When to override a policy rather than adjust the profile:** if a style is "the same decision with a different appetite," it is a profile number. If it is "a different way of thinking about the decision" (for example, a future persona that leads trump at every opportunity), it is a new policy implementation passed in `overrides`. This rule keeps the policy implementations few and cohesive, and it keeps the personas thin.
 
-*As built (after Sprint 10):* a fifth opponent, **Johnny Blue**, is a persona with no `style`. Each game he plays as one of `DISGUISES` (Soopy, Shrubs, Rusty or Smooth, even one already at the table), drawn in `startGame` from the opponent-choice stream, so a seeded game always gives him the same disguise. `BotSpec.playsAs` records the disguise and is saved with the game; `isSavedGame` requires it for Johnny and refuses it for anyone else. `playingPersona(spec)` resolves the persona the factory plays, and `specKey` includes the disguise, so caching and decision seeds keep his disguises apart. The table and Settings show only Johnny Blue's own name, colour and tagline, and nothing reveals the disguise. A random seat can draw him; the tournament does not field him.
+*As built (after Sprint 10):* a fifth opponent, **Johnny Blue**, is a persona with no `style`. Each game he plays as one of `DISGUISES` (Soopy, Shrubs, Rusty or Smooth, even one already at the table), drawn in `startGame` from the opponent-choice stream, so a seeded game always gives him the same disguise. `BotSpec.playsAs` records the disguise and is saved with the game; `isSavedGame` requires it for Johnny and refuses it for anyone else. `playingPersona(spec)` resolves the persona the factory plays, and `specKey` includes the disguise, so caching and decision seeds keep his disguises apart. The table and Settings show only Johnny Blue's own name, color and tagline, and nothing reveals the disguise. A random seat can draw him; the tournament does not field him.
 
 ### 6.5 Skill: difficulty as strategy selection
 
@@ -699,28 +701,28 @@ sequenceDiagram
 ### 9.1 UI composition (`src/ui/`)
 
 ```
-App
-├── AppShell                 theme, safe areas, error boundary, audio unlock
-├── HomeScreen               Continue / New game (GF-1)
-├── TableScreen
-│   ├── ScoreBar             score, trump indicator, dealer marker, tricks per team (VP-1)
-│   ├── SeatBadge ×3         persona monogram, card backs, bid bubbles, "sitting out"
-│   ├── TrickArea            upcard and kitty, cards in the current trick
-│   ├── PlayerHand           sorted by effective suit, bower badges, legal dimming, raise/tap (GF-2, UI-4)
-│   ├── BidPanel             only legal bid buttons (GF-3)
-│   ├── HintControl          hint highlight and reason (CO-1, CO-2)
+App                          screen state, saved game, settings and stats; ?dev opens dev/DevApp
+├── HomeScreen               Continue / New game, and the reading screens (GF-1)
+├── GameScreen               runs the TableDriver (ui/game/createTable.ts), hints, the menu
+│   ├── TableScreen          score bar, seats (OtherSeat, SeatLabel), CenterContents, TrickView (VP-1)
+│   │   ├── PlayerHand       sorted by effective suit, bower badges, legal dimming, raise/tap (GF-2, UI-4)
+│   │   ├── BidPanel         only legal bid buttons (GF-3)
+│   │   ├── HouseRulePanels  the farmer's swap and defending alone
+│   │   └── SoundToggle
 │   ├── LastTrickPeek        (GF-5)
-│   ├── RulesChip            summary of the active RuleSet
 │   ├── HandSummary          (GF-6)
-│   └── GameOver             (GF-7)
+│   ├── GameOver             (GF-7)
+│   └── GameMenu             sound, the game's rules (RulesDialog), how to play, leave, end
 ├── SettingsScreen           (UI-1)
-├── RulesScreen              rendered from the active RuleSet (UI-2)
+├── RulesScreen              rendered from a RuleSet (UI-2)
 ├── PartnerConventionsScreen generated from coach.partnerConventions() (UI-6)
 ├── StatsScreen              (UI-5)
-└── AboutScreen              the Bauer story, credits, version (UI-3)
+└── AboutScreen              the Bauer story, credits, license, version (UI-3)
 ```
 
-Navigation is a small screen-state enum in the app store, with no router library, as in gammon. Seat placement on screen is a pure UI function, `screenPosition(seat, humanSeat)`. Nothing below the UI assumes the human sits in seat 0 (§12).
+Dialogs share `Dialog`; the reading screens share `Page`. The hint (CO-1, CO-2) is a highlight on the suggested card or bid plus its reason in the turn prompt, owned by `GameScreen`.
+
+Navigation is a small screen-state union in `App`, with no router library, as in gammon. Seat placement on screen is a pure UI function, `screenPosition(seat, humanSeat)`. Nothing below the UI assumes the human sits in seat 0 (§12).
 
 *As built (after Sprint 9):* the table's grid tracks are fixed, so nothing moves during a hand. The side columns are `--side-w` wide, and a side seat's status chip may wrap onto a reserved second line. An empty hand or row of backs keeps one card's height. The action bar is always the prompt's lines plus one row of buttons (`--prompt-lines`, `--button-h`), and a panel that wraps grows upward over the felt. On phones in portrait the suit buttons show only the suit, so a round-two bid fits on one row, and the trick sits at the bottom of the felt below the corner controls. With a short screen (iPhone landscape) the partner's and the human's names sit beside their cards. `.trick` pads itself to hold its cards, which are taller than its rows. `tests/e2e/layout.spec.ts` checks every part of the table, the four score slots and the Hint button keep their boxes from the deal to the end of the hand. Spacing follows `docs/design/layout-improvements.md`: the `--space-*` scale and relationship tokens on `:root`, four tiers (portrait phone `max-width: 520px`, landscape phone `max-height: 500px`, default, and roomy `min-width: 768px and min-height: 700px`), and compact pills whose hit area reaches 44 px through an out-of-flow `::after`. The game's rules open from the game menu (`RulesDialog`); the felt keeps only Hint and Last trick, in one right-to-left row. `Dialog` takes `onClose` (Escape), traps Tab, restores focus, and has a `sheet` placement for the hand summary on portrait phones. Sound renders twice, in the score bar and in the menu, and CSS shows one per tier.
 
@@ -768,7 +770,7 @@ type DeckVariant = 'standard' | 'fourColor';
 
 Components ask the manifest for a card face by `CardId` and `DeckVariant`. They never import art files directly, so replacing the open-licensed deck with the illustrated Bauer deck later is a manifest change. Themes are CSS-variable palettes, as in gammon (VP-4).
 
-*As built (Sprint 10):* the app installs and runs offline (ADR-0006). `vite.config.ts` configures `vite-plugin-pwa` to precache the whole build, sounds included, with `autoUpdate`. The icons are rendered from `public/icon.svg` by `npm run icons`. It is hosted by `infra/left-bauer.yaml`: S3 behind CloudFront with OAC, at `leftbauer.beta-site.us`, with a cache policy that honours each object's `Cache-Control` and a response headers policy whose CSP the preview server also sends (`infra/security-headers.json`). `scripts/deploy.sh` runs the gate, uploads the build, deletes stale files only after the upload, and invalidates `/*`. E2E tests block service workers except `pwa.spec.ts`; `budget.spec.ts` checks NF-4 (the code was 115.5 KB gzipped) and approximates NF-1 on Chrome with a 4× slower CPU.
+*As built (Sprint 10):* the app installs and runs offline (ADR-0006). `vite.config.ts` configures `vite-plugin-pwa` to precache the whole build, sounds included, with `autoUpdate`. The icons are rendered from `public/icon.svg` by `npm run icons`. It is hosted by `infra/left-bauer.yaml`: S3 behind CloudFront with OAC, at `leftbauer.beta-site.us`, with a cache policy that honors each object's `Cache-Control` and a response headers policy whose CSP the preview server also sends (`infra/security-headers.json`). `scripts/deploy.sh` runs the gate, uploads the build, deletes stale files only after the upload, and invalidates `/*`. E2E tests block service workers except `pwa.spec.ts`; `budget.spec.ts` checks NF-4 (the code was 115.5 KB gzipped) and approximates NF-1 on Chrome with a 4× slower CPU.
 
 ## 10. State (`src/state/`)
 
@@ -778,7 +780,7 @@ Three keys, each with its own schema version and migration chain (ADR-0027 patte
 
 | Key | Contents | Written |
 |---|---|---|
-| `leftbauer:game` | `SavedGame { schemaVersion, game: GameState, seats: SeatSetup }` | after every applied action (PE-1) |
+| `leftbauer:game` | `SavedGame { game: GameState, seats: SeatSetup, seed: number \| null }`; the store wraps it with its schema version | after every applied action (PE-1) |
 | `leftbauer:settings` | `Settings` | on change (PE-3) |
 | `leftbauer:stats` | `Stats` | after `handScored` and `gameOver` (PE-2) |
 
@@ -799,7 +801,7 @@ As built (Sprint 5): `persistence.ts` is a generic `VersionedStore<T>` (`key`, `
 
 ### 10.2 Settings
 
-As built in Sprint 9, `Settings` (schema version 3) holds `opponents`, `skill`, `pacingMs`, `oneTapPlay`, `soundOn`, `hintsOn`, `pendingRules` and `deck`. The version 1 → 2 migration adds `hintsOn: true`; 2 → 3 adds standard rules and the two-color deck. `deck` is typed structurally (`DeckChoice`), since `state/` may not import `assets/`. A game keeps the rules it started with; Settings notes when the pending rules differ from the game in progress, and the table's `RulesChip` shows the game's own rules. The deck reaches every card through `ui/deck.ts` `DeckContext`. The theme is not yet a setting. The target shape:
+As built in Sprint 9, `Settings` (schema version 3) holds `opponents`, `skill`, `pacingMs`, `oneTapPlay`, `soundOn`, `hintsOn`, `pendingRules` and `deck`. The version 1 → 2 migration adds `hintsOn: true`; 2 → 3 adds standard rules and the two-color deck. `deck` is typed structurally (`DeckChoice`), since `state/` may not import `assets/`. A game keeps the rules it started with; Settings notes when the pending rules differ from the game in progress, and the game menu's Rules item (`RulesDialog`) shows the game's own rules. The deck reaches every card through `ui/deck.ts` `DeckContext`. The theme is not a setting. The shape:
 
 ```ts
 interface Settings {
@@ -809,9 +811,8 @@ interface Settings {
   readonly pacingMs: number;                         // GF-4
   readonly oneTapPlay: boolean;                      // GF-2
   readonly soundOn: boolean;                         // SA-3, default true
-  readonly hintsEnabled: boolean;                    // CO-3
-  readonly deck: DeckVariant;                        // VP-3
-  readonly themeId: string;
+  readonly hintsOn: boolean;                         // CO-3
+  readonly deck: DeckChoice;                         // VP-3
 }
 ```
 
@@ -837,7 +838,7 @@ interface Settings {
 
 ### 11.3 Tournament harness
 
-`runMatch` in `src/session/tournament.ts` (wrapped by `scripts/tournament.ts`, run with `npm run tournament`) runs `TableDriver` headless with four `BotSeatController`s over `InlineBotRunner`, seeded shuffles and no presentation sinks. It reports win, make, euchre, march and loner rates per pairing and confirms the difficulty ordering (Sharp > Standard > Casual) and the partner's strength (§9 acceptance criteria in the requirements). A small fixed-seed version runs in CI as a regression gate on bot strength.
+`runMatch` in `src/session/tournament.ts` (wrapped by `scripts/tournament.ts`, run with `npm run tournament`) runs `TableDriver` headless with four `BotSeatController`s over `InlineBotRunner`, seeded shuffles and no presentation sinks. It reports win, make, euchre, march and loner rates per pairing and confirms the difficulty ordering (Sharp > Standard > Casual) and the partner's strength (§9 acceptance criteria in the requirements). A small fixed-seed version runs in the test suite (`tests/integration/tournament.test.ts`) as a regression gate on bot strength, so `npm run verify` checks it before every merge.
 
 *As built (Sprint 7):* `runMatch` takes a `firstGame`, so `scripts/tournament.ts` splits each match into ranges of games, one per child process (`--jobs`), and `mergeReports` combines them into exactly the result of one long run. Each match is reported with a 95% confidence interval on the win rate, and `--out` writes the report (`docs/tournaments/sprint-07.md`). The suite's gates: Standard beats Casual over 200 games, and the partner at Sharp beats Standard over 40 games, each at a fixed seed.
 
@@ -861,17 +862,22 @@ v1 ships none of the networking.
 |---|---|---|---|
 | Game loop | A reducer inside a React provider, with an effect driving the AI | `TableDriver` outside React, read via `useSyncExternalStore` | Keeps the driver reusable in tests, the tournament and a future server. Bots run off the main thread. |
 | Side effects | Audio triggers diff consecutive states | The engine emits `GameEvent`s, consumed by sinks | Events are explicit, public-only and the future multiplayer wire format |
-| Strategy granularity | One strategy class per difficulty | One composite `Bot` assembled from per-decision policies, with style and skill as separate axes | Four personas × three skills would otherwise mean twelve classes, or style tangled into skill |
+| Strategy granularity | One strategy class per difficulty | One composite `Bot` assembled from per-decision policies, with style and skill as separate axes | Five personas × three skills would otherwise mean fifteen classes, or style tangled into skill |
 
 The stack, tooling, layer-purity enforcement, persistence pattern, PWA setup and AWS deployment are copied from gammon; ADR-0006 lists where the hosting differs.
 
-## 14. ADRs to write first
+## 14. ADRs
+
+The decisions are recorded in `docs/decisions/`:
 
 1. **ADR-0001 Tooling**: mirror gammon (React 19, TypeScript, Vite, vite-plugin-pwa, Vitest, Playwright, npm).
 2. **ADR-0002 Session outside React**: `TableDriver`, `useSyncExternalStore` and event sinks (§8, §13).
 3. **ADR-0003 Bot composition**: the `Bot`, policies, selectors, personas as data and skill as strategy selection (§6).
-4. **ADR-0004 Rules edge cases**: the dealer sitting out a partner's loner (decided: the dealer does not pick up the upcard, which is turned over, and there is no discard), defending alone and the lead, and the farmer's hand mechanics (once settled).
-5. **ADR-0005 Determinism and seeding**: crypto shuffles and view-hashed bot seeds (§5).
+4. **ADR-0004 Rules edge cases**: the dealer sitting out a partner's loner (the dealer does not pick up the upcard, which is turned over, and there is no discard), defending alone and the lead, and the farmer's hand.
+5. **ADR-0005 Card art and sound sources**: code-drawn faces and Kenney's CC0 sounds.
+6. **ADR-0006 The installable app and its hosting**: the PWA, the icon, and the S3 and CloudFront stack.
+
+Determinism and seeding (crypto shuffles, view-hashed bot seeds) were planned as an ADR but are recorded in §5 instead.
 
 ## 15. Requirements traceability
 
@@ -885,10 +891,10 @@ The stack, tooling, layer-purity enforcement, persistence pattern, PWA setup and
 | PB-3 | `util/rng.ts` `hashSeed`, `bots/context.ts` |
 | PB-4, UI-6 | `bots/conventions/`, `coach.partnerConventions()` |
 | PB-5 | `StyleProfile.scoreAwareness`, `HandEvaluator` seat context |
-| OP-3, OP-4 | `bots/personas.ts`, `ui/SeatBadge` |
-| CO-1 to CO-3 | `coach/`, `ui/HintControl` |
-| GF-1 to GF-8 | `session/TableDriver`, `ui/TableScreen` |
-| SA-1 to SA-3 | `ui/Presenter`, `audio/` |
+| OP-3, OP-4 | `bots/personas.ts`, `ui/TableScreen.tsx` (`SeatLabel`), `ui/SettingsScreen.tsx` |
+| CO-1 to CO-3 | `coach/`, `ui/GameScreen.tsx` |
+| GF-1 to GF-8 | `session/driver.ts` (`TableDriver`), `ui/TableScreen.tsx`, `ui/GameMenu.tsx` |
+| SA-1 to SA-3 | `ui/game/presenter.ts`, `ui/motion.ts`, `audio/` |
 | PE-1 to PE-3 | `state/persistence.ts`, `state/settings.ts`, `state/stats.ts` |
 | VP-1 to VP-4 | `ui/`, `assets/`, `themes/` |
-| NF-2, NF-3 | `workers/bot.worker.ts`, `SkillProfile.simulation.timeBudgetMs` |
+| NF-2, NF-3 | `workers/botHost.ts`, `session/workerRunner.ts`, `SkillProfile.simulation.timeBudgetMs` |

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tim Howland
 
 /**
- * Settings — UI-1 (first pass), PE-3; Technical Spec §10.2.
+ * Settings — UI-1, PE-3; Technical Spec §10.2.
  *
  * Stored under their own key, separately from the game (PE-3). Opponent
  * choice, difficulty and the house rules apply when the next game starts

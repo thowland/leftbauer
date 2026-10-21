@@ -3,8 +3,8 @@
 
 /**
  * Plain-language descriptions of game events and seat status, from the
- * human's point of view. Used by the dev panel now and by the table's
- * status messages later.
+ * human's point of view: the table's prompt and seat chips, the hand
+ * summary, game over, and the dev panel.
  */
 
 import type { Action, BidAction } from '../engine/actions';

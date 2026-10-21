@@ -94,7 +94,7 @@ const SIDES = [
   { side: 'right', label: 'Right opponent' },
 ] as const;
 
-/** Settings — UI-1 (first pass). Every change is saved as it is made (PE-3). */
+/** Settings — UI-1. Every change is saved as it is made (PE-3). */
 export function SettingsScreen({
   settings,
   onChange,

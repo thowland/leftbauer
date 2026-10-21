@@ -25,7 +25,7 @@ The plan puts something visible in front of you after the first sprint and a pla
 - Commits within a sprint are small and use conventional-commit messages, as in gammon.
 - A sprint closes only when every exit criterion in §2.2 passes on the sprint branch.
 - The sprint is merged with `git switch master && git merge --no-ff sprint/NN-short-name`, so every sprint appears as a merge commit in the history. The merged `master` is then tagged `sprint-NN`.
-- The repository is local only for now. No pushes, and no CI. The exit criteria are run locally with one command (§2.3).
+- The repository is public at github.com/thowland/leftbauer, and Tim reviews every pull request. There is no CI: the exit criteria run locally with one command (§2.3), and the husky hook enforces them on every merge.
 
 ### 2.2 Exit criteria (every sprint)
 
@@ -246,4 +246,4 @@ These are recorded so they stay out of v1:
 - **Sprint 4 is the largest and the most judgment-heavy.** Tuning conventions takes play-testing. If it runs long, split it into 4a (bidding and discards) and 4b (card play and personas).
 - **Coverage on UI and animation code.** The 80% branch threshold across all code includes React components and the presenter. Keeping the timing logic in pure, testable modules (the presenter's queue and `soundMap`) is what makes this achievable.
 - **WebKit E2E flakiness.** Animations make E2E timing fragile. Tests use a `?e2e` flag that sets pacing and animation durations to zero, and assert on state rather than timing.
-- **Local-only verification.** With no CI, the exit criteria depend on running `npm run verify` before every merge. To make that automatic, Sprint 1 adds a husky `pre-merge-commit` hook that runs `npm run verify`. Git runs this hook for every `--no-ff` merge, so a sprint cannot merge to `master` with a failing gate.
+- **Local verification.** With no CI, the exit criteria depend on running `npm run verify` before every merge. To make that automatic, Sprint 1 adds a husky `pre-merge-commit` hook that runs `npm run verify`. Git runs this hook for every `--no-ff` merge, so a sprint cannot merge to `master` with a failing gate.

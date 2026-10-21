@@ -4,8 +4,8 @@
 /**
  * Seat controllers — Technical Spec §8.1.
  *
- * Every seat is driven through one interface, so a human, a bot or (in
- * Phase 3) a remote player are interchangeable to the TableDriver.
+ * Every seat is driven through one interface, so a human, a bot or a
+ * future remote player (Phase 3) are interchangeable to the TableDriver.
  *
  * Pure module: no DOM, no React, no storage.
  */
