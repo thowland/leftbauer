@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Left Bauer: the corner of the jack of diamonds on the table felt.
+       The J is the card face's own rank glyph (src/ui/Card.tsx), scaled up. -->
+  <defs>
+    <radialGradient id="felt" cx="50%" cy="40%" r="70%">
+      <stop offset="0" stop-color="#2a5139" />
+      <stop offset="1" stop-color="#1d3b2a" />
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#felt)" />
+  <rect id="trim" x="20" y="20" width="472" height="472" rx="80" fill="none" stroke="#c9a45c" stroke-width="8" opacity="0.6" />
+  <g id="art">
+  <path
+    d="M20 4 H36 M30 4 V38 C30 48 25 52 18 52 C11 52 7 48 6 42"
+    transform="translate(96 84) scale(5.6)"
+    fill="none"
+    stroke="#efe6cf"
+    stroke-width="10"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path d="M370 236 L432 316 L370 396 L308 316 Z" fill="#d8483e" />
+  </g>
+</svg>
