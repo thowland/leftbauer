@@ -55,6 +55,7 @@ How a game runs:
    - Controllers are `HumanSeatController` or `BotSeatController`.
    - The sinks are wired in `ui/game/createTable.ts`, in this order: `PersistenceSink` (saves after every action), `StatsSink` (counts scored hands and games), then `AudioSink`, then `Presenter`. The `Presenter` holds the driver until animations finish.
    - Every wait goes through an `AbortSignal`, so `stop()` and a StrictMode remount are safe. `hurry()` cuts the current pause short.
+   - Failures are recoverable only where the app opts in: `DriverDeps.onError` (a failing sink is skipped; anything else ends the run with status `error`, resumable by `start()`) and `BotSeatController`'s `onFailure` (play the first legal action). Tests and the tournament leave them out, so a failure rejects `start()`. `ui/ErrorBoundary.tsx` catches render failures.
 3. **The UI** reads the driver with `useSyncExternalStore(driver.subscribe, driver.snapshot)` and sends the human's moves through `HumanSeatController.submit`; it never calls `applyAction`.
    - `GameScreen` starts the driver in a microtask, so React StrictMode's mount, unmount and remount presents the first deal once.
    - The `Presenter` publishes a single animation `Cue`. `ui/motion.ts` maps that cue to CSS classes plus `--dx`/`--dy` vectors.

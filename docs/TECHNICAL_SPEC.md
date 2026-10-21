@@ -668,6 +668,8 @@ The driver loop:
 
 The driver is identical in the app, in integration tests (with fake controllers and an immediate scheduler) and in the tournament harness (four bot controllers and no presentation sinks). That reuse is a deliberate part of the design.
 
+*As built (after 0.2.0):* `DriverDeps.onError` makes failures recoverable, and only the app passes it (`ui/game/createTable.ts`). A sink that throws is reported and skipped; any other failure is reported and ends the run with status `error`, which `GameScreen` shows as a dialog whose Try again calls `start()` from the current state. `BotSeatController`'s optional `onFailure` makes a bot whose decision fails play its first legal action. Without them, as in the tests and the tournament, a failure rejects `start()`, so nothing broken passes silently. Aborts always pass through. `ui/ErrorBoundary.tsx` wraps the app in `main.tsx`: a render failure offers Reload, or clearing `leftbauer:game` and reloading.
+
 ### 8.3 Sequence: a bot plays a card
 
 ```mermaid
@@ -797,7 +799,7 @@ Saving after every action is cheap (a Euchre game is a few hundred actions). Bec
 
 As built (Sprint 9): the game store is at schema version 2. Its migration from version 1 sets `farmersHand: false`, `farmerSwap: null` and, when there is a contract, `loneDefender: null`.
 
-As built (Sprint 5): `persistence.ts` is a generic `VersionedStore<T>` (`key`, `schemaVersion`, `migrations`, `isValid`) with guarded `load`/`save`/`clear`, so a full or blocked `localStorage` never breaks a game. `SavedGame` also records the `seed` of a `?seed=N` game; a resumed seeded game deals later hands from a stream derived from the seed and hand number, and a crypto game keeps using crypto. A save is validated structurally and then by asking the engine about it; anything it cannot answer is discarded.
+As built (Sprint 5): `persistence.ts` is a generic `VersionedStore<T>` (`key`, `schemaVersion`, `migrations`, `isValid`) with guarded `load`/`save`/`clear`, so a full or blocked `localStorage` never breaks a game. `SavedGame` also records the `seed` of a `?seed=N` game; a resumed seeded game deals later hands from a stream derived from the seed and hand number, and a crypto game keeps using crypto. A save is validated structurally and then by asking the engine about it; anything it cannot answer is discarded. Since 0.2.0 the structural check covers every field a screen reads (each phase's fields, results, bids, tricks, the contract, and no card held or played twice), and a test plays whole random games, house rules included, to prove every real state still passes.
 
 ### 10.2 Settings
 
