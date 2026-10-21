@@ -2,7 +2,7 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
-## Johnny Blue
+## 0.2.0 — Johnny Blue (2026-10-21)
 
 ### Added
 
@@ -11,8 +11,6 @@ All notable changes to this project are recorded here, one section per sprint.
 ### Fixed
 
 - The score bar no longer moves a pixel when trump is named on iPhone in landscape: the Trump slot is as wide as its widest value.
-
-## Fix — Home without a tagline
 
 ### Removed
 
