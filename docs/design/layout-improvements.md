@@ -2,6 +2,8 @@
 
 A layout and spacing review of every screen at the four target sizes, written after `fix/stable-table-layout`. It covers spacing, consistency across sizes, and which controls to collapse or group. It is not a rebrand: the green felt, brass accents and serif type stay as they are.
 
+**Status:** all 14 changes in §5 are implemented on `fix/stable-table-layout`. Deviations: the menu note sits under the Leave group, which it describes; in landscape the kitty's label sits beside the kitty, the cards are `14dvh`, and the action bar drops its top pad, so the table fits at 750×340.
+
 **Hard constraint.** Every recommendation keeps the table still during a hand. `tests/e2e/layout.spec.ts` must keep passing. Any track size or gap proposed here is static for a given viewport and never depends on game state.
 
 ## How this was measured

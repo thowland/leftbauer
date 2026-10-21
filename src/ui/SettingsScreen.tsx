@@ -210,7 +210,7 @@ export function SettingsScreen({
             </span>
           </span>
         </label>
-        <div className="settings-row">
+        <div className="settings-row settings-row-dependent">
           <label htmlFor="sweep-points">A loner who takes all five scores</label>
           <select
             id="sweep-points"

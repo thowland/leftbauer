@@ -6,7 +6,18 @@ import { expect, test, type Page } from '@playwright/test';
  * the hand. Seed 127 takes the human through both bidding rounds.
  */
 
-const PARTS = ['.center', '.seat-top', '.seat-left', '.seat-right', '.seat-bottom', '.action-bar'];
+const PARTS = [
+  '.center',
+  '.seat-top',
+  '.seat-left',
+  '.seat-right',
+  '.seat-bottom',
+  '.action-bar',
+  '.score > div:nth-child(1)',
+  '.score > div:nth-child(2)',
+  '.score > div:nth-child(3)',
+  '.score > div:nth-child(4)',
+];
 
 const boxes = (page: Page) =>
   page.evaluate((parts) => {
@@ -25,9 +36,17 @@ test('nothing on the table moves during a hand', async ({ page }) => {
   const summary = page.getByRole('dialog', { name: 'Hand 1' });
 
   const first = await boxes(page);
+  // Hint comes and goes with the turn, but always appears in the same place.
+  const hint = page.getByRole('button', { name: 'Hint' });
+  const hints = new Set<string>();
+  const recordHint = async () => {
+    const box = (await hint.isVisible()) ? await hint.boundingBox() : null;
+    if (box !== null) hints.add([box.x, box.y, box.width, box.height].map(Math.round).join(','));
+  };
   for (let i = 0; i < 200 && !(await summary.isVisible()); i++) {
     await expect(bid.or(cards.first()).or(summary)).toBeVisible();
     expect(await boxes(page)).toEqual(first);
+    await recordHint();
     if (await summary.isVisible()) break;
     if (await bid.isVisible()) {
       const pass = bid.getByRole('button', { name: 'Pass' });
@@ -41,4 +60,5 @@ test('nothing on the table moves during a hand', async ({ page }) => {
   await expect(summary).toBeVisible();
   await expect(cards).toHaveCount(0);
   expect(await boxes(page)).toEqual(first);
+  expect(hints.size).toBe(1);
 });

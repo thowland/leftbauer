@@ -88,17 +88,21 @@ test.describe('sound (SA-3)', () => {
   test('the mute control on the table persists across a reload', async ({ page }) => {
     const errors = await open(page, 34);
     await page.getByRole('button', { name: 'New game' }).click();
+    // Portrait phones keep Sound in the menu; elsewhere it is in the score bar.
     const sound = page.getByRole('button', { name: 'Sound' });
+    const reach = async () => {
+      await expect(page.getByRole('button', { name: 'Menu' })).toBeVisible();
+      if ((await sound.count()) === 0) await page.getByRole('button', { name: 'Menu' }).click();
+    };
+    await reach();
     await expect(sound).toHaveAttribute('aria-pressed', 'true');
     await sound.click();
     await expect(sound).toHaveAttribute('aria-pressed', 'false');
 
     await page.reload();
     await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByRole('button', { name: 'Sound' })).toHaveAttribute(
-      'aria-pressed',
-      'false'
-    );
+    await reach();
+    await expect(sound).toHaveAttribute('aria-pressed', 'false');
     expect(errors).toEqual([]);
   });
 });

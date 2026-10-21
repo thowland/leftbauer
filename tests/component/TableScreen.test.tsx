@@ -128,7 +128,10 @@ describe('TableScreen options', () => {
   it('scores from the human team’s point of view', () => {
     renderTable({ ...gameFromDeck(), score: [3, 7] }, 1);
     const values = [...screen.getByLabelText('Score').querySelectorAll('dd')];
-    expect(values.map((d) => d.textContent)).toEqual(['7', '3']);
+    // Trump and Tricks hold their places with a dash until trump is named.
+    expect(values.map((d) => d.textContent)).toEqual(['7', '3', '—', '—']);
+    expect(screen.getByLabelText('Trump: not named yet')).toBeInTheDocument();
+    expect(screen.getByLabelText('Tricks: none yet')).toBeInTheDocument();
   });
 
   it('renders extra score-bar controls', () => {

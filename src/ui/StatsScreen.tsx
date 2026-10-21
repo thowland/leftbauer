@@ -65,7 +65,7 @@ export function StatsScreen({ stats, onReset, onDone }: StatsScreenProps) {
       <p className="settings-detail">
         A game left unfinished counts as a loss. Hints are never counted.
       </p>
-      <button type="button" className="button" onClick={() => setConfirming(true)}>
+      <button type="button" className="button stats-reset" onClick={() => setConfirming(true)}>
         Reset stats
       </button>
       {confirming && (

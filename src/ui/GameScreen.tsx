@@ -22,6 +22,8 @@ interface GameScreenProps {
   /** Leave the game; it stays saved to continue later. */
   readonly onHome: () => void;
   readonly onSettings: () => void;
+  /** Read How to play; the game stays saved. */
+  readonly onRules?: () => void;
   /** Abandon the game for a new one (confirmed in the menu). */
   readonly onNewGame: () => void;
   /** Abandon the game (confirmed in the menu). */
@@ -42,6 +44,7 @@ export function GameScreen({
   onPlayAgain,
   onHome,
   onSettings,
+  onRules = () => {},
   onNewGame,
   onConcede,
 }: GameScreenProps) {
@@ -117,6 +120,10 @@ export function GameScreen({
       {menuOpen && snapshot.status !== 'gameOver' && (
         <GameMenu
           onClose={() => setMenuOpen(false)}
+          rules={view.rules}
+          soundOn={soundOn}
+          onToggleSound={onToggleSound}
+          onRules={onRules}
           onSettings={onSettings}
           onHome={onHome}
           onNewGame={onNewGame}

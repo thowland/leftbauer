@@ -1,5 +1,5 @@
 /**
- * The Sprint 9 screens: house-rule controls on the table, the Rules chip,
+ * The Sprint 9 screens: house-rule controls on the table, the menu's Rules,
  * house-rule settings and the four-color deck.
  */
 import { render, screen, within } from '@testing-library/react';
@@ -17,7 +17,7 @@ import { App } from '../../src/ui/App';
 import { BidPanel } from '../../src/ui/BidPanel';
 import { Card } from '../../src/ui/Card';
 import { DeckContext } from '../../src/ui/deck';
-import { RulesChip } from '../../src/ui/RulesChip';
+import { GameMenu } from '../../src/ui/GameMenu';
 import { RulesScreen } from '../../src/ui/RulesScreen';
 import { SettingsScreen } from '../../src/ui/SettingsScreen';
 import { TableScreen } from '../../src/ui/TableScreen';
@@ -179,32 +179,40 @@ describe("the dealer's partner must go alone (RU-14)", () => {
   });
 });
 
-describe('the Rules chip', () => {
+describe('the game menu’s Rules', () => {
+  function openRules(rules: RuleSet, name: string) {
+    const noop = () => {};
+    render(
+      <GameMenu
+        rules={rules}
+        soundOn={false}
+        onToggleSound={noop}
+        onRules={noop}
+        onClose={noop}
+        onSettings={noop}
+        onHome={noop}
+        onNewGame={noop}
+        onConcede={noop}
+      />
+    );
+    return userEvent.click(screen.getByRole('button', { name }));
+  }
+
   it('names the game and opens a summary', async () => {
-    const { rerender } = render(<RulesChip rules={STANDARD_RULES} />);
-    expect(screen.getByRole('button', { name: 'Rules · to 10' })).toBeInTheDocument();
-    rerender(<RulesChip rules={{ ...FARMER, targetScore: 5, stickTheDealer: true }} />);
-    await userEvent.click(screen.getByRole('button', { name: 'House rules · to 5' }));
+    await openRules({ ...FARMER, targetScore: 5, stickTheDealer: true }, 'House rules · to 5');
     const dialog = screen.getByRole('dialog', { name: 'Rules for this game' });
     expect(within(dialog).getByText(/first team to 5 points/)).toBeInTheDocument();
     expect(within(dialog).getByText(/Stick the dealer/)).toBeInTheDocument();
     expect(within(dialog).getByText(/Farmer’s hand/)).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
-    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Menu' })).toBeInTheDocument();
   });
 
   it('lists every house rule in play, and none that are not', async () => {
-    render(
-      <RulesChip
-        rules={{
-          ...STANDARD_RULES,
-          lonerSweepPoints: 5,
-          defendAlone: true,
-          dealerPartnerMustGoAlone: true,
-        }}
-      />
+    await openRules(
+      { ...STANDARD_RULES, lonerSweepPoints: 5, defendAlone: true, dealerPartnerMustGoAlone: true },
+      'House rules · to 10'
     );
-    await userEvent.click(screen.getByRole('button', { name: 'House rules · to 10' }));
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText(/takes all five scores 5/)).toBeInTheDocument();
     expect(within(dialog).getByText(/Defending alone/)).toBeInTheDocument();
@@ -213,16 +221,18 @@ describe('the Rules chip', () => {
   });
 
   it('shows no loner rules with loners off', async () => {
-    render(<RulesChip rules={{ ...STANDARD_RULES, lonersAllowed: false, defendAlone: true }} />);
-    await userEvent.click(screen.getByRole('button', { name: 'House rules · to 10' }));
+    await openRules(
+      { ...STANDARD_RULES, lonersAllowed: false, defendAlone: true },
+      'House rules · to 10'
+    );
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText(/No loners/)).toBeInTheDocument();
     expect(within(dialog).queryByText(/Defending alone/)).toBeNull();
   });
 
-  it('sits on the table', () => {
+  it('shows the target score on the table', () => {
     render(<TableScreen view={toPlayerView(gameFromDeck(), 0)} />);
-    expect(screen.getByRole('button', { name: 'Rules · to 10' })).toBeInTheDocument();
+    expect(screen.getByText('Game to 10')).toBeInTheDocument();
   });
 });
 
@@ -344,7 +354,15 @@ describe('house rules reach the game', () => {
     });
     render(<App seed={1} fast storage={storage} />);
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
+    expect(screen.getByText('Game to 5')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Menu' }));
     expect(screen.getByRole('button', { name: 'House rules · to 5' })).toBeInTheDocument();
+
+    // How to play, from the game, describes this game and leads back to it.
+    await userEvent.click(screen.getByRole('button', { name: 'How to play' }));
+    expect(screen.getByText(/first team to 5 points/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Back to the game' }));
+    expect(screen.getByRole('main', { name: 'Euchre table' })).toBeInTheDocument();
   });
 
   it('shows the pending rules on How to play', () => {

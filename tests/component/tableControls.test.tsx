@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { currentActor, legalActions } from '../../src/engine/game';
 import type { GameState } from '../../src/engine/state';
 import { toPlayerView } from '../../src/engine/view';
+import { STANDARD_RULES } from '../../src/engine/rules';
 import { DEFAULT_SETTINGS, type Settings } from '../../src/state/settings';
 import { GameMenu } from '../../src/ui/GameMenu';
 import { HomeScreen } from '../../src/ui/HomeScreen';
@@ -104,14 +105,64 @@ describe('GameMenu (GF-8)', () => {
   function renderMenu() {
     const handlers = {
       onClose: vi.fn(),
+      onToggleSound: vi.fn(),
+      onRules: vi.fn(),
       onSettings: vi.fn(),
       onHome: vi.fn(),
       onNewGame: vi.fn(),
       onConcede: vi.fn(),
     };
-    render(<GameMenu {...handlers} />);
+    render(<GameMenu rules={STANDARD_RULES} soundOn {...handlers} />);
     return handlers;
   }
+
+  it('groups its items: this game, leaving it, and ending it', () => {
+    renderMenu();
+    const group = (name: string) => within(screen.getByRole('group', { name }));
+    expect(group('This game').getByRole('button', { name: 'Sound' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(group('This game').getByRole('button', { name: 'How to play' })).toBeInTheDocument();
+    expect(group('Leave').getByRole('button', { name: 'Home' })).toBeInTheDocument();
+    expect(group('End the game').getByRole('button', { name: 'Concede' })).toBeInTheDocument();
+  });
+
+  it('toggles sound and opens How to play', async () => {
+    const h = renderMenu();
+    await userEvent.click(screen.getByRole('button', { name: 'Sound' }));
+    await userEvent.click(screen.getByRole('button', { name: 'How to play' }));
+    expect(h.onToggleSound).toHaveBeenCalledOnce();
+    expect(h.onRules).toHaveBeenCalledOnce();
+  });
+
+  it('shows the rules for this game, then comes back to the menu', async () => {
+    renderMenu();
+    await userEvent.click(screen.getByRole('button', { name: 'Rules · to 10' }));
+    expect(screen.getByRole('dialog', { name: 'Rules for this game' })).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.getByRole('dialog', { name: 'Menu' })).toBeInTheDocument();
+  });
+
+  it('closes on Escape, and steps back from a confirmation', async () => {
+    const h = renderMenu();
+    await userEvent.click(screen.getByRole('button', { name: 'Concede' }));
+    await userEvent.keyboard('{Escape}');
+    expect(screen.getByRole('dialog', { name: 'Menu' })).toBeInTheDocument();
+    expect(h.onConcede).not.toHaveBeenCalled();
+    await userEvent.keyboard('{Escape}');
+    expect(h.onClose).toHaveBeenCalledOnce();
+  });
+
+  it('keeps Tab inside the menu', async () => {
+    renderMenu();
+    const back = screen.getByRole('button', { name: 'Back to the game' });
+    expect(back).toHaveFocus();
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: 'Sound' })).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    expect(back).toHaveFocus();
+  });
 
   it('goes back to the game, to settings or home without asking', async () => {
     const h = renderMenu();
@@ -142,6 +193,19 @@ describe('GameMenu (GF-8)', () => {
     expect(screen.getByRole('dialog', { name: 'Concede this game?' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Concede' }));
     expect(h.onConcede).toHaveBeenCalledOnce();
+  });
+});
+
+describe('Dialog focus', () => {
+  it('gives the focus back to the control that opened it', async () => {
+    const h = { onContinue: vi.fn(), onNewGame: vi.fn(), onSettings: vi.fn() };
+    render(<HomeScreen canContinue {...h} />);
+    const newGame = screen.getByRole('button', { name: 'New game' });
+    await userEvent.click(newGame);
+    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(newGame).toHaveFocus();
   });
 });
 

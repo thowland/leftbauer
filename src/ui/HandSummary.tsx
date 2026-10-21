@@ -19,6 +19,7 @@ export function HandSummary({ view, onContinue, names }: HandSummaryProps) {
   return (
     <Dialog
       title={`Hand ${view.handNumber}`}
+      placement="sheet"
       actions={
         <button type="button" className="button button-primary" onClick={onContinue}>
           Continue

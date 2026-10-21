@@ -48,7 +48,8 @@ type Screen =
   | { readonly kind: 'game'; readonly id: number; readonly table: GameTable }
   | { readonly kind: 'settings'; readonly from: 'home' | 'game' }
   | { readonly kind: 'stats'; readonly stats: Stats }
-  | { readonly kind: Exclude<InfoScreen, 'stats'> };
+  | { readonly kind: 'rules'; readonly from?: 'game' }
+  | { readonly kind: Exclude<InfoScreen, 'stats' | 'rules'> };
 
 export function App({
   dev = false,
@@ -148,7 +149,16 @@ export function App({
           />
         );
       case 'rules':
-        return <RulesScreen rules={settings.pendingRules} onDone={home} />;
+        // From a game, How to play describes that game's own rules.
+        return screen.from === 'game' ? (
+          <RulesScreen
+            rules={paused?.game.rules ?? settings.pendingRules}
+            doneLabel="Back to the game"
+            onDone={() => resume(paused)}
+          />
+        ) : (
+          <RulesScreen rules={settings.pendingRules} onDone={home} />
+        );
       case 'conventions':
         return <PartnerConventionsScreen onDone={home} />;
       case 'about':
@@ -187,6 +197,7 @@ export function App({
             onPlayAgain={newGame}
             onHome={() => leave(table, { kind: 'home' })}
             onSettings={() => leave(table, { kind: 'settings', from: 'game' })}
+            onRules={() => leave(table, { kind: 'rules', from: 'game' })}
             onNewGame={newGame}
             onConcede={abandon}
           />

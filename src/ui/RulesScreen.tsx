@@ -10,12 +10,13 @@ import { Page, Section } from './Page';
 interface RulesScreenProps {
   readonly rules: RuleSet;
   readonly onDone: () => void;
+  readonly doneLabel?: string;
 }
 
 /** How to play — UI-2. Written from the active rules, so house rules show as played. */
-export function RulesScreen({ rules, onDone }: RulesScreenProps) {
+export function RulesScreen({ rules, onDone, doneLabel }: RulesScreenProps) {
   return (
-    <Page title="How to play" onDone={onDone}>
+    <Page title="How to play" onDone={onDone} {...(doneLabel === undefined ? {} : { doneLabel })}>
       <Section title="The deal">
         <p>
           Euchre is played by four players in two teams; you and your partner sit across from each
