@@ -766,6 +766,8 @@ type DeckVariant = 'standard' | 'fourColor';
 
 Components ask the manifest for a card face by `CardId` and `DeckVariant`. They never import art files directly, so replacing the open-licensed deck with the illustrated Bauer deck later is a manifest change. Themes are CSS-variable palettes, as in gammon (VP-4).
 
+*As built (Sprint 10):* the app installs and runs offline (ADR-0006). `vite.config.ts` configures `vite-plugin-pwa` to precache the whole build, sounds included, with `autoUpdate`. The icons are rendered from `public/icon.svg` by `npm run icons`. It is hosted by `infra/left-bauer.yaml`: S3 behind CloudFront with OAC, at `leftbauer.beta-site.us`, with a cache policy that honours each object's `Cache-Control` and a response headers policy whose CSP the preview server also sends (`infra/security-headers.json`). `scripts/deploy.sh` runs the gate, uploads the build, deletes stale files only after the upload, and invalidates `/*`. E2E tests block service workers except `pwa.spec.ts`; `budget.spec.ts` checks NF-4 (the code was 115.5 KB gzipped) and approximates NF-1 on Chrome with a 4× slower CPU.
+
 ## 10. State (`src/state/`)
 
 ### 10.1 Persistence
@@ -859,7 +861,7 @@ v1 ships none of the networking.
 | Side effects | Audio triggers diff consecutive states | The engine emits `GameEvent`s, consumed by sinks | Events are explicit, public-only and the future multiplayer wire format |
 | Strategy granularity | One strategy class per difficulty | One composite `Bot` assembled from per-decision policies, with style and skill as separate axes | Four personas × three skills would otherwise mean twelve classes, or style tangled into skill |
 
-The stack, tooling, layer-purity enforcement, persistence pattern, PWA setup and AWS deployment are copied from gammon unchanged.
+The stack, tooling, layer-purity enforcement, persistence pattern, PWA setup and AWS deployment are copied from gammon; ADR-0006 lists where the hosting differs.
 
 ## 14. ADRs to write first
 

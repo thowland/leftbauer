@@ -4,7 +4,7 @@ An installable, browser-based Euchre game for one player against three computer 
 
 The name comes from the left bower, the jack that leaves its own suit to become the second-highest trump. "Bower" comes from the German _Bauer_, the name for the jack in German card games.
 
-> **Status:** Sprint 9 of the [implementation plan](docs/IMPLEMENTATION_PLAN.md), v1 feature-complete. Play a full game, with animation and sound, alongside a Sharp partner against two of four named opponents at Casual, Standard or Sharp, with hints, a rules reference, the partner's conventions, lifetime stats, every house rule and an optional four-color deck.
+> **Status:** 0.1.0, the friends beta (Sprint 10 of the [implementation plan](docs/IMPLEMENTATION_PLAN.md)), at https://leftbauer.beta-site.us; see the [beta guide](docs/BETA.md). Play a full game, with animation and sound, alongside a Sharp partner against two of four named opponents at Casual, Standard or Sharp, with hints, a rules reference, the partner's conventions, lifetime stats, every house rule and an optional four-color deck.
 
 ## Documents
 
@@ -35,6 +35,16 @@ npm run dev -- --host                    # also reachable from a phone on the sa
 | `npm run verify`        | All of the above, in order: the sprint exit gate                         |
 
 `npm run verify` also runs automatically before every merge commit (a husky `pre-merge-commit` hook), so a sprint branch cannot be merged with a failing gate.
+
+## Deployment
+
+The site is static: S3 behind CloudFront at `leftbauer.beta-site.us` (ADR-0006). Copy `deploy.env.example` to `deploy.env` and fill in the hosted zone, then:
+
+```bash
+npm run infra:deploy   # create or update the CloudFormation stack (infra/left-bauer.yaml)
+npm run deploy         # run the gate, build and publish (SKIP_VERIFY=1 skips the gate)
+npm run icons          # re-render the PNG icons after editing public/icon.svg
+```
 
 ## Layout
 

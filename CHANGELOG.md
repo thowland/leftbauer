@@ -2,6 +2,16 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Sprint 10 — The installable app (0.1.0)
+
+### Added
+
+- **Install and play offline.** Left Bauer is a PWA: add it to the home screen and it runs full screen, with no network after the first visit. New releases take over on the next launch (ADR-0006).
+- **An icon:** the corner of the jack of diamonds on the felt, as the browser-tab favicon, the iPhone and iPad home-screen icon, and Android's maskable icon.
+- **Hosting** at `leftbauer.beta-site.us`: `infra/left-bauer.yaml` (S3, CloudFront, certificate and DNS), `npm run infra:deploy` and `npm run deploy`, with security headers including a strict Content-Security-Policy.
+- The [beta guide](docs/BETA.md) for friends: how to install, and what to report.
+- E2E: the manifest and icons, offline play, the security policy, the bundle budget (NF-4) and a cold launch to a dealt hand (NF-1).
+
 ## Fix — A steady table, and the layout guide
 
 ### Changed
