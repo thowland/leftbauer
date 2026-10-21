@@ -1,17 +1,21 @@
 # Contributing
 
-Left Bauer is a personal project, but issues and suggestions are welcome.
+Left Bauer is a personal project, but issues and suggestions are welcome, and the notes below say what makes each kind most useful.
 
-- **Bugs:** open an issue with the device, the browser, what you did and what happened. A screenshot helps. If you can, include the `?seed=N` from the address bar so the deal can be replayed.
-- **Rules and house rules:** say which table plays it that way and how it works there.
-- **Pull requests:** open an issue first to talk it over, so the work fits the design.
+## Issues
+
+- **Bugs:** give the device, the browser, what you did and what happened, with a screenshot if you have one. If the address bar shows a `?seed=N`, include it, because the same seed replays the same deals.
+- **Rules and house rules:** say which table plays it that way and how it works there, since house rules differ from one table to the next.
+- **Pull requests:** open an issue first so we can talk it over; a change that fits the design is much easier to take than one that has to be reworked after the fact.
 
 ## Working on the code
 
-Read `CLAUDE.md` for the commands and the architecture, then `docs/TECHNICAL_SPEC.md` for the design. Before you send a change:
+Start with `CLAUDE.md` for the commands and the architecture, then `docs/TECHNICAL_SPEC.md` for the design. A change is ready to send when it meets these conditions:
 
-- `npm run verify` must pass: lint, typecheck, unit and component tests with 80% coverage, and the Playwright suite on four devices.
-- Tests stay silent: every E2E URL uses `?e2e`, and only a test about sound may add `?sound`.
-- Keep the layer rules (`eslint.config.js`) and the invariants in `CLAUDE.md`, above all that bots never see the hidden game state.
+- `npm run verify` passes. That covers lint, the typecheck, the unit, component and integration tests at 80% coverage, and the Playwright suite on four device projects.
+- The tests stay silent: every E2E URL uses `?e2e`, and only a test about sound may add `?sound`.
+- The layer rules in `eslint.config.js` and the invariants in `CLAUDE.md` still hold. The one that matters most is that bots never see the hidden game state; they get a `PlayerView` and the legal actions, and nothing else.
 
-By contributing, you agree that your work is licensed under the GPL-3.0-or-later, the same as the rest of the project.
+## License
+
+By contributing, you agree that your work is licensed under GPL-3.0-or-later, the same as the rest of the project.
