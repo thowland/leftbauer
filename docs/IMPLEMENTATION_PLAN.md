@@ -62,7 +62,7 @@ Within each sprint, pure modules (engine, bots, coach, state) are written test-f
 | ~~Card art: code-drawn SVG faces, or an open-licensed deck~~ | Sprint 6 | **Decided:** keep and refine the code-drawn faces. Recorded in ADR-0005. |
 | ~~Sound sources (specific CC0 or open-licensed packs)~~ | Sprint 6 | **Decided:** Kenney's CC0 *Casino Audio* and *Music Jingles*. Recorded in ADR-0005. |
 | Farmer's hand mechanics | Sprint 9 | Decided 2026-10-20: strict (five 9s and 10s), swap three with the kitty (ADR-0004). |
-| ~~Domain and hosting account~~ | Sprint 10 | **Decided** 2026-10-21: `leftbauer.beta-site.us`, in Gammon's existing `beta-site.us` Route 53 zone with the `wdog_developer` AWS profile. |
+| ~~Domain and hosting account~~ | Sprint 10 | **Decided** 2026-10-21: `leftbauer.beta-site.us`, in the existing `beta-site.us` Route 53 hosted zone; the AWS profile and zone are set in the local `deploy.env`. |
 
 ## 4. Sprints
 

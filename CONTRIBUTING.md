@@ -6,7 +6,7 @@ Left Bauer is a personal project, but issues and suggestions are welcome, and th
 
 - **Bugs:** give the device, the browser, what you did and what happened, with a screenshot if you have one. If the address bar shows a `?seed=N`, include it, because the same seed replays the same deals.
 - **Rules and house rules:** say which table plays it that way and how it works there, since house rules differ from one table to the next.
-- **Pull requests:** open an issue first so we can talk it over; a change that fits the design is much easier to take than one that has to be reworked after the fact.
+- **Pull requests:** open an issue first so we can talk it over; a change that fits the design is much easier to take than one that has to be reworked after the fact. I review every pull request before it is merged, and nothing reaches `master` without that review.
 
 ## Working on the code
 
