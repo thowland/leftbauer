@@ -40,7 +40,7 @@ export interface Pacing {
 export const DEFAULT_PACING: Pacing = { botMs: 650, trickMs: 900 };
 export const NO_PACING: Pacing = { botMs: 0, trickMs: 0 };
 
-export type DriverStatus = 'idle' | 'running' | 'handComplete' | 'gameOver' | 'stopped';
+export type DriverStatus = 'idle' | 'running' | 'handComplete' | 'gameOver' | 'stopped' | 'error';
 
 export interface TableSnapshot {
   readonly state: GameState;
@@ -57,6 +57,13 @@ export interface DriverDeps {
   readonly pacing?: Pacing;
   /** Deal the next hand without waiting for `continueToNextHand` (tests, tournaments). */
   readonly autoContinue?: boolean;
+  /**
+   * Recover from failures instead of failing the run (the app). A sink's
+   * failure is reported and the game goes on; any other failure is reported
+   * and ends the run with status `error`, which `start` can resume. Without
+   * it, a failure rejects `start` (tests and tournaments must not hide one).
+   */
+  readonly onError?: (error: unknown) => void;
 }
 
 export class TableDriver {
@@ -127,7 +134,13 @@ export class TableDriver {
   private async emit(events: readonly GameEvent[], signal: AbortSignal): Promise<void> {
     if (events.length === 0) return;
     for (const sink of this.deps.sinks ?? []) {
-      await settled(sink.handle(events, this.current.state), signal);
+      try {
+        await settled(sink.handle(events, this.current.state), signal);
+      } catch (error) {
+        // Sound, animation and stats are not worth the game: report and go on.
+        if (isAborted(error) || this.deps.onError === undefined) throw error;
+        this.deps.onError(error);
+      }
     }
   }
 
@@ -186,7 +199,11 @@ export class TableDriver {
       }
     } catch (error) {
       // `stop` has already published the stopped status.
-      if (!isAborted(error)) throw error;
+      if (isAborted(error)) return this.current.state;
+      if (this.deps.onError === undefined) throw error;
+      this.deps.onError(error);
+      if (this.abort?.signal === signal) this.abort = null;
+      this.publish({ status: 'error', awaiting: null });
       return this.current.state;
     }
   }

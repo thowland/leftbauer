@@ -13,7 +13,7 @@
 import type { BotSpec } from '../bots/bot';
 import { sameAction, type Action } from '../engine/actions';
 import type { PlayerView } from '../engine/view';
-import { abortable } from './abort';
+import { abortable, isAborted } from './abort';
 import type { BotRunner } from './botRunner';
 
 export interface SeatController {
@@ -64,7 +64,9 @@ export class BotSeatController implements SeatController {
   constructor(
     readonly spec: BotSpec,
     private readonly runner: BotRunner,
-    private readonly onIllegal: (action: Action) => void = () => {}
+    private readonly onIllegal: (action: Action) => void = () => {},
+    /** Play on after a failed decision (the app); without it the failure propagates. */
+    private readonly onFailure?: (error: unknown) => void
   ) {}
 
   async requestAction(
@@ -72,7 +74,15 @@ export class BotSeatController implements SeatController {
     legal: readonly Action[],
     signal: AbortSignal
   ): Promise<Action> {
-    const { action } = await this.runner.decide(this.spec, view, legal, signal);
+    let action: Action;
+    try {
+      ({ action } = await this.runner.decide(this.spec, view, legal, signal));
+    } catch (error) {
+      if (isAborted(error) || this.onFailure === undefined) throw error;
+      // A bot that cannot decide must not stall the game: report it and play on.
+      this.onFailure(error);
+      return legal[0]!;
+    }
     if (legal.some((l) => sameAction(l, action))) return action;
     // A bot returning an illegal action is a bug; report it and keep the game moving.
     this.onIllegal(action);

@@ -94,9 +94,14 @@ function buildTable(
   const { seats } = saved;
   const human = new HumanSeatController();
   const reportIllegal = (action: unknown) => console.error('Bot chose an illegal action', action);
+  // The app recovers from failures rather than freezing (the driver's onError).
+  const reportFailure = (error: unknown) =>
+    console.error('Left Bauer recovered from an error', error);
   const controllerAt = (seat: Seat): SeatController => {
     const spec = botAt(seats, seat);
-    return spec === null ? human : new BotSeatController(spec, runner, reportIllegal);
+    return spec === null
+      ? human
+      : new BotSeatController(spec, runner, reportIllegal, reportFailure);
   };
   const infoAt = (seat: Seat): SeatInfo => {
     const spec = botAt(seats, seat);
@@ -126,6 +131,7 @@ function buildTable(
       shuffleRng,
       sinks,
       pacing: fast ? NO_PACING : pacingFor(pacingMs),
+      onError: reportFailure,
     },
     saved.game
   );
