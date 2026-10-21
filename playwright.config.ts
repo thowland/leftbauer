@@ -13,6 +13,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4173',
     trace: 'retain-on-failure',
+    // A service worker would cache builds across tests; only pwa.spec.ts lets it run.
+    serviceWorkers: 'block',
   },
   projects: [
     { name: 'iphone', use: { ...devices['iPhone 14'] } },
