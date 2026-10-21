@@ -7,8 +7,10 @@
  * Plays the manifest's sounds through Web Audio. Browsers (iOS above all)
  * only let audio start inside a user gesture, so the engine stays silent
  * until `unlock` runs from one; `unlockOn` wires that to the first tap or
- * key press. Sounds load on unlock, and a sound that has not loaded yet is
- * skipped rather than played late.
+ * key press. Sounds load on unlock. The tap that unlocks audio can also
+ * deal, so a sound asked for while it is still loading plays when it
+ * arrives, if that is within `LOAD_GRACE_S`; a later one is skipped rather
+ * than played late.
  */
 
 import { SOUNDS, type SoundId } from '../assets/manifest';
@@ -16,6 +18,7 @@ import { SOUNDS, type SoundId } from '../assets/manifest';
 /** The slice of Web Audio the engine uses, so tests can supply a fake. */
 export interface AudioContextLike {
   readonly state: string;
+  readonly currentTime: number;
   readonly destination: unknown;
   resume(): Promise<void>;
   decodeAudioData(data: ArrayBuffer): Promise<unknown>;
@@ -38,9 +41,15 @@ export interface AudioDeps {
 /** Events that count as a user gesture for unlocking audio. */
 const GESTURES = ['pointerup', 'touchend', 'keydown'] as const;
 
+/** How late, in seconds, a sound that was still loading may start. */
+export const LOAD_GRACE_S = 0.5;
+
 export class AudioEngine {
   private context: AudioContextLike | null = null;
   private readonly buffers = new Map<SoundId, unknown>();
+  /** Sounds asked for while loading, with the context time they were asked for. */
+  private readonly waiting = new Map<SoundId, number>();
+  private loading = false;
   private muted: boolean;
 
   constructor(
@@ -96,10 +105,13 @@ export class AudioEngine {
 
   play(id: SoundId): void {
     const context = this.context;
+    if (this.muted || context === null || context.state !== 'running') return;
     const buffer = this.buffers.get(id);
-    if (this.muted || context === null || context.state !== 'running' || buffer === undefined) {
-      return;
-    }
+    if (buffer !== undefined) this.start(context, id, buffer);
+    else if (this.loading) this.waiting.set(id, context.currentTime);
+  }
+
+  private start(context: AudioContextLike, id: SoundId, buffer: unknown): void {
     const source = context.createBufferSource();
     source.buffer = buffer;
     const gain = context.createGain();
@@ -110,16 +122,24 @@ export class AudioEngine {
   }
 
   private async loadAll(context: AudioContextLike): Promise<void> {
+    this.loading = true;
     await Promise.all(
       (Object.keys(SOUNDS) as SoundId[]).map(async (id) => {
         try {
           const data = await this.deps.load(SOUNDS[id].file);
-          this.buffers.set(id, await context.decodeAudioData(data));
+          const buffer = await context.decodeAudioData(data);
+          this.buffers.set(id, buffer);
+          const asked = this.waiting.get(id);
+          if (asked !== undefined && context.currentTime - asked <= LOAD_GRACE_S) {
+            this.play(id);
+          }
         } catch {
           // A missing or undecodable sound stays silent; the game goes on.
         }
+        this.waiting.delete(id);
       })
     );
+    this.loading = false;
   }
 }
 

@@ -3,6 +3,7 @@
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine, browserAudioDeps } from './audio/audioEngine';
 import { App } from './ui/App';
 import { ErrorBoundary } from './ui/ErrorBoundary';
@@ -15,6 +16,9 @@ const { dev, seed, fast, motion, sound } = parseLaunchOptions(window.location.se
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // No audio engine at all under test, so nothing can reach the speakers.
 const storage = browserStorage();
+// A new version takes over open pages at once; reload onto it, so a page
+// never runs old code against the new build's files. Every action is saved.
+registerSW({ immediate: true });
 const audio = sound ? new AudioEngine(browserAudioDeps(window, import.meta.env.BASE_URL)) : null;
 
 createRoot(document.getElementById('root')!).render(

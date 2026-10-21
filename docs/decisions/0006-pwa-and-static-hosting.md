@@ -11,7 +11,7 @@ NF-5 asks for an app that installs from a link and works with no network after t
 ## Decisions
 
 1. **The site is `leftbauer.beta-site.us`**, in the existing `beta-site.us` Route 53 hosted zone, shared with gammon. The AWS profile and the zone are set in the local, gitignored `deploy.env`. (Decided by the product owner, 2026-10-21.)
-2. **`vite-plugin-pwa` precaches the whole build**, sounds included (about 475 KiB), with `registerType: 'autoUpdate'`. A new release takes over on the next launch without a prompt; the game is saved after every action, so a swap loses nothing. Unknown paths fall back to `index.html`.
+2. **`vite-plugin-pwa` precaches the whole build**, sounds included (about 475 KiB), with `registerType: 'autoUpdate'`. A new release takes over without a prompt, and open pages reload onto it (`registerSW` in `main.tsx`); the game is saved after every action, so a swap loses nothing. Unknown paths fall back to `index.html`.
 3. **The icon is the corner of the jack of diamonds on the felt** (decided by the product owner, 2026-10-21). The J is the card face's own rank glyph, so it never depends on a font. `public/icon.svg` is the source and the browser-tab icon; `npm run icons` renders the 32, 180, 192 and 512 px PNGs and a maskable 512 with the artwork inside the 80% safe zone. The Apple and maskable icons are full-bleed felt, since iOS fills transparency with black and rounds the corners itself.
 4. **The stack is gammon's, with four changes:**
    - **One cache policy that honours each object's `Cache-Control`.** Gammon's default behaviour pins a year at the edge whatever the object says. The deploy marks the hashed files in `/assets` immutable for a year and everything else `no-cache`, and invalidates `/*`.
