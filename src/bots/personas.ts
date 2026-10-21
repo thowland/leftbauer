@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Personas: playing style as data — OP-3, OP-4; Technical Spec §6.4.
  *

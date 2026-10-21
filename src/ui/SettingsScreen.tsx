@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import type { PersonaId, SkillLevel } from '../bots/bot';
 import { OPPONENT_IDS, personaById } from '../bots/personas';
 import {

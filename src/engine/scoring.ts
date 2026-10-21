@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Hand and game scoring — RU-8, RU-9, RU-12, RU-13.
  *

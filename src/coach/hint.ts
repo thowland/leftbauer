@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Hints — CO-1, CO-2; Technical Spec §7.
  *

@@ -1,7 +1,13 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { CREDITS } from '../assets/manifest';
 import { Page, Section } from './Page';
 
-/** About — UI-3: the name, the credits and the version. */
+/** Where the GPL's corresponding source lives. */
+export const SOURCE_URL = 'https://github.com/thowland/leftbauer';
+
+/** About — UI-3: the name, the credits, the license and the version. */
 export function AboutScreen({ onDone }: { onDone: () => void }) {
   return (
     <Page title="About" onDone={onDone}>
@@ -36,7 +42,21 @@ export function AboutScreen({ onDone }: { onDone: () => void }) {
             </li>
           ))}
         </ul>
-        <p>Left Bauer is free software under the GNU General Public License, version 3 or later.</p>
+      </Section>
+
+      <Section title="License">
+        <p>Copyright © 2026 Tim Howland.</p>
+        <p>
+          Left Bauer is free software: you can redistribute it and change it under the terms of the{' '}
+          <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noreferrer">
+            GNU General Public License
+          </a>
+          , version 3 or later. It comes with no warranty. The{' '}
+          <a href={SOURCE_URL} target="_blank" rel="noreferrer">
+            source code
+          </a>{' '}
+          is on GitHub.
+        </p>
       </Section>
 
       <p className="page-lede">Version {__APP_VERSION__}</p>

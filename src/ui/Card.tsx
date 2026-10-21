@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { useContext, useId, type ReactNode } from 'react';
 import { rankOf, suitOf, type CardId, type Rank, type Suit } from '../engine/cards';
 import { cardLabel, RANK_LABELS, suitColor, type DeckVariant } from '../assets/manifest';

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import type { Persona } from '../bots/personas';
 import { teamOf, type Seat, type Team } from '../engine/seats';
 

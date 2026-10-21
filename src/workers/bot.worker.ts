@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * The bot Web Worker entry — Technical Spec §9.4. Sharp's simulation
  * runs here, off the main thread, so animation stays smooth (NF-2, NF-3).

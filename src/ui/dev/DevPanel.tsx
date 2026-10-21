@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { currentActor } from '../../engine/game';
 import { seatName } from '../layout';
 import type { DevTable } from './devTable';

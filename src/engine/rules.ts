@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * The rule set — RU-10 to RU-16; Technical Spec §4.2.
  *

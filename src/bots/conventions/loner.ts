@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Going alone, and defending alone — PB-4: play alone only on hands that
  * justify it.

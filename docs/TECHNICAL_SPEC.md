@@ -1,7 +1,7 @@
 # Left Bauer — Technical Specification
 
-**Status:** Draft v1
-**Last updated:** 2026-10-19
+**Status:** v1, first release (0.1.0, 2026-10-21)
+**Last updated:** 2026-10-21
 **Implements:** [Requirements](./REQUIREMENTS.md) (requirement IDs such as RU-7 or PB-4 refer to that document)
 
 ## 1. Purpose and scope

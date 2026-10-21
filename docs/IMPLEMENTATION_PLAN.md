@@ -1,7 +1,7 @@
 # Left Bauer — Implementation Plan
 
-**Status:** Draft v1
-**Last updated:** 2026-10-19
+**Status:** Complete through Sprint 10; v1 released as 0.1.0 on 2026-10-21
+**Last updated:** 2026-10-21
 **Builds on:** [Requirements](./REQUIREMENTS.md) · [Technical Specification](./TECHNICAL_SPEC.md)
 
 ## 1. Approach
@@ -15,7 +15,7 @@ The plan puts something visible in front of you after the first sprint and a pla
 | **Real Euchre** | Sprint 4 | Play against conventional bots: your partner and the four named opponents |
 | **Feels like a table** | Sprint 6 | Animation, sound, resume and settings |
 | **v1 feature-complete** | Sprint 9 | All Must and Should requirements |
-| **Friends beta** | Sprint 10 | Installed PWA on a public URL |
+| **Friends beta** | Sprint 10 | Installed PWA on a public URL (released as 0.1.0, 2026-10-21) |
 
 ## 2. Working agreement
 
@@ -62,7 +62,7 @@ Within each sprint, pure modules (engine, bots, coach, state) are written test-f
 | ~~Card art: code-drawn SVG faces, or an open-licensed deck~~ | Sprint 6 | **Decided:** keep and refine the code-drawn faces. Recorded in ADR-0005. |
 | ~~Sound sources (specific CC0 or open-licensed packs)~~ | Sprint 6 | **Decided:** Kenney's CC0 *Casino Audio* and *Music Jingles*. Recorded in ADR-0005. |
 | Farmer's hand mechanics | Sprint 9 | Decided 2026-10-20: strict (five 9s and 10s), swap three with the kitty (ADR-0004). |
-| ~~Domain and hosting account~~ | Sprint 10 | **Decided** 2026-10-21: `leftbauer.beta-site.us`, in Gammon's existing `beta-site.us` Route 53 zone with the `wdog_developer` AWS profile. |
+| ~~Domain and hosting account~~ | Sprint 10 | **Decided** 2026-10-21: `leftbauer.beta-site.us`, in the existing `beta-site.us` Route 53 hosted zone; the AWS profile and zone are set in the local `deploy.env`. |
 
 ## 4. Sprints
 

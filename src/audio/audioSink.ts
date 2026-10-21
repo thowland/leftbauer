@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Plays each event's sounds as the driver emits it — SA-2; Technical
  * Spec §9.3. It never waits: sounds start with their animations.

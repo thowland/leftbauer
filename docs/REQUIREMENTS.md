@@ -1,7 +1,7 @@
 # Left Bauer — Requirements
 
-**Status:** Draft v1
-**Last updated:** 2026-10-19
+**Status:** v1, first release (0.1.0, 2026-10-21)
+**Last updated:** 2026-10-21
 **Companion to:** [Left Bauer Vision](./Left%20Bauer%20Vision.md)
 
 ## 1. Overview
@@ -118,7 +118,7 @@ The partner is the most important feature in the product. Its job is to play sou
 
   Mistake rates and thresholds are configuration values, not constants.
 
-- **OP-3 Personas.** Four named opponents in v1. Each is defined as adjustments to the shared strategy: calling aggressiveness, loner threshold, defensive caution, and willingness to "stick" an opponent dealer. Personas set style and difficulty sets skill, and the two combine independently. The persona list is data-driven, so more opponents can be added without code changes.
+- **OP-3 Personas.** Four named opponents in v1. Each is defined as adjustments to the shared strategy: calling aggressiveness, loner threshold, defensive caution, and willingness to "stick" an opponent dealer. Personas set style and difficulty sets skill, and the two combine independently. The persona list is data-driven, so more opponents can be added without code changes. *As released:* a fifth opponent, Johnny Blue, plays each game as one of the four, drawn at random and never revealed.
 
   | Opponent | Style | Tendencies |
   |---|---|---|

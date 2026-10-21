@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Versioned storage — PE-1, PE-3; Technical Spec §10.1.
  *

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { teamOf } from '../engine/seats';
 import type { PlayerView } from '../engine/view';
 import { SUIT_NAMES } from '../assets/manifest';

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Builds a table for one game from a `SavedGame`, new or resumed, with a
  * TableDriver to run it and its sinks: a PersistenceSink to save it

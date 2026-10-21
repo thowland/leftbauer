@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { partnerConventions } from '../coach/conventions';
 import { Page, Section } from './Page';
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Lifetime stats — PE-2, UI-5; Technical Spec §10.3.
  *

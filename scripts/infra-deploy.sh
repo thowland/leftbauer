@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Tim Howland
+
 # Create or update the left-bauer CloudFormation stack (ADR-0006):
 # infra/left-bauer.yaml, in us-east-1 for CloudFront's certificate.
 #

@@ -10,7 +10,7 @@ NF-5 asks for an app that installs from a link and works with no network after t
 
 ## Decisions
 
-1. **The site is `leftbauer.beta-site.us`**, in gammon's existing `beta-site.us` Route 53 zone, deployed with the `wdog_developer` AWS profile. (Decided by the product owner, 2026-10-21.)
+1. **The site is `leftbauer.beta-site.us`**, in the existing `beta-site.us` Route 53 hosted zone, shared with gammon. The AWS profile and the zone are set in the local, gitignored `deploy.env`. (Decided by the product owner, 2026-10-21.)
 2. **`vite-plugin-pwa` precaches the whole build**, sounds included (about 475 KiB), with `registerType: 'autoUpdate'`. A new release takes over on the next launch without a prompt; the game is saved after every action, so a swap loses nothing. Unknown paths fall back to `index.html`.
 3. **The icon is the corner of the jack of diamonds on the felt** (decided by the product owner, 2026-10-21). The J is the card face's own rank glyph, so it never depends on a font. `public/icon.svg` is the source and the browser-tab icon; `npm run icons` renders the 32, 180, 192 and 512 px PNGs and a maskable 512 with the artwork inside the 80% safe zone. The Apple and maskable icons are full-bleed felt, since iOS fills transparency with black and rounds the corners itself.
 4. **The stack is gammon's, with four changes:**
@@ -22,7 +22,7 @@ NF-5 asks for an app that installs from a link and works with no network after t
 
 ## Consequences
 
-- Deployed 2026-10-21 as stack `left-bauer` in us-east-1 (account ACCOUNT_ID): bucket `left-bauer-ACCOUNT_ID`, CloudFront distribution `DISTRIBUTION_ID`.
+- Deployed 2026-10-21 as stack `left-bauer` in us-east-1. The bucket and the CloudFront distribution are in the stack's outputs.
 - `npm run infra:deploy` creates the stack once (the certificate and CloudFront take 15 minutes or more). `npm run deploy` publishes each release. Both read the gitignored `deploy.env`.
 - A friend who installed the app gets a new release the second time they open it after a deploy: the first launch fetches the new service worker, and the next one runs it.
 - The CSP allows inline styles (React's `style` attributes and the theme's custom properties) but no inline scripts. A future inline script must move to a file, or the policy changes in both places.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 interface SoundToggleProps {
   readonly on: boolean;
   readonly onToggle: () => void;

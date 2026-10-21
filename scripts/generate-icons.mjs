@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 /**
  * Generate the PWA icon set from `public/icon.svg`, into `public/`:
  *

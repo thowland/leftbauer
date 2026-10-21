@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Tim Howland
+
 import { useId, useState, type ReactNode } from 'react';
 import type { RuleSet } from '../engine/rules';
 import { Dialog } from './Dialog';
