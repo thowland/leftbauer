@@ -4,8 +4,8 @@
 /**
  * Runs bot decisions — Technical Spec §9.4.
  *
- * `InlineBotRunner` decides on the calling thread. Sprint 7 adds a
- * `WorkerBotRunner` behind the same interface for the Sharp level.
+ * `InlineBotRunner` decides on the calling thread; `WorkerBotRunner`
+ * (`workerRunner.ts`) sends the same requests to the bot Web Worker.
  *
  * Pure module: no DOM, no React, no storage.
  */

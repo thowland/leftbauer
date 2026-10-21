@@ -9,8 +9,8 @@
  * bot turns. It knows nothing about React; the UI reads it through
  * `subscribe` and `snapshot` (useSyncExternalStore).
  *
- * The same driver runs the app, the integration tests and (from Sprint 4)
- * the tournament harness.
+ * The same driver runs the app, the integration tests and the tournament
+ * harness.
  *
  * Pure module: no DOM, no React, no storage.
  */

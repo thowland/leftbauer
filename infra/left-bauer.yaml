@@ -103,7 +103,7 @@ Resources:
             QueryStringBehavior: none
 
   # Keep in step with infra/security-headers.json, which the preview server
-  # sends so the E2E run tests the same policy (tests/unit/infra.test.ts).
+  # sends so the E2E run tests the same policy (tests/unit/infra/securityHeaders.test.ts).
   SiteHeadersPolicy:
     Type: AWS::CloudFront::ResponseHeadersPolicy
     Properties:
