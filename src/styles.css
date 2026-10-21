@@ -841,11 +841,6 @@ body {
   color: var(--brass);
 }
 
-.home-tagline {
-  margin: var(--space-2) 0 0;
-  color: var(--ink-muted);
-}
-
 .home-button {
   width: 100%;
   font-size: 1.1rem;

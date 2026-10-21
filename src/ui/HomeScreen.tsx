@@ -37,7 +37,6 @@ export function HomeScreen({
     <main className="home" aria-label="Home">
       <div className="home-hero">
         <h1 className="home-title">Left Bauer</h1>
-        <p className="home-tagline">Euchre at the kitchen table.</p>
       </div>
       <div className="home-actions">
         <div className="home-primary">

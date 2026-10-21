@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Fix — Home without a tagline
+
+### Removed
+
+- The tagline under the title on Home.
+
 ## Sprint 10 — The installable app (0.1.0)
 
 ### Added
