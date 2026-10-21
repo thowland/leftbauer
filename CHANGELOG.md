@@ -23,6 +23,8 @@ All notable changes to this project are recorded here, one section per sprint.
 - The score and the Hint button no longer move during a hand; the layout test now checks both.
 - Safari landscape with a saved game: Home's title was clipped and About could not be reached.
 - The redeal summary no longer shows a stray "Lead" behind it.
+- Card ranks are drawn as strokes instead of set in a font, so they show in the corners on every phone; some phones painted them blank.
+- On iPad, cards you couldn't play could vanish from the hand: a faded card no longer carries a drop shadow, which iOS Safari sometimes failed to paint.
 
 ## Sprint 9 — House rules and the four-color deck
 

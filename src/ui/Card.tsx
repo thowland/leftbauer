@@ -112,20 +112,50 @@ function CardFace({ card, deck }: { card: CardId; deck: DeckVariant }) {
   );
 }
 
-function CornerIndex({ rank, color }: { rank: Rank; color: string }) {
+/**
+ * Each rank as strokes in a box 56 units tall, with its width. Ranks are
+ * drawn, not set in a font, so they show on every device: some phones
+ * failed to paint SVG text in the card corners.
+ */
+const GLYPHS: Record<Rank, { readonly d: string; readonly w: number }> = {
+  '9': {
+    d: 'M7 21 A13 15 0 1 1 33 21 A13 15 0 1 1 7 21 M33 21 V34 C33 46 27 52 18 52 C12 52 8 49 6 45',
+    w: 40,
+  },
+  T: {
+    d: 'M5 12 L13 4 V52 M26 28 C26 12 31 4 38 4 C45 4 50 12 50 28 C50 44 45 52 38 52 C31 52 26 44 26 28 Z',
+    w: 55,
+  },
+  J: { d: 'M20 4 H36 M30 4 V38 C30 48 25 52 18 52 C11 52 7 48 6 42', w: 40 },
+  Q: {
+    d: 'M20 4 C9 4 4 14 4 28 C4 42 9 52 20 52 C31 52 36 42 36 28 C36 14 31 4 20 4 Z M24 40 L37 55',
+    w: 40,
+  },
+  K: { d: 'M8 4 V52 M32 4 L9 32 M17 24 L33 52', w: 40 },
+  A: { d: 'M6 52 L20 4 L34 52 M11 36 H29', w: 40 },
+};
+
+/** A rank, centred on `cx`, from `top` down `height` units. */
+function RankGlyph(props: { rank: Rank; cx: number; top: number; height: number; color: string }) {
+  const { rank, cx, top, height, color } = props;
+  const glyph = GLYPHS[rank];
+  const scale = height / 56;
   return (
-    <text
-      x="30"
-      y="56"
-      textAnchor="middle"
-      fontFamily="Georgia, 'Times New Roman', serif"
-      fontWeight="700"
-      fontSize={rank === 'T' ? 40 : 48}
-      fill={color}
-    >
-      {RANK_LABELS[rank]}
-    </text>
+    <path
+      data-rank={RANK_LABELS[rank]}
+      d={glyph.d}
+      transform={`translate(${cx - (glyph.w * scale) / 2} ${top}) scale(${scale})`}
+      fill="none"
+      stroke={color}
+      strokeWidth="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   );
+}
+
+function CornerIndex({ rank, color }: { rank: Rank; color: string }) {
+  return <RankGlyph rank={rank} cx={30} top={16} height={42} color={color} />;
 }
 
 /**
@@ -192,17 +222,7 @@ function CourtPanel({ rank, suit, color }: { rank: Rank; suit: Suit; color: stri
         opacity="0.45"
       />
       <g transform="translate(83 78) scale(0.84)">{EMBLEMS[rank]?.(color)}</g>
-      <text
-        x={CENTER_X}
-        y="222"
-        textAnchor="middle"
-        fontFamily="Georgia, 'Times New Roman', serif"
-        fontWeight="700"
-        fontSize="78"
-        fill={color}
-      >
-        {RANK_LABELS[rank]}
-      </text>
+      <RankGlyph rank={rank} cx={CENTER_X} top={170} height={52} color={color} />
       <SuitIcon suit={suit} x={CENTER_X} y={254} size={36} color={color} />
     </g>
   );
