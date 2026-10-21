@@ -49,3 +49,6 @@ deploy.env
 .aws/
 credentials
 
+
+# Launch videos (/brag)
+brag-output*/
