@@ -9,7 +9,7 @@ A layout and spacing review of every screen at the four target sizes, written af
 ## How this was measured
 
 - The dev server ran at `http://localhost:5173/?seed=127&e2e`. Seed 127 passes through both bidding rounds and ends in a redeal; the second hand was played by ordering up, which gives the play and summary states.
-- Script: `uxd/capture.mjs`. For each state it saves a screenshot and records the boxes of every control, card, chip and label. It also lists every pair of neighbours less than 16 px apart, and every control smaller than 44 px.
+- Script: `uxd/capture.mjs`, a one-off Playwright capture run locally and not kept in the repository. For each state it saves a screenshot and records the boxes of every control, card, chip and label. It also lists every pair of neighbours less than 16 px apart, and every control smaller than 44 px.
 - Raw numbers: `uxd/shots/report.json` and `.../shots/report-iphone.json`. A second probe (`.../uxd/probe.mjs`) measured font sizes, empty felt, the Home overflow and the menu note gap.
 - Screenshots: `uxd/shots/`, named `<size>-<state>.png`. Phones and the iPad were captured at 2x and 1x on WebKit, and the desktop on Chromium.
 - Six sizes were captured. Besides the four target sizes, two Safari-in-a-tab sizes were added. Most friends will open a shared link in Safari before they install the PWA, and Safari's toolbars take a lot of height:
@@ -398,7 +398,7 @@ Effort: S is under 1 h, M is half a day, and L is a day or more. "Shift risk" is
 
 ## 6. Before references
 
-All paths are under `uxd/shots/`.
+All paths are under `uxd/shots/`, in a one-off local capture that is not kept in the repository.
 
 **Table**
 - `uxd/shots/iphone-table-round1.png`: portrait round one: corner controls 6 px under the partner, 323 px of empty felt, D over a card.
