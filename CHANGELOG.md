@@ -2,6 +2,12 @@
 
 This file records every notable change to the project, one section per sprint or fix. The first release is 0.1.0.
 
+## Unreleased
+
+### Changed
+
+- About shows the version under its title, where it is visible without scrolling; it used to sit at the very bottom of the page.
+
 ## 0.2.2 — The installed app on iPhone (2026-10-21)
 
 ### Fixed

@@ -11,6 +11,7 @@ export const SOURCE_URL = 'https://github.com/thowland/leftbauer';
 export function AboutScreen({ onDone }: { onDone: () => void }) {
   return (
     <Page title="About" onDone={onDone}>
+      <p className="page-lede">Version {__APP_VERSION__}</p>
       <Section title="The name">
         <p>
           In Euchre the <strong>left bower</strong> is the jack of the same color as trump. It
@@ -58,8 +59,6 @@ export function AboutScreen({ onDone }: { onDone: () => void }) {
           is on GitHub.
         </p>
       </Section>
-
-      <p className="page-lede">Version {__APP_VERSION__}</p>
     </Page>
   );
 }

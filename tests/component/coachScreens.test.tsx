@@ -119,7 +119,12 @@ describe('reading screens (UI-2, UI-3, UI-6)', () => {
       'https://github.com/thowland/leftbauer'
     );
     expect(screen.getByRole('link', { name: 'GNU General Public License' })).toBeInTheDocument();
-    expect(screen.getByText(/^Version \d+\.\d+\.\d+$/)).toBeInTheDocument();
+    // Under the title, where it shows without scrolling.
+    const version = screen.getByText(/^Version \d+\.\d+\.\d+$/);
+    const firstSection = screen.getByRole('heading', { name: 'The name' });
+    expect(
+      version.compareDocumentPosition(firstSection) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
     await userEvent.click(screen.getByRole('button', { name: 'Done' }));
     expect(onDone).toHaveBeenCalledOnce();
   });
