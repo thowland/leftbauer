@@ -579,9 +579,19 @@ body {
   transform: translateY(-12%);
 }
 
+/*
+ * Faded cards drop their shadow. iOS Safari can fail to paint a filtered
+ * card (the drop shadow) inside a faded parent, so the two never nest.
+ */
 .card-illegal {
   opacity: 0.45;
-  filter: saturate(0.6);
+}
+
+.card-illegal .card,
+.seat-out .card,
+.trick-done .trick-slot:not(.trick-winner) .card,
+.peek-play:not(.peek-winner) .card {
+  filter: none;
 }
 
 .bower-badge {
