@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { cardValue, HeuristicEvaluator, NoisyEvaluator } from '../../../src/bots/evaluate';
 import { buildKnowledge } from '../../../src/bots/knowledge';
-import { OPPONENT_IDS, PERSONAS, personaById } from '../../../src/bots/personas';
+import { createBot } from '../../../src/bots/factory';
+import {
+  DISGUISES,
+  OPPONENT_IDS,
+  PERSONAS,
+  personaById,
+  playingPersona,
+} from '../../../src/bots/personas';
+import { specKey } from '../../../src/bots/bot';
 import { bestSelector, noisySelector } from '../../../src/bots/selectors';
 import { cheapestFirst, holdingStrength, rankByRules } from '../../../src/bots/conventions/rule';
 import { seededRng } from '../../../src/util/rng';
@@ -153,9 +161,16 @@ describe('rule helpers', () => {
 });
 
 describe('personas (OP-3)', () => {
-  it('has the partner and four named opponents', () => {
-    expect(PERSONAS.map((p) => p.name)).toEqual(['Partner', 'Soopy', 'Shrubs', 'Rusty', 'Smooth']);
-    expect(OPPONENT_IDS).toEqual(['soopy', 'shrubs', 'rusty', 'smooth']);
+  it('has the partner, four named opponents and Johnny Blue', () => {
+    expect(PERSONAS.map((p) => p.name)).toEqual([
+      'Partner',
+      'Soopy',
+      'Shrubs',
+      'Rusty',
+      'Smooth',
+      'Johnny Blue',
+    ]);
+    expect(OPPONENT_IDS).toEqual(['soopy', 'shrubs', 'rusty', 'smooth', 'johnny']);
     for (const p of PERSONAS) {
       expect(p.tagline.length).toBeGreaterThan(10);
       expect(p.colorToken).toMatch(/^--persona-/);
@@ -163,10 +178,32 @@ describe('personas (OP-3)', () => {
   });
 
   it('gives each opponent its documented tendency', () => {
-    expect(personaById('soopy').style.callThreshold).toBeGreaterThan(0);
-    expect(personaById('rusty').style.callThreshold).toBeLessThan(0);
-    expect(personaById('shrubs').style.lonerThreshold).toBeLessThan(0);
+    expect(personaById('soopy').style!.callThreshold).toBeGreaterThan(0);
+    expect(personaById('rusty').style!.callThreshold).toBeLessThan(0);
+    expect(personaById('shrubs').style!.lonerThreshold).toBeLessThan(0);
     expect(personaById('smooth').style).toEqual(personaById('partner').style);
+  });
+
+  it('lets Johnny Blue play as any of the four, with no style of his own', () => {
+    expect(DISGUISES).toEqual(['soopy', 'shrubs', 'rusty', 'smooth']);
+    expect(personaById('johnny').style).toBeUndefined();
+    const johnny = { role: 'opponent', personaId: 'johnny', skill: 'standard' } as const;
+    expect(playingPersona({ ...johnny, playsAs: 'rusty' })).toBe(personaById('rusty'));
+    expect(playingPersona({ personaId: 'smooth' })).toBe(personaById('smooth'));
+    expect(() => playingPersona(johnny)).toThrow(/Johnny Blue needs a persona/);
+    expect(() => createBot(johnny)).toThrow(/Johnny Blue needs a persona/);
+    expect(createBot({ ...johnny, playsAs: 'shrubs' }).spec.playsAs).toBe('shrubs');
+  });
+
+  it("keys each of Johnny Blue's disguises apart, for caching and seeding", () => {
+    const johnny = { role: 'opponent', personaId: 'johnny', skill: 'casual' } as const;
+    expect(specKey({ ...johnny, playsAs: 'rusty' })).toBe('opponent/johnny:rusty/casual');
+    expect(specKey({ ...johnny, playsAs: 'soopy' })).not.toBe(
+      specKey({ ...johnny, playsAs: 'rusty' })
+    );
+    expect(specKey({ role: 'opponent', personaId: 'rusty', skill: 'casual' })).toBe(
+      'opponent/rusty/casual'
+    );
   });
 
   it('rejects an unknown persona', () => {

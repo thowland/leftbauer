@@ -493,6 +493,8 @@ interface Persona {
 
 **When to override a policy rather than adjust the profile:** if a style is "the same decision with a different appetite," it is a profile number. If it is "a different way of thinking about the decision" (for example, a future persona that leads trump at every opportunity), it is a new policy implementation passed in `overrides`. This rule keeps the policy implementations few and cohesive, and it keeps the personas thin.
 
+*As built (after Sprint 10):* a fifth opponent, **Johnny Blue**, is a persona with no `style`. Each game he plays as one of `DISGUISES` (Soopy, Shrubs, Rusty or Smooth, even one already at the table), drawn in `startGame` from the opponent-choice stream, so a seeded game always gives him the same disguise. `BotSpec.playsAs` records the disguise and is saved with the game; `isSavedGame` requires it for Johnny and refuses it for anyone else. `playingPersona(spec)` resolves the persona the factory plays, and `specKey` includes the disguise, so caching and decision seeds keep his disguises apart. The table and Settings show only Johnny Blue's own name, colour and tagline, and nothing reveals the disguise. A random seat can draw him; the tournament does not field him.
+
 ### 6.5 Skill: difficulty as strategy selection
 
 Difficulty (OP-2) changes *how well* a bot plays, independently of style:

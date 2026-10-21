@@ -106,4 +106,12 @@ describe('resolveOpponents (OP-4)', () => {
       expect(first).not.toBe('smooth');
     }
   });
+
+  it('can draw Johnny Blue for a random seat, like any opponent', () => {
+    const drawn = new Set<string>();
+    for (let seed = 0; seed < 50; seed++) {
+      drawn.add(resolveOpponents({ left: 'random', right: 'rusty' }, seededRng(seed))[0]);
+    }
+    expect([...drawn].sort()).toEqual(['johnny', 'shrubs', 'smooth', 'soopy']);
+  });
 });
