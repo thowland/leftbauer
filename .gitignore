@@ -37,3 +37,6 @@ playwright/.cache/
 
 # Track the lockfile despite the global ignore: reproducible installs.
 !package-lock.json
+
+# Local deploy settings (deploy.env.example is the template)
+deploy.env
