@@ -40,3 +40,11 @@ playwright/.cache/
 
 # Local deploy settings (deploy.env.example is the template)
 deploy.env
+# Credentials and secrets never enter the repository
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.aws/
+credentials
