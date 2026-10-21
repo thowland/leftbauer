@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   AudioEngine,
   browserAudioDeps,
+  LOAD_GRACE_S,
   type AudioContextLike,
   type AudioDeps,
 } from '../../../src/audio/audioEngine';
@@ -12,6 +13,7 @@ import { gameFromDeck } from '../../helpers/engine';
 /** A Web Audio stand-in that records what was started, and at what gain. */
 class FakeContext implements AudioContextLike {
   state = 'suspended';
+  currentTime = 0;
   readonly destination = 'speakers';
   readonly started: { buffer: unknown; gain: number | null }[] = [];
 
@@ -97,6 +99,32 @@ describe('AudioEngine (SA-2, SA-3)', () => {
     expect(
       new AudioEngine({ createContext: () => null, load: vi.fn() }, { muted: true }).isMuted
     ).toBe(true);
+  });
+
+  it('plays a sound asked for while it loads, unless it arrives too late', async () => {
+    const pending: Record<string, () => void> = {};
+    const { context, engine } = setup(
+      (file) =>
+        new Promise((resolve) => {
+          pending[file] = () => resolve(new TextEncoder().encode(file).buffer);
+        })
+    );
+    engine.unlock();
+    engine.play('shuffle');
+    engine.play('card');
+    pending[SOUNDS.shuffle.file]!();
+    await loaded();
+    expect(context.started.at(-1)?.buffer).toBe(`decoded:${SOUNDS.shuffle.file}`);
+
+    context.currentTime = LOAD_GRACE_S + 0.1;
+    pending[SOUNDS.card.file]!();
+    await loaded();
+    expect(context.started).toHaveLength(2);
+
+    for (const resolve of Object.values(pending)) resolve();
+    await loaded();
+    engine.play('deal');
+    expect(context.started).toHaveLength(3);
   });
 
   it('skips a sound that failed to load', async () => {

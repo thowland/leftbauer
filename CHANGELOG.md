@@ -2,6 +2,13 @@
 
 This file records every notable change to the project, one section per sprint or fix. The first release is 0.1.0.
 
+## Unreleased
+
+### Fixed
+
+- An open game reloads onto a new release as soon as it arrives. Before, the new version took over a page that was already open while the old code kept running, and the old page's requests could then fail (Safari logged "You do not have permission to access the requested resource").
+- The shuffle at the start of the first game plays. The tap on New game also switches sound on, and the shuffle used to be skipped because its sound had not finished loading; a sound that arrives within half a second of being asked for now plays.
+
 ## 0.2.3 — The version on About (2026-10-21)
 
 ### Changed

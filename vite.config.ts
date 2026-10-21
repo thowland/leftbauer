@@ -15,8 +15,9 @@ export default defineConfig({
     /**
      * The installable, offline PWA (NF-5, ADR-0006). The whole build is
      * precached, so the game runs with no network once it has loaded.
-     * `autoUpdate` swaps a new service worker in on the next launch; the
-     * game is saved after every action, so nothing is lost when it does.
+     * `autoUpdate` swaps a new service worker in as soon as it is found, and
+     * `registerSW` in `main.tsx` then reloads open pages onto the new build;
+     * the game is saved after every action, so nothing is lost when it does.
      * Unknown paths fall back to `index.html`, matching CloudFront's
      * 403/404 mapping in `infra/left-bauer.yaml`.
      */
