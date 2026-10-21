@@ -3,6 +3,7 @@ node_modules
 coverage
 playwright-report
 test-results
+brag-output*
 package-lock.json
 
 # Local tooling artefacts (not part of the app)

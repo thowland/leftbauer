@@ -68,6 +68,7 @@ export default tseslint.config(
       'coverage/**',
       'playwright-report/**',
       'test-results/**',
+      'brag-output*/**',
     ],
   },
   js.configs.recommended,
