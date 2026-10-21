@@ -4,6 +4,53 @@
   box-sizing: border-box;
 }
 
+/*
+ * Spacing (docs/design/layout-improvements.md §2): one 4 px scale, plus
+ * tokens named for the relationships they set. These are minimums.
+ */
+:root {
+  --space-0: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* The smallest hit area, and the compact pill drawn inside it. */
+  --tap: 44px;
+  --pill-h: 36px;
+  --gutter: 12px;
+
+  --gap-controls: var(--space-2);
+  --gap-control-card: var(--space-3);
+  --gap-control-text: var(--space-2);
+  --gap-label-chip: var(--space-1);
+  --gap-chip-cards: var(--space-2);
+  --gap-hand: clamp(6px, 1.5vw, 12px);
+  --gap-region: var(--space-2);
+  --gap-group: var(--space-4);
+  --gap-danger: var(--space-4);
+}
+
+@media (max-height: 500px) {
+  :root {
+    --pill-h: 30px;
+    --gap-region: var(--space-0);
+    --gap-control-card: var(--space-2);
+    --gap-control-text: var(--space-1);
+  }
+}
+
+/* Roomy (iPad and desktop): larger controls and gutters. */
+@media (min-width: 768px) and (min-height: 700px) {
+  :root {
+    --pill-h: 44px;
+    --gutter: 16px;
+    --gap-region: var(--space-3);
+  }
+}
+
 html,
 body {
   margin: 0;
@@ -44,11 +91,16 @@ body {
   --card-w: clamp(46px, min(17vw, 12.5dvh), 118px);
   --back-w: calc(var(--card-w) * 0.52);
   /* How far a card travels between the center and a seat (SA-1). */
-  --reach-x: 38vw;
+  --reach-x: min(38vw, 400px);
   --reach-y: 34dvh;
+  /* Fixed tracks, so nothing moves as cards and chips come and go. */
+  --side-w: clamp(76px, 22vw, 128px);
+  --prompt-lines: 1;
+  --prompt-line: 1.125rem;
+  --button-h: 44px;
 
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: var(--side-w) minmax(0, 1fr) var(--side-w);
   grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   grid-template-areas:
     'score score score'
@@ -57,9 +109,13 @@ body {
     'actions actions actions'
     'bottom bottom bottom';
   height: 100%;
-  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
-    max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
-  gap: 6px;
+  /* The felt stays full-bleed on .app; a wide window keeps the seats near the trick. */
+  max-inline-size: 1040px;
+  margin-inline: auto;
+  padding: max(var(--space-2), env(safe-area-inset-top))
+    max(var(--gutter), env(safe-area-inset-right)) max(var(--gutter), env(safe-area-inset-bottom))
+    max(var(--gutter), env(safe-area-inset-left));
+  gap: var(--gap-region);
 }
 
 .score-bar {
@@ -67,7 +123,32 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
+}
+
+/* Each slot is as wide as its widest value, so "1–0" never widens it. */
+.score .tricks dd {
+  min-width: 3ch;
+}
+
+.score .trump dd {
+  display: grid;
+  place-items: center;
+  min-width: 1.1rem;
+}
+
+.score-target {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ink-muted);
+}
+
+/* The menu's Sound item is for portrait phones only (see below). */
+.menu-sound {
+  display: none;
 }
 
 .brand {
@@ -131,11 +212,20 @@ body {
   }
 
   .score-bar {
-    gap: 8px;
+    gap: var(--space-3);
   }
 
-  .score-controls {
-    gap: 6px;
+  /* No room for these here: the target is in the menu's Rules, Sound is in the menu. */
+  .score-target,
+  .score-sound {
+    display: none;
+  }
+
+  .menu-sound {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
   }
 }
 
@@ -161,10 +251,18 @@ body {
 }
 
 .button-small {
-  min-height: 36px;
+  position: relative;
+  min-height: var(--pill-h);
   padding: 0 12px;
   font-size: 0.85rem;
   white-space: nowrap;
+}
+
+/* A compact pill is still a full target: the hit area reaches --tap, vertically only. */
+.button-small::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--pill-h) - var(--tap)) / 2) 0;
 }
 
 .button-icon {
@@ -179,7 +277,7 @@ body {
 
 .score-controls {
   display: flex;
-  gap: 8px;
+  gap: var(--gap-controls);
 }
 
 .button:focus-visible {
@@ -192,7 +290,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: var(--gap-chip-cards);
   min-width: 0;
 }
 
@@ -204,9 +302,20 @@ body {
   grid-area: left;
 }
 
-.seat-left,
-.seat-right {
-  max-width: 24vw;
+.seat-left .seat-label,
+.seat-right .seat-label {
+  max-width: 100%;
+}
+
+/* A side seat's status may wrap: reserve both lines, so its cards never move. */
+.seat-left .seat-status,
+.seat-right .seat-status {
+  min-height: 2.3rem;
+}
+
+.seat-left .status-chip,
+.seat-right .status-chip {
+  white-space: normal;
 }
 
 .seat-right {
@@ -221,7 +330,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: var(--gap-label-chip);
   margin: 0;
   font-size: 0.85rem;
   color: var(--ink-muted);
@@ -251,23 +360,20 @@ body {
 .seat-status {
   display: flex;
   align-items: center;
-  min-height: 1.15rem;
+  min-height: 1.25rem;
 }
 
 .seat-cards {
   position: relative;
 }
 
-/* The dealer button sits on the corner of the seat's cards (out of flow). */
+/* The dealer's disc follows the seat's name, no taller than the monogram. */
 .dealer-button {
-  position: absolute;
-  z-index: 2;
-  top: -0.6rem;
-  right: -0.6rem;
-  display: grid;
+  display: inline-grid;
   place-items: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  flex: none;
+  width: 1.35rem;
+  height: 1.35rem;
   border: 2px solid var(--felt-shadow);
   border-radius: 50%;
   background: var(--brass);
@@ -279,6 +385,8 @@ body {
 
 .chip {
   padding: 1px 7px;
+  /* A fixed line, so a chip is exactly the status row's height. */
+  line-height: 1rem;
   border-radius: 9px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -316,9 +424,13 @@ body {
   filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.35));
 }
 
-/* Face-down hands: an overlapped row across the top, stacked columns at the sides. */
+/*
+ * Face-down hands: an overlapped row across the top, stacked columns at the
+ * sides. An empty hand keeps one card's height, so the rows never collapse.
+ */
 .backs {
   display: flex;
+  min-height: calc(var(--back-w) * 1.4);
 }
 
 .back-card {
@@ -350,22 +462,44 @@ body {
   position: relative;
 }
 
-/* Last trick (GF-5): pinned to a corner so it never moves the trick. */
+/*
+ * Hint and Last trick (CO-1, GF-5): one row pinned to a corner, so neither
+ * moves the trick. The row runs right to left with Hint first, so Last
+ * trick appearing grows it inward and Hint never moves.
+ */
 .center-corner {
   position: absolute;
   right: 0;
   bottom: 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: var(--gap-controls);
 }
 
-/* Phones in portrait: the trick fills the center's width; the empty felt is above it. */
+/*
+ * Phones in portrait: the trick fills the center's width, so it sits at the
+ * bottom of the felt and the corner controls take the empty felt above it.
+ */
 @media (max-width: 520px) {
+  .center {
+    justify-content: flex-end;
+  }
+
+  .center .center-flight {
+    align-items: flex-end;
+  }
+
   .center-corner {
-    top: 0;
+    top: var(--space-1);
     bottom: auto;
+  }
+
+  /* The opponents' backs sit level with their slots in the trick. */
+  .seat-left,
+  .seat-right {
+    justify-content: flex-end;
+    padding-bottom: calc(var(--card-w) * 0.8 * 0.95 * 0.5);
   }
 }
 
@@ -412,12 +546,14 @@ body {
 .hand {
   display: flex;
   justify-content: center;
-  gap: clamp(2px, 1vw, 10px);
+  gap: var(--gap-hand);
+  /* One card tall even when empty, at the end of a hand. */
+  min-height: calc(var(--card-w) * 1.4);
 }
 
 .hand-card {
   /* A dealer briefly holds six cards: never wider than the screen. */
-  width: min(var(--card-w), calc((100vw - 24px) / var(--count, 5) - clamp(2px, 1vw, 10px)));
+  width: min(var(--card-w), calc((100vw - 2 * var(--gutter)) / var(--count, 5) - var(--gap-hand)));
 }
 
 .hand-slot {
@@ -443,9 +579,19 @@ body {
   transform: translateY(-12%);
 }
 
+/*
+ * Faded cards drop their shadow. iOS Safari can fail to paint a filtered
+ * card (the drop shadow) inside a faded parent, so the two never nest.
+ */
 .card-illegal {
   opacity: 0.45;
-  filter: saturate(0.6);
+}
+
+.card-illegal .card,
+.seat-out .card,
+.trick-done .trick-slot:not(.trick-winner) .card,
+.peek-play:not(.peek-winner) .card {
+  filter: none;
 }
 
 .bower-badge {
@@ -465,29 +611,46 @@ body {
   white-space: nowrap;
 }
 
-/* The prompt and bid buttons between the table and the hand (GF-2, GF-3). */
+/*
+ * The prompt and bid buttons between the table and the hand (GF-2, GF-3).
+ * Always the prompt's lines plus one row of buttons tall, so the table
+ * never shifts; a panel that wraps grows upward over the felt.
+ */
 .action-bar {
   grid-area: actions;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  min-height: 1.5rem;
+  justify-content: flex-end;
+  gap: var(--gap-control-text);
+  height: calc(
+    var(--space-2) + var(--prompt-lines) * var(--prompt-line) + var(--gap-control-text) +
+      var(--button-h)
+  );
+  z-index: 3;
 }
 
 .turn-prompt {
+  flex: none;
   margin: 0;
-  min-height: 1.2em;
+  min-height: calc(var(--prompt-lines) * var(--prompt-line));
   line-height: 1.25;
   font-size: 0.9rem;
   color: var(--ink-on-felt);
   text-align: center;
 }
 
-/* Phones: prompts and hints can wrap; reserve both lines so the table never shifts. */
+.action-panel {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  min-height: var(--button-h);
+}
+
+/* Phones: prompts and hints can wrap; reserve both lines. */
 @media (max-width: 520px) {
-  .turn-prompt {
-    min-height: 2.5em;
+  .table {
+    --prompt-lines: 2;
   }
 }
 
@@ -496,7 +659,7 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: var(--gap-controls);
 }
 
 .button-primary {
@@ -520,11 +683,32 @@ body {
   height: 1rem;
 }
 
+@media (max-width: 520px) {
+  .suit-button {
+    padding: 0 14px;
+  }
+
+  .suit-button-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .suit-button-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 .alone-toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
+  padding-inline: var(--space-2);
+  min-height: var(--button-h, 44px);
   font-size: 0.95rem;
 }
 
@@ -541,12 +725,22 @@ body {
   z-index: 10;
   display: grid;
   place-items: center;
-  padding: 16px;
+  padding: var(--space-4);
   background: rgb(10 20 14 / 0.6);
+}
+
+/* Portrait phones: the hand summary rises from the bottom, clear of the last trick. */
+@media (max-width: 520px) {
+  .dialog-backdrop-sheet {
+    align-items: end;
+    padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+  }
 }
 
 .dialog {
   width: min(100%, 360px);
+  max-height: calc(100dvh - 2 * var(--space-4));
+  overflow-y: auto;
   padding: 20px;
   border: 1px solid var(--brass);
   border-radius: 14px;
@@ -577,8 +771,8 @@ body {
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
+  gap: var(--gap-controls);
+  margin-top: var(--space-4);
 }
 
 .highlights {
@@ -608,15 +802,36 @@ body {
 }
 
 /* Home (GF-1). */
+/* Home scrolls if it must, so nothing is ever out of reach (Safari landscape). */
 .home {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  justify-content: safe center;
+  gap: var(--space-5);
   height: 100%;
-  padding: 24px;
+  overflow-y: auto;
+  padding: max(var(--space-5), env(safe-area-inset-top)) var(--space-5)
+    max(var(--space-5), env(safe-area-inset-bottom));
   text-align: center;
+}
+
+.home-hero,
+.home-actions,
+.home-primary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.home-actions {
+  gap: var(--space-5);
+  width: 100%;
+}
+
+.home-primary {
+  gap: var(--space-3);
+  width: min(100%, 280px);
 }
 
 .home-title {
@@ -627,22 +842,25 @@ body {
 }
 
 .home-tagline {
-  margin: 0 0 16px;
+  margin: var(--space-2) 0 0;
   color: var(--ink-muted);
 }
 
 .home-button {
-  min-width: 200px;
+  width: 100%;
   font-size: 1.1rem;
 }
 
 /* The trick: each card sits toward the seat that played it. */
 .trick {
   --trick-w: calc(var(--card-w) * 0.8);
+  --trick-row: calc(var(--trick-w) * 0.95);
 
   display: grid;
   grid-template-columns: repeat(3, calc(var(--trick-w) * 1.05));
-  grid-template-rows: repeat(3, calc(var(--trick-w) * 0.95));
+  grid-template-rows: repeat(3, var(--trick-row));
+  /* The cards are taller than their rows: pad so the box holds them all. */
+  padding-block: calc((var(--trick-w) * 1.4 - var(--trick-row)) / 2);
   grid-template-areas:
     '. top .'
     'left . right'
@@ -783,8 +1001,76 @@ body {
 /* iPhone landscape: little height, so shrink the cards and the chrome. */
 @media (max-height: 500px) {
   .table {
-    --card-w: clamp(40px, 15dvh, 80px);
-    gap: 2px;
+    --card-w: clamp(40px, 14dvh, 80px);
+    --button-h: 36px;
+  }
+
+  /* The kitty's label goes beside it: the center has no height to spare. */
+  .center {
+    flex-direction: row;
+    gap: var(--space-3);
+  }
+
+  /* The bid buttons keep a clear gap above the hand, and none to spare above the prompt. */
+  .action-bar {
+    height: calc(
+      var(--prompt-lines) * var(--prompt-line) + var(--gap-control-text) + var(--button-h)
+    );
+    margin-bottom: var(--gap-control-card);
+  }
+
+  .score-bar {
+    padding-bottom: var(--space-1);
+  }
+
+  /* Two columns: the title beside the actions. */
+  .home {
+    flex-direction: row;
+    gap: var(--space-6);
+  }
+
+  .home-title {
+    font-size: clamp(2rem, 12dvh, 3rem);
+    white-space: nowrap;
+  }
+
+  .menu-groups {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-4);
+  }
+
+  .menu-group-danger {
+    grid-column: 1 / -1;
+  }
+
+  .dialog:has(.menu-groups) {
+    width: min(100%, 560px);
+  }
+
+  .trick {
+    --trick-w: calc(var(--card-w) * 0.65);
+    --trick-row: calc(var(--trick-w) * 0.75);
+  }
+
+  /* Names beside the cards, not above them: the center needs the height. */
+  .seat-top,
+  .seat-bottom {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    column-gap: 10px;
+  }
+
+  .seat-top .seat-label,
+  .seat-bottom .seat-label {
+    grid-area: 1 / 1;
+    justify-self: end;
+  }
+
+  .seat-top .seat-cards,
+  .seat-bottom .seat-cards {
+    grid-area: 1 / 2;
   }
 
   .brand {
@@ -796,19 +1082,39 @@ body {
   }
 
   .button-small {
-    min-height: 30px;
+    min-height: var(--pill-h);
   }
 }
 
 /* In-game menu (GF-8). */
+.menu-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-group);
+}
+
+.menu-group + .menu-group {
+  padding-top: var(--gap-group);
+  border-top: 1px solid rgb(201 164 92 / 0.25);
+}
+
+.menu-heading {
+  margin: 0 0 var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
 .menu-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--gap-controls);
 }
 
-.menu-note {
-  margin-top: 12px;
+.dialog-body .menu-note {
+  margin: 0;
   font-size: 0.85rem;
   color: var(--ink-muted);
 }
@@ -851,12 +1157,19 @@ body {
     max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
 
+/* The way out stays on screen however far the page scrolls. */
 .settings-header {
+  position: sticky;
+  top: calc(-1 * max(16px, env(safe-area-inset-top)));
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: var(--space-3);
+  margin: calc(-1 * max(16px, env(safe-area-inset-top))) calc(-1 * var(--space-4)) var(--space-2);
+  padding: max(16px, env(safe-area-inset-top)) var(--space-4) var(--space-2);
+  background: var(--felt-shadow);
+  box-shadow: 0 6px 12px -8px rgb(0 0 0 / 0.6);
 }
 
 .settings-title {
@@ -867,8 +1180,8 @@ body {
 }
 
 .settings-group {
-  margin: 0 0 12px;
-  padding: 12px 14px;
+  margin: 0 0 var(--gap-group);
+  padding: var(--space-4);
   border: 1px solid rgb(201 164 92 / 0.4);
   border-radius: 12px;
 }
@@ -884,20 +1197,30 @@ body {
   display: grid;
   grid-template-columns: 9rem 1fr;
   align-items: center;
-  gap: 4px 12px;
-  margin-bottom: 8px;
+  gap: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+/* A setting that depends on the one above it, indented beneath it. */
+.settings-row-dependent {
+  margin-left: var(--space-5);
+  grid-template-columns: 1fr 1fr;
 }
 
 .settings-row .settings-detail {
   grid-column: 1 / -1;
 }
 
+/* iOS ignores a native select's height, so draw it ourselves, with a chevron. */
 .settings-row select {
-  min-height: 40px;
-  padding: 0 8px;
+  appearance: none;
+  min-height: var(--tap);
+  padding: 0 32px 0 var(--space-3);
   border: 1px solid var(--brass);
   border-radius: 8px;
-  background: var(--felt-shadow);
+  background: var(--felt-shadow)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23c9a45c' stroke-width='1.6'/%3E%3C/svg%3E")
+    no-repeat right 12px center / 12px 8px;
   color: var(--ink-on-felt);
   font: inherit;
 }
@@ -1086,40 +1409,12 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  max-width: 340px;
-  margin-top: 8px;
+  gap: var(--gap-controls);
+  max-width: 360px;
 }
 
-/* House rules (Sprint 9). The Rules chip sits in the corner opposite Hint. */
-.center-rules {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-}
-
-.rules-chip {
-  font-variant: small-caps;
-  letter-spacing: 0.04em;
-}
-
-.rules-chip-short {
-  display: none;
-}
-
-@media (max-width: 520px) {
-  .center-rules {
-    top: 0;
-    bottom: auto;
-  }
-
-  .rules-chip-long {
-    display: none;
-  }
-
-  .rules-chip-short {
-    display: inline;
-  }
+.stats-reset {
+  margin-top: var(--gap-danger);
 }
 
 .dialog-body .rules-list {
@@ -1145,4 +1440,82 @@ body {
 .deck-preview-card {
   width: 44px;
   height: auto;
+}
+
+/*
+ * Roomy (iPad and desktop): the chrome scales with the cards. Every value
+ * is static for the viewport, so the table still never moves.
+ */
+@media (min-width: 768px) and (min-height: 700px) {
+  .table {
+    --card-w: clamp(46px, min(17vw, 14dvh), 128px);
+    --side-w: 160px;
+    --button-h: 48px;
+    --prompt-line: 1.3125rem;
+  }
+
+  .score dt {
+    font-size: 0.9rem;
+  }
+
+  .score dd {
+    font-size: 1.5rem;
+  }
+
+  .trump-icon,
+  .score .trump dd {
+    min-width: 1.5rem;
+  }
+
+  .trump-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .score-target {
+    font-size: 0.9rem;
+  }
+
+  .seat-label {
+    font-size: 1rem;
+  }
+
+  .monogram,
+  .dealer-button {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+  .chip {
+    font-size: 0.8rem;
+  }
+
+  .turn-prompt {
+    font-size: 1.05rem;
+  }
+
+  .button-small {
+    font-size: 0.95rem;
+  }
+
+  .home-primary {
+    width: 320px;
+  }
+
+  .home-button {
+    min-height: 48px;
+  }
+
+  .home-title {
+    font-size: clamp(2.4rem, 10vw, 5rem);
+  }
+
+  .dialog {
+    padding: var(--space-5);
+  }
+}
+
+/* The dev panel's table fills its column. */
+.app-dev .table {
+  max-inline-size: none;
 }

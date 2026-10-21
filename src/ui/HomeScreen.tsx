@@ -35,38 +35,45 @@ export function HomeScreen({
   const [confirming, setConfirming] = useState(false);
   return (
     <main className="home" aria-label="Home">
-      <h1 className="home-title">Left Bauer</h1>
-      <p className="home-tagline">Euchre at the kitchen table.</p>
-      {canContinue && (
-        <button type="button" className="button button-primary home-button" onClick={onContinue}>
-          Continue
-        </button>
-      )}
-      <button
-        type="button"
-        className={`button home-button${canContinue ? '' : ' button-primary'}`}
-        onClick={canContinue ? () => setConfirming(true) : onNewGame}
-      >
-        New game
-      </button>
-      <button type="button" className="button home-button" onClick={onSettings}>
-        Settings
-      </button>
-      <nav className="home-links" aria-label="More">
-        {LINKS.map(({ screen, label }) => (
+      <div className="home-hero">
+        <h1 className="home-title">Left Bauer</h1>
+        <p className="home-tagline">Euchre at the kitchen table.</p>
+      </div>
+      <div className="home-actions">
+        <div className="home-primary">
+          {canContinue && (
+            <button
+              type="button"
+              className="button button-primary home-button"
+              onClick={onContinue}
+            >
+              Continue
+            </button>
+          )}
           <button
-            key={screen}
             type="button"
-            className="button button-small"
-            onClick={() => onOpen(screen)}
+            className={`button home-button${canContinue ? '' : ' button-primary'}`}
+            onClick={canContinue ? () => setConfirming(true) : onNewGame}
           >
-            {label}
+            New game
           </button>
-        ))}
-      </nav>
+        </div>
+        {/* Settings is a destination like the reading screens, so it sits with them. */}
+        <nav className="home-links" aria-label="More">
+          <button type="button" className="button" onClick={onSettings}>
+            Settings
+          </button>
+          {LINKS.map(({ screen, label }) => (
+            <button key={screen} type="button" className="button" onClick={() => onOpen(screen)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+      </div>
       {confirming && (
         <Dialog
           title="Start a new game?"
+          onClose={() => setConfirming(false)}
           actions={
             <>
               <button type="button" className="button" onClick={() => setConfirming(false)}>

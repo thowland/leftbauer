@@ -23,9 +23,15 @@ describe('Card', () => {
     expect(suitIcons(container)).toHaveLength(expected);
   });
 
-  it('prints 10 in the corner of a ten', () => {
-    render(<Card card="TS" />);
-    expect(screen.getByRole('img', { name: 'Ten of spades' })).toHaveTextContent('10');
+  it('draws 10 in both corners of a ten, as strokes rather than text', () => {
+    const { container } = render(<Card card="TS" />);
+    expect(container.querySelectorAll('[data-rank="10"]')).toHaveLength(2);
+    expect(container.querySelector('text')).toBeNull();
+  });
+
+  it('draws a court card’s rank in its panel too', () => {
+    const { container } = render(<Card card="QH" />);
+    expect(container.querySelectorAll('[data-rank="Q"]')).toHaveLength(3);
   });
 
   it('inks suits by deck variant (VP-3)', () => {

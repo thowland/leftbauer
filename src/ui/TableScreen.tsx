@@ -15,7 +15,6 @@ import type { Cue } from './game/presenter';
 import { DefendAlonePanel, FarmerPanel } from './HouseRulePanels';
 import { LastTrickPeek } from './LastTrickPeek';
 import { PlayerHand } from './PlayerHand';
-import { RulesChip } from './RulesChip';
 import { namesOf, screenPosition, seatName, type SeatInfo } from './layout';
 import { dealt, flyFrom, flyTo, intoHand, type CardMotion } from './motion';
 import { SuitIcon } from './SuitIcon';
@@ -117,25 +116,35 @@ export function TableScreen({
             <dt>Them</dt>
             <dd>{view.score[them]}</dd>
           </div>
-          {trump !== null && (
-            <div className="trump" aria-label={`Trump: ${SUIT_NAMES[trump]}`}>
-              <dt>Trump</dt>
-              <dd>
+          {/* Trump and Tricks hold their places from the deal, so the score never moves. */}
+          <div
+            className="trump"
+            aria-label={trump === null ? 'Trump: not named yet' : `Trump: ${SUIT_NAMES[trump]}`}
+          >
+            <dt>Trump</dt>
+            <dd>
+              {trump === null ? (
+                '—'
+              ) : (
                 <svg viewBox="0 0 100 100" className="trump-icon" aria-hidden="true">
                   <SuitIcon suit={trump} x={50} y={50} size={100} color="var(--ink-on-felt)" />
                 </svg>
-              </dd>
-            </div>
-          )}
-          {view.contract !== null && (
-            <div className="tricks" aria-label={`Tricks: us ${tricks[us]}, them ${tricks[them]}`}>
-              <dt>Tricks</dt>
-              <dd>
-                {tricks[us]}–{tricks[them]}
-              </dd>
-            </div>
-          )}
+              )}
+            </dd>
+          </div>
+          <div
+            className="tricks"
+            aria-label={
+              view.contract === null
+                ? 'Tricks: none yet'
+                : `Tricks: us ${tricks[us]}, them ${tricks[them]}`
+            }
+          >
+            <dt>Tricks</dt>
+            <dd>{view.contract === null ? '—' : `${tricks[us]}–${tricks[them]}`}</dd>
+          </div>
         </dl>
+        <p className="score-target">Game to {view.rules.targetScore}</p>
         {controls !== undefined && <div className="score-controls">{controls}</div>}
       </header>
 
@@ -152,9 +161,7 @@ export function TableScreen({
 
       <section className="center" aria-label="Table center">
         <CenterContents view={view} cue={cue} />
-        <div className="center-rules">
-          <RulesChip rules={view.rules} />
-        </div>
+        {/* Hint comes first and the row runs right to left, so Last trick never moves it. */}
         <div className="center-corner">
           {onHint !== undefined && legal !== null && (
             <button
@@ -176,28 +183,30 @@ export function TableScreen({
         <p className={`turn-prompt${hint ? ' hint-text' : ''}`} aria-live="polite">
           {hint ? `Hint: ${hint.reasonText}` : turnPrompt(view, legal, namesOf(seats))}
         </p>
-        {bids.length > 0 && (
-          <BidPanel
-            legal={bids}
-            isDealer={view.dealer === human}
-            onBid={onAction}
-            hinted={hint !== null && isBidAction(hint.action) ? hint.action : null}
-          />
-        )}
-        {farmer && (
-          <FarmerPanel
-            picked={picked}
-            onSwap={() => onAction({ type: 'farmerExchange', cards: picked })}
-            onKeep={() => onAction({ type: 'farmerExchange', cards: [] })}
-            hinted={hint?.action ?? null}
-          />
-        )}
-        {defending && (
-          <DefendAlonePanel
-            onChoose={(accept) => onAction({ type: 'defendAlone', accept })}
-            hinted={hint?.action ?? null}
-          />
-        )}
+        <div className="action-panel">
+          {bids.length > 0 && (
+            <BidPanel
+              legal={bids}
+              isDealer={view.dealer === human}
+              onBid={onAction}
+              hinted={hint !== null && isBidAction(hint.action) ? hint.action : null}
+            />
+          )}
+          {farmer && (
+            <FarmerPanel
+              picked={picked}
+              onSwap={() => onAction({ type: 'farmerExchange', cards: picked })}
+              onKeep={() => onAction({ type: 'farmerExchange', cards: [] })}
+              hinted={hint?.action ?? null}
+            />
+          )}
+          {defending && (
+            <DefendAlonePanel
+              onChoose={(accept) => onAction({ type: 'defendAlone', accept })}
+              hinted={hint?.action ?? null}
+            />
+          )}
+        </div>
       </section>
 
       <section
@@ -217,7 +226,6 @@ export function TableScreen({
             hinted={hintedCards}
             picking={farmer ? { picked, onToggle: togglePick } : null}
           />
-          {view.dealer === human && <DealerButton />}
         </div>
       </section>
     </main>
@@ -269,7 +277,6 @@ function OtherSeat({ seat, view, cards, info, cue }: OtherSeatProps) {
                 />
               ))}
         </div>
-        {view.dealer === seat && <DealerButton />}
       </div>
     </section>
   );
@@ -303,6 +310,7 @@ function SeatLabel({
           </span>
         )}
         {info?.name ?? seatName(seat, view.seat)}
+        {view.dealer === seat && <DealerButton />}
       </span>
       <span className="seat-status">
         {status !== null && <span className="chip status-chip">{status}</span>}
@@ -311,7 +319,7 @@ function SeatLabel({
   );
 }
 
-/** A dealer button pinned to the seat's cards, outside the layout flow. */
+/** The dealer's disc, after the seat's name, clear of the cards. */
 function DealerButton() {
   return (
     <span className="dealer-button" title="Dealer">
@@ -380,7 +388,7 @@ function CenterContents({ view, cue }: { view: PlayerView; cue: Cue | null }) {
         </div>
       )}
       {trick === null ? (
-        <p className="center-label">Lead</p>
+        view.phase === 'play' && <p className="center-label">Lead</p>
       ) : (
         <TrickView trick={trick} humanSeat={human} done={view.currentTrick === null} cue={cue} />
       )}

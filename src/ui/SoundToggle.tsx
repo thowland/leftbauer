@@ -1,15 +1,21 @@
 interface SoundToggleProps {
   readonly on: boolean;
   readonly onToggle: () => void;
+  /**
+   * `bar` is the icon in the score bar; `menu` is the labelled menu item.
+   * The table renders both, and CSS shows exactly one per screen size.
+   */
+  readonly variant?: 'bar' | 'menu';
 }
 
-/** The mute control on the table (SA-3); the setting persists with the others. */
-export function SoundToggle({ on, onToggle }: SoundToggleProps) {
+/** The mute control (SA-3); the setting persists with the others. */
+export function SoundToggle({ on, onToggle, variant = 'bar' }: SoundToggleProps) {
+  const menu = variant === 'menu';
   return (
     <button
       type="button"
-      className="button button-small button-icon"
-      aria-label="Sound"
+      className={menu ? 'button menu-sound' : 'button button-small button-icon score-sound'}
+      aria-label={menu ? undefined : 'Sound'}
       aria-pressed={on}
       title={on ? 'Sound on' : 'Sound off'}
       onClick={onToggle}
@@ -33,6 +39,7 @@ export function SoundToggle({ on, onToggle }: SoundToggleProps) {
           />
         )}
       </svg>
+      {menu && 'Sound'}
     </button>
   );
 }

@@ -46,7 +46,9 @@ test('stick the dealer: the dealer cannot pass in round two (RU-10)', async ({ p
   await newGameWith(page, '/?seed=127&e2e', () =>
     page.getByRole('checkbox', { name: /Stick the dealer/ }).check()
   );
+  await page.getByRole('button', { name: 'Menu' }).click();
   await expect(page.getByRole('button', { name: 'House rules · to 10' })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to the game' }).click();
   const stuck = page.getByText('Stick the dealer: you must name trump.');
   await passUntil(page, () => stuck.isVisible());
   await expect(bid(page).getByRole('button', { name: 'Pass' })).toHaveCount(0);
@@ -59,9 +61,11 @@ test('a game to 5 ends at 5 (RU-11)', async ({ page }) => {
   await newGameWith(page, '/?seed=3&e2e', async () => {
     await page.getByLabel('Game to').selectOption('5');
   });
+  await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('button', { name: 'Rules · to 5' }).click();
   await expect(page.getByRole('dialog')).toContainText('The first team to 5 points wins.');
   await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Back to the game' }).click();
 
   const over = page.getByRole('dialog', { name: /We win!|They win/ });
   await passUntil(page, () => over.isVisible());

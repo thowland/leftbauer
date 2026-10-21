@@ -2,6 +2,30 @@
 
 All notable changes to this project are recorded here, one section per sprint.
 
+## Fix — A steady table, and the layout guide
+
+### Changed
+
+- **Layout pass** from `docs/design/layout-improvements.md`: one spacing scale (`--space-*` and relationship tokens such as `--gap-controls`) across the stylesheet, wider screen gutters, 6–12 px between hand cards, and a full 44 px tap area on every compact button.
+- **Game menu** grouped as This game (Sound on portrait phones, the game's Rules, How to play), Leave (Settings, Home) and End the game (New game, Concede). Rules left the felt for the menu; the score bar shows "Game to 10" where it fits. How to play opened from a game describes that game's rules and leads back to it.
+- **Score bar:** Trump and Tricks hold their places with a dash from the deal. On portrait phones Sound moves into the menu, leaving the score and Menu.
+- **Dialogs** scroll when they are taller than the screen, close on Escape (except the hand summary and game over), keep Tab inside, and give the focus back when they close. On portrait phones the hand summary rises from the bottom, leaving the last trick in view.
+- **Home** groups Settings with the other destinations; in landscape the title sits beside the buttons, and the page scrolls if it must.
+- **Settings and reading pages:** the header, with Done, stays on screen while scrolling; dropdowns are a full 44 px on iOS; groups and rows have more room, and the loner-sweep row is indented under Loners.
+- **iPad and desktop** get larger cards, text and controls; on a wide window the table is capped at 1040 px so the seats stay near the trick.
+- The dealer's disc moved next to the dealer's name, off the cards.
+
+### Fixed
+
+- Nothing on the table moves during a hand any more. Before, the center and the trick jumped when the last cards left the hands, when a "Called…" or "Pass" chip appeared, and when the bid buttons came and went.
+- On phones in portrait, round-two bids fit on one row (the suit buttons show only the suit), and the trick no longer overlaps the prompt or the Last trick button.
+- On iPhone in landscape, the kitty and the trick now fit, in Safari too: the partner's and your names sit beside the cards, the kitty's label sits beside it, and the trick is a little smaller.
+- The score and the Hint button no longer move during a hand; the layout test now checks both.
+- Safari landscape with a saved game: Home's title was clipped and About could not be reached.
+- The redeal summary no longer shows a stray "Lead" behind it.
+- Card ranks are drawn as strokes instead of set in a font, so they show in the corners on every phone; some phones painted them blank.
+- On iPad, cards you couldn't play could vanish from the hand: a faded card no longer carries a drop shadow, which iOS Safari sometimes failed to paint.
+
 ## Sprint 9 — House rules and the four-color deck
 
 ### Added

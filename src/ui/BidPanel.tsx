@@ -51,7 +51,8 @@ export function BidPanel({ legal, isDealer, onBid, hinted = null }: BidPanelProp
           <svg viewBox="0 0 100 100" className="suit-button-icon" aria-hidden="true">
             <SuitIcon suit={suit} x={50} y={50} size={100} color="currentColor" />
           </svg>
-          {capitalize(SUIT_NAMES[suit])}
+          {/* Phones show only the suit, so a round-two bid fits on one row. */}
+          <span className="suit-button-name">{capitalize(SUIT_NAMES[suit])}</span>
         </button>
       ))}
       {canGoAlone && !orderAloneOnly && (
