@@ -48,3 +48,6 @@ deploy.env
 *.key
 .aws/
 credentials
+
+# Private review notes (never pushed)
+prelaunch/
