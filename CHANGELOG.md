@@ -2,7 +2,9 @@
 
 This file records every notable change to the project, one section per sprint or fix. The first release is 0.1.0.
 
-## Unreleased
+## 0.2.1 — Open source, and recovering from errors (2026-10-21)
+
+Published at https://github.com/thowland/leftbauer.
 
 ### Changed
 
