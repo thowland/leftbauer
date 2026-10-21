@@ -22,6 +22,7 @@ NF-5 asks for an app that installs from a link and works with no network after t
 
 ## Consequences
 
+- Deployed 2026-10-21 as stack `left-bauer` in us-east-1 (account ACCOUNT_ID): bucket `left-bauer-ACCOUNT_ID`, CloudFront distribution `DISTRIBUTION_ID`.
 - `npm run infra:deploy` creates the stack once (the certificate and CloudFront take 15 minutes or more). `npm run deploy` publishes each release. Both read the gitignored `deploy.env`.
 - A friend who installed the app gets a new release the second time they open it after a deploy: the first launch fetches the new service worker, and the next one runs it.
 - The CSP allows inline styles (React's `style` attributes and the theme's custom properties) but no inline scripts. A future inline script must move to a file, or the policy changes in both places.
