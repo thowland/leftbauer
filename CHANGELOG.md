@@ -2,6 +2,12 @@
 
 This file records every notable change to the project, one section per sprint or fix. The first release is 0.1.0.
 
+## Unreleased
+
+### Fixed
+
+- The installed app on iPhone fills the whole screen: before, the felt stopped one status bar short of the bottom, leaving a plain band under the hand. Held upright, the score bar also sits clear of the fade iOS draws below the status bar, which was dimming the top of the Menu button.
+
 ## 0.2.1 — Open source, and recovering from errors (2026-10-21)
 
 Published at https://github.com/thowland/leftbauer.

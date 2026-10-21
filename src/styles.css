@@ -9,6 +9,8 @@
  * tokens named for the relationships they set. These are minimums.
  */
 :root {
+  /* The top safe area; the installed app adds room for iOS's status-bar fade (below). */
+  --safe-top: env(safe-area-inset-top);
   --space-0: 2px;
   --space-1: 4px;
   --space-2: 8px;
@@ -69,6 +71,28 @@ body {
   height: 100%;
 }
 
+/*
+ * The installed app on iOS draws under a translucent status bar. There,
+ * 100% falls one status bar short of the screen, leaving a band without
+ * felt at the bottom; with no browser toolbars, 100vh is the whole screen.
+ * Upright, iOS also fades the content just below the status bar, so the
+ * top safe area gets extra room. In landscape the status bar is hidden.
+ */
+@media (display-mode: standalone) {
+  html,
+  body,
+  #root,
+  .app {
+    height: 100vh;
+  }
+}
+
+@media (display-mode: standalone) and (orientation: portrait) {
+  :root {
+    --safe-top: calc(env(safe-area-inset-top) + var(--space-6));
+  }
+}
+
 .app {
   height: 100%;
   /* Cards in flight pass the screen edges; clip them, never scroll (SA-1). */
@@ -112,9 +136,8 @@ body {
   /* The felt stays full-bleed on .app; a wide window keeps the seats near the trick. */
   max-inline-size: 1040px;
   margin-inline: auto;
-  padding: max(var(--space-2), env(safe-area-inset-top))
-    max(var(--gutter), env(safe-area-inset-right)) max(var(--gutter), env(safe-area-inset-bottom))
-    max(var(--gutter), env(safe-area-inset-left));
+  padding: max(var(--space-2), var(--safe-top)) max(var(--gutter), env(safe-area-inset-right))
+    max(var(--gutter), env(safe-area-inset-bottom)) max(var(--gutter), env(safe-area-inset-left));
   gap: var(--gap-region);
 }
 
@@ -812,7 +835,7 @@ body {
   gap: var(--space-5);
   height: 100%;
   overflow-y: auto;
-  padding: max(var(--space-5), env(safe-area-inset-top)) var(--space-5)
+  padding: max(var(--space-5), var(--safe-top)) var(--space-5)
     max(var(--space-5), env(safe-area-inset-bottom));
   text-align: center;
 }
@@ -1149,21 +1172,21 @@ body {
   overflow-y: auto;
   max-width: 560px;
   margin: 0 auto;
-  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+  padding: max(16px, var(--safe-top)) max(16px, env(safe-area-inset-right))
     max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
 
 /* The way out stays on screen however far the page scrolls. */
 .settings-header {
   position: sticky;
-  top: calc(-1 * max(16px, env(safe-area-inset-top)));
+  top: calc(-1 * max(16px, var(--safe-top)));
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin: calc(-1 * max(16px, env(safe-area-inset-top))) calc(-1 * var(--space-4)) var(--space-2);
-  padding: max(16px, env(safe-area-inset-top)) var(--space-4) var(--space-2);
+  margin: calc(-1 * max(16px, var(--safe-top))) calc(-1 * var(--space-4)) var(--space-2);
+  padding: max(16px, var(--safe-top)) var(--space-4) var(--space-2);
   background: var(--felt-shadow);
   box-shadow: 0 6px 12px -8px rgb(0 0 0 / 0.6);
 }
