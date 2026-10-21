@@ -4,19 +4,21 @@ This file records every notable change to the project, one section per sprint or
 
 ## Unreleased
 
-### Johnny Blue
+### Changed
 
-#### Added
+- The project is ready to publish under the GPL-3.0-or-later: copyright notices in every source file, a License section on About with a link to the source, and the public docs rewritten.
+
+## 0.2.0 — Johnny Blue (2026-10-21)
+
+### Added
 
 - **Johnny Blue**, a fifth opponent. Each game he plays as one of the other four (Soopy, Shrubs, Rusty or Smooth), and the game never says which. You can choose him in Settings, or a random seat may draw him, and a saved game keeps his disguise.
 
-#### Fixed
+### Fixed
 
 - The score bar no longer moves a pixel when trump is named on an iPhone in landscape, because the Trump slot is now as wide as its widest value.
 
-### Home without a tagline
-
-#### Removed
+### Removed
 
 - The tagline under the title on Home.
 
