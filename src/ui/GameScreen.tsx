@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { hintFor, type Hint } from '../coach/hint';
 import { toPlayerView } from '../engine/view';
+import { Dialog } from './Dialog';
 import type { GameTable } from './game/createTable';
 import { GameMenu } from './GameMenu';
 import { GameOver } from './GameOver';
@@ -66,7 +67,11 @@ export function GameScreen({
     let live = true;
     queueMicrotask(() => {
       if (!live) return;
-      void driver.start(pending.current);
+      // The driver recovers from failures itself (status `error`); this only
+      // keeps a failure it could not catch from going unseen.
+      driver
+        .start(pending.current)
+        .catch((error: unknown) => console.error('The game stopped', error));
       pending.current = [];
     });
     return () => {
@@ -120,7 +125,28 @@ export function GameScreen({
           onHome={onHome}
         />
       )}
-      {menuOpen && snapshot.status !== 'gameOver' && (
+      {snapshot.status === 'error' && (
+        <Dialog
+          title="Something went wrong"
+          actions={
+            <>
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={() => void driver.start()}
+              >
+                Try again
+              </button>
+              <button type="button" className="button" onClick={onHome}>
+                Home
+              </button>
+            </>
+          }
+        >
+          <p>The game hit a problem and stopped. It is saved up to the last move.</p>
+        </Dialog>
+      )}
+      {menuOpen && snapshot.status !== 'gameOver' && snapshot.status !== 'error' && (
         <GameMenu
           onClose={() => setMenuOpen(false)}
           rules={view.rules}

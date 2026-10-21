@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PARTNER_SPEC } from '../../../src/bots/factory';
-import { STANDARD_RULES } from '../../../src/engine/rules';
+import { applyAction, currentActor, dealNextHand, legalActions } from '../../../src/engine/game';
+import { STANDARD_RULES, type RuleSet } from '../../../src/engine/rules';
 import { load, memoryStorage, save } from '../../../src/state/persistence';
 import {
   botAt,
@@ -12,6 +13,7 @@ import {
   type NewGameOptions,
   type SavedGame,
 } from '../../../src/state/savedGame';
+import { seededRng } from '../../../src/util/rng';
 import { finishHand, gameFromDeck } from '../../helpers/engine';
 
 const OPTIONS: NewGameOptions = {
@@ -130,6 +132,19 @@ describe('isSavedGame', () => {
       tampered((b) => (b.game = null)),
       tampered((b) => (b.game.rules = null)),
       tampered((b) => (b.game.hand = null)),
+      tampered((b) => delete b.game.hand.phase.toAct),
+      tampered((b) => (b.game.hand.phase = { kind: 'complete' })),
+      tampered((b) => (b.game.hand.phase = { kind: 'complete', result: { kind: 'scored' } })),
+      tampered((b) => (b.game.hand.phase = { kind: 'farmer' })),
+      tampered((b) => (b.game.completedHands = [{ kind: 'scored', makers: 2 }])),
+      tampered((b) => (b.game.hand.bids = [{ seat: 1, round: 3, action: { type: 'pass' } }])),
+      tampered((b) => (b.game.hand.contract = { trump: 'X', maker: 1, round: 1, alone: false })),
+      tampered((b) => (b.game.hand.currentTrick = { leader: 9, plays: [], winner: null })),
+      tampered((b) => (b.game.hand.tricks = [{ leader: 0, plays: [{ seat: 0 }], winner: null }])),
+      tampered((b) => (b.game.hand.upcardStatus = 'lost')),
+      tampered((b) => (b.game.hand.discard = 'ZZ')),
+      tampered((b) => (b.game.hand.hands[1][0] = b.game.hand.hands[2][0])),
+      tampered((b) => b.game.hand.hands[0].push('9S', '9S')),
       tampered((b) => (b.game.score = [0])),
       tampered((b) => (b.game.score = [0, -1])),
       tampered((b) => (b.game.dealer = 7)),
@@ -188,5 +203,44 @@ describe('saved game migrations', () => {
     const storage = memoryStorage();
     storage.setItem(GAME_STORE.key, JSON.stringify({ schemaVersion: 1, seed: null }));
     expect(load(storage, GAME_STORE)).toBeNull();
+  });
+});
+
+describe('isSavedGame accepts every state a real game passes through', () => {
+  const HOUSE: RuleSet = {
+    ...STANDARD_RULES,
+    stickTheDealer: true,
+    defendAlone: true,
+    dealerPartnerMustGoAlone: true,
+    farmersHand: true,
+    lonerSweepPoints: 5,
+  };
+
+  it.each([
+    ['standard', STANDARD_RULES],
+    ['every house rule', HOUSE],
+  ])('with %s rules, through whole random games', (_, rules) => {
+    for (let seed = 1; seed <= 6; seed++) {
+      const { saved } = startGame({ ...OPTIONS, rules, seed });
+      const rng = seededRng(seed * 31);
+      let state = saved.game;
+      let checked = 0;
+      for (let step = 0; step < 2000 && state.winner === null; step++) {
+        expect(isSavedGame(JSON.parse(JSON.stringify({ ...saved, game: state })))).toBe(true);
+        checked++;
+        const seat = currentActor(state);
+        if (seat === null) {
+          state = dealNextHand(state, rng).state;
+          continue;
+        }
+        const legal = legalActions(state, seat);
+        const applied = applyAction(state, seat, legal[rng.nextInt(legal.length)]!);
+        if (!applied.ok) throw new Error(applied.reason);
+        state = applied.state;
+      }
+      expect(isSavedGame(JSON.parse(JSON.stringify({ ...saved, game: state })))).toBe(true);
+      expect(state.winner).not.toBeNull();
+      expect(checked).toBeGreaterThan(20);
+    }
   });
 });

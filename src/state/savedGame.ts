@@ -14,12 +14,12 @@
 import type { BotSpec, PersonaId, SkillLevel } from '../bots/bot';
 import { PARTNER_SPEC } from '../bots/factory';
 import { DISGUISES, PERSONAS } from '../bots/personas';
-import { isCardId } from '../engine/cards';
+import { isCardId, SUITS } from '../engine/cards';
 import type { GameEvent } from '../engine/events';
 import { currentActor, legalActions, newGame } from '../engine/game';
 import { isRuleSet, type RuleSet } from '../engine/rules';
 import { leftOf, partnerOf, SEATS, type Seat } from '../engine/seats';
-import type { GameState, HandPhase } from '../engine/state';
+import type { GameState, HandOutcome, HandPhase, UpcardStatus } from '../engine/state';
 import { toPlayerView } from '../engine/view';
 import type { EventSink } from '../session/driver';
 import { cryptoRng, hashSeed, seededRng, type Rng } from '../util/rng';
@@ -152,37 +152,120 @@ const PHASE_KINDS: readonly unknown[] = [
   'complete',
 ] satisfies HandPhase['kind'][];
 
+const OUTCOMES: readonly unknown[] = [
+  'made',
+  'march',
+  'lonerMade',
+  'lonerSweep',
+  'euchred',
+  'euchredAlone',
+  'euchredByLoneDefender',
+] satisfies HandOutcome[];
+
+const UPCARD_STATUSES: readonly unknown[] = [
+  'faceUp',
+  'pickedUp',
+  'turnedDown',
+  'setAside',
+] satisfies UpcardStatus[];
+
+const isTeam = (v: unknown): boolean => v === 0 || v === 1;
+const isPair = (v: unknown): boolean => Array.isArray(v) && v.length === 2 && v.every(isCount);
 const isCardList = (v: unknown): boolean => Array.isArray(v) && v.every(isCardId);
+const isListOf = (v: unknown, item: (x: unknown) => boolean): boolean =>
+  Array.isArray(v) && v.every(item);
+
+function isHandResult(v: unknown): boolean {
+  if (!isRecord(v)) return false;
+  if (v.kind === 'redeal') return true;
+  return (
+    v.kind === 'scored' &&
+    isTeam(v.makers) &&
+    isPair(v.tricksWon) &&
+    OUTCOMES.includes(v.outcome) &&
+    isCount(v.points) &&
+    isTeam(v.pointsTo)
+  );
+}
+
+function isPhase(v: unknown): boolean {
+  if (!isRecord(v) || !PHASE_KINDS.includes(v.kind)) return false;
+  switch (v.kind) {
+    case 'farmer':
+      return isSeat(v.seat);
+    case 'dealerDiscard':
+      return true;
+    case 'complete':
+      return isHandResult(v.result);
+    default:
+      return isSeat(v.toAct);
+  }
+}
+
+const isBid = (v: unknown): boolean =>
+  isRecord(v) &&
+  isSeat(v.seat) &&
+  (v.round === 1 || v.round === 2) &&
+  isRecord(v.action) &&
+  (v.action.type === 'pass' || v.action.type === 'orderUp' || v.action.type === 'callTrump');
+
+const isContract = (v: unknown): boolean =>
+  isRecord(v) &&
+  SUITS.includes(v.trump as never) &&
+  isSeat(v.maker) &&
+  (v.round === 1 || v.round === 2) &&
+  typeof v.alone === 'boolean' &&
+  (v.loneDefender === null || isSeat(v.loneDefender));
+
+const isTrick = (v: unknown): boolean =>
+  isRecord(v) &&
+  isSeat(v.leader) &&
+  isListOf(v.plays, (p) => isRecord(p) && isSeat(p.seat) && isCardId(p.card)) &&
+  (v.plays as unknown[]).length <= 4 &&
+  (v.winner === null || isSeat(v.winner));
+
+/** No card is in two hands, or in a hand and a trick, or played twice. */
+function noCardTwice(hand: GameState['hand']): boolean {
+  const tricks = [...hand.tricks, ...(hand.currentTrick === null ? [] : [hand.currentTrick])];
+  const held = [...hand.hands.flat(), ...tricks.flatMap((t) => t.plays.map((p) => p.card))];
+  return new Set(held).size === held.length;
+}
 
 /**
- * A structural check, then the engine itself as the judge: a state it
- * cannot answer questions about is not loaded.
+ * A structural check of every field the table reads, then the engine
+ * itself as the judge: a state it cannot answer questions about is not
+ * loaded, so a bad save can never crash a screen.
  */
 function isGameState(value: unknown): value is GameState {
   if (!isRecord(value) || !isRuleSet(value.rules) || !isRecord(value.hand)) return false;
-  const { hand, score } = value;
+  const { hand } = value;
   const shaped =
-    Array.isArray(score) &&
-    score.length === 2 &&
-    score.every(isCount) &&
+    isPair(value.score) &&
     isSeat(value.dealer) &&
     isCount(value.handNumber) &&
-    Array.isArray(value.completedHands) &&
-    (value.winner === null || value.winner === 0 || value.winner === 1) &&
+    isListOf(value.completedHands, isHandResult) &&
+    (value.winner === null || isTeam(value.winner)) &&
     isSeat(hand.dealer) &&
-    isRecord(hand.phase) &&
-    PHASE_KINDS.includes(hand.phase.kind) &&
+    isPhase(hand.phase) &&
     Array.isArray(hand.hands) &&
     hand.hands.length === 4 &&
-    hand.hands.every(isCardList) &&
+    hand.hands.every((cards) => isCardList(cards) && (cards as unknown[]).length <= 6) &&
     isCardList(hand.kitty) &&
     (hand.kitty as unknown[]).length === 4 &&
-    (hand.farmerSwap === null || (isRecord(hand.farmerSwap) && isCardList(hand.farmerSwap.gave))) &&
-    (hand.contract === null || (isRecord(hand.contract) && 'loneDefender' in hand.contract)) &&
-    Array.isArray(hand.bids) &&
-    Array.isArray(hand.tricks);
+    (hand.farmerSwap === null ||
+      (isRecord(hand.farmerSwap) &&
+        isSeat(hand.farmerSwap.seat) &&
+        isCardList(hand.farmerSwap.gave))) &&
+    UPCARD_STATUSES.includes(hand.upcardStatus) &&
+    isListOf(hand.bids, isBid) &&
+    (hand.contract === null || isContract(hand.contract)) &&
+    (hand.discard === null || isCardId(hand.discard)) &&
+    isListOf(hand.tricks, isTrick) &&
+    (hand.tricks as unknown[]).length <= 5 &&
+    (hand.currentTrick === null || isTrick(hand.currentTrick));
   if (!shaped) return false;
   const state = value as unknown as GameState;
+  if (!noCardTwice(state.hand)) return false;
   try {
     const actor = currentActor(state);
     if (actor !== null) legalActions(state, actor);

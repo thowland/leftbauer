@@ -8,6 +8,11 @@ This file records every notable change to the project, one section per sprint or
 
 - The project is ready to publish under the GPL-3.0-or-later: copyright notices in every source file, a License section on About with a link to the source, and the public docs rewritten.
 
+### Fixed
+
+- A failure no longer freezes the game. Before, an error in a bot, the bot worker, the sound or the animation left the table at "… is thinking" for good, and Continue froze it again. Now a bot that fails plays its first legal card or bid, a failing sound or animation is skipped, and anything else stops the game with a "Something went wrong" message offering Try again (from the saved position) or Home.
+- A saved game the app cannot show no longer leaves a blank page. Saves are checked field by field (every phase, result, bid, trick and contract, and no card held or played twice) before they load, and a screen that still fails to draw offers Reload, or clearing the saved game while keeping settings and stats.
+
 ## 0.2.0 — Johnny Blue (2026-10-21)
 
 ### Added

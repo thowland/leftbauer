@@ -390,3 +390,86 @@ describe('TableDriver guards', () => {
     await expect(d.start()).rejects.toThrow(/rejected action \(illegal\)/);
   });
 });
+
+describe('TableDriver recovery (onError)', () => {
+  const cheat: SeatController = {
+    kind: 'bot',
+    requestAction: async () => ({ type: 'play', card: '9S' }),
+  };
+
+  it('reports a failing sink and plays on', async () => {
+    const onError = vi.fn();
+    const broken: EventSink = {
+      handle: () => {
+        throw new Error('no sound');
+      },
+    };
+    const end = await driver(bots(), start().state, { sinks: [broken], onError }).start(
+      start().events
+    );
+    expect(end.winner).not.toBeNull();
+    expect(onError).toHaveBeenCalledWith(new Error('no sound'));
+  });
+
+  it('still fails a run on a broken sink without onError', async () => {
+    const broken: EventSink = { handle: () => Promise.reject(new Error('no sound')) };
+    await expect(driver(bots(), start().state, { sinks: [broken] }).start()).rejects.toThrow(
+      'no sound'
+    );
+  });
+
+  it('ends the run with status error instead of freezing, and resumes on start', async () => {
+    const onError = vi.fn();
+    const seats = [cheat, ...bots().slice(1)];
+    const d = driver(seats, start().state, { onError });
+    const stuck = await d.start();
+    expect(d.snapshot()).toMatchObject({ status: 'error', awaiting: null, state: stuck });
+    expect(onError.mock.calls[0]![0]).toMatchObject({ message: /rejected action/ });
+
+    seats[0] = bots()[0]!;
+    const end = await d.start();
+    expect(end.winner).not.toBeNull();
+    expect(d.snapshot().status).toBe('gameOver');
+  });
+
+  it('lets stop and a StrictMode restart through an aborted run', async () => {
+    const onError = vi.fn();
+    const human = new HumanSeatController();
+    const d = driver([human, ...bots().slice(1)], start().state, { onError });
+    const run = d.start();
+    await until(d, () => d.snapshot().awaiting?.seat === 0);
+    d.stop();
+    await expect(run).resolves.toBe(d.snapshot().state);
+    expect(d.snapshot().status).toBe('stopped');
+    expect(onError).not.toHaveBeenCalled();
+  });
+});
+
+describe('BotSeatController failures', () => {
+  const view = { seat: 1 } as never;
+  const legal: Action[] = [{ type: 'pass' }, { type: 'orderUp', alone: false }];
+  const failing: BotRunner = { decide: () => Promise.reject(new Error('bot broke')) };
+
+  it('plays the first legal action when the bot fails, if told to recover', async () => {
+    const onFailure = vi.fn();
+    const seat = new BotSeatController(SPEC, failing, () => {}, onFailure);
+    await expect(seat.requestAction(view, legal, new AbortController().signal)).resolves.toEqual(
+      legal[0]
+    );
+    expect(onFailure).toHaveBeenCalledWith(new Error('bot broke'));
+  });
+
+  it('passes the failure on otherwise, and never swallows an abort', async () => {
+    const plain = new BotSeatController(SPEC, failing);
+    await expect(plain.requestAction(view, legal, new AbortController().signal)).rejects.toThrow(
+      'bot broke'
+    );
+    const aborting: BotRunner = { decide: () => Promise.reject(new AbortedError()) };
+    const onFailure = vi.fn();
+    const seat = new BotSeatController(SPEC, aborting, () => {}, onFailure);
+    await expect(
+      seat.requestAction(view, legal, new AbortController().signal)
+    ).rejects.toBeInstanceOf(AbortedError);
+    expect(onFailure).not.toHaveBeenCalled();
+  });
+});

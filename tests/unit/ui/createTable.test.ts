@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { load, memoryStorage } from '../../../src/state/persistence';
 import { GAME_STORE } from '../../../src/state/savedGame';
 import { DEFAULT_SETTINGS, type Settings } from '../../../src/state/settings';
@@ -87,5 +87,35 @@ describe('saving and resuming (PE-1)', () => {
     expect(resumed.initialEvents).toEqual([]);
     expect(resumed.seats).toEqual(table.seats);
     expect(resumed.driver.snapshot().state).toEqual(saved.game);
+  });
+});
+
+describe('the app table recovers from failures (CR-1)', () => {
+  const reaches = (table: ReturnType<typeof newTable>, seat: number) =>
+    new Promise<void>((resolve) => {
+      const check = () => table.driver.snapshot().awaiting?.seat === seat && resolve();
+      table.driver.subscribe(check);
+      check();
+    });
+
+  it('plays on when sounds fail and every bot decision fails', async () => {
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const table = newTable(settings({ opponents: { left: 'rusty', right: 'soopy' } }), 3, {
+      ...FAST,
+      sound: {
+        play: () => {
+          throw new Error('audio suspended');
+        },
+      },
+      runner: { decide: () => Promise.reject(new Error('bot broke')) },
+    });
+    void table.driver.start(table.initialEvents);
+    await reaches(table, 0);
+    table.driver.stop();
+    expect(table.driver.snapshot().status).toBe('stopped');
+    const reported = quiet.mock.calls.map((call) => String(call[1]));
+    expect(reported).toContain('Error: audio suspended');
+    expect(reported).toContain('Error: bot broke');
+    quiet.mockRestore();
   });
 });
