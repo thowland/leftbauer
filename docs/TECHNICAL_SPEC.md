@@ -497,6 +497,8 @@ interface Persona {
 
 *As built (after Sprint 10):* a fifth opponent, **Johnny Blue**, is a persona with no `style`. Each game he plays as one of `DISGUISES` (Soopy, Shrubs, Rusty or Smooth, even one already at the table), drawn in `startGame` from the opponent-choice stream, so a seeded game always gives him the same disguise. `BotSpec.playsAs` records the disguise and is saved with the game; `isSavedGame` requires it for Johnny and refuses it for anyone else. `playingPersona(spec)` resolves the persona the factory plays, and `specKey` includes the disguise, so caching and decision seeds keep his disguises apart. The table and Settings show only Johnny Blue's own name, color and tagline, and nothing reveals the disguise. A random seat can draw him; the tournament does not field him.
 
+*As built (after 0.2.4):* the partner gets a name each game, drawn in `startGame` from `PARTNER_NAMES` (Sammy, Cathy, Rev, Nick, Dr Love, Koach, Allison, Whit, Nay, Vinnie, Leo) as the last draw from the opponent-choice stream, so it changes neither the opponents nor Johnny's disguise. The name is a label: it lives in `SeatSetup.partnerName`, not in the `BotSpec`, whose fields seed every decision, so the partner plays the same whatever it is called. The seat shows the name and its initial in the partner's color; the seat region keeps its positional label, "Partner". `isSavedGame` accepts only a listed name, or none: a game saved before names keeps calling its partner "Partner".
+
 ### 6.5 Skill: difficulty as strategy selection
 
 Difficulty (OP-2) changes *how well* a bot plays, independently of style:

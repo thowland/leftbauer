@@ -303,13 +303,13 @@ function SeatLabel({
   return (
     <div className="seat-label">
       <span className="seat-name" title={persona?.tagline}>
-        {persona !== null && (
+        {info !== undefined && persona !== null && (
           <span
             className="monogram"
             style={{ background: `var(${persona.colorToken})` }}
             aria-hidden="true"
           >
-            {persona.name[0]}
+            {info.name[0]}
           </span>
         )}
         {info?.name ?? seatName(seat, view.seat)}

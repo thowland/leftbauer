@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PARTNER_SPEC } from '../../../src/bots/factory';
+import { PARTNER_NAMES } from '../../../src/bots/personas';
 import { applyAction, currentActor, dealNextHand, legalActions } from '../../../src/engine/game';
 import { STANDARD_RULES, type RuleSet } from '../../../src/engine/rules';
 import { load, memoryStorage, save } from '../../../src/state/persistence';
@@ -61,6 +62,18 @@ describe('startGame', () => {
     expect(botAt(saved().seats, 1)!.playsAs).toBeUndefined();
   });
 
+  it('names the partner from the list, the same name for the same seed', () => {
+    const name = (seed: number) => startGame({ ...OPTIONS, seed }).saved.seats.partnerName;
+    const names = new Set<string>();
+    for (let seed = 0; seed < 80; seed++) {
+      expect(name(seed)).toBe(name(seed));
+      names.add(name(seed)!);
+    }
+    expect([...names].sort()).toEqual([...PARTNER_NAMES].sort());
+    // A label only: the partner's spec is the same whatever its name.
+    expect(botAt(saved().seats, 2)).toEqual(PARTNER_SPEC);
+  });
+
   it('seats around a human in any seat', () => {
     const { seats } = startGame({ ...OPTIONS, humanSeat: 2 }).saved;
     expect(botAt(seats, 2)).toBeNull();
@@ -113,6 +126,10 @@ describe('isSavedGame', () => {
     expect(load(storage, GAME_STORE)).toEqual(between);
   });
 
+  it('accepts a save from before partners had names', () => {
+    expect(isSavedGame(tampered((b) => delete b.seats.partnerName))).toBe(true);
+  });
+
   it('rejects corrupted saves', () => {
     const corrupt: unknown[] = [
       null,
@@ -129,6 +146,8 @@ describe('isSavedGame', () => {
       tampered((b) => (b.seats.bots[1].playsAs = 'soopy')),
       tampered((b) => Object.assign(b.seats.bots[1], { personaId: 'johnny', playsAs: 'partner' })),
       tampered((b) => (b.seats.bots[1].skill = 'grandmaster')),
+      tampered((b) => (b.seats.partnerName = 'Nobody')),
+      tampered((b) => (b.seats.partnerName = 7)),
       tampered((b) => (b.game = null)),
       tampered((b) => (b.game.rules = null)),
       tampered((b) => (b.game.hand = null)),

@@ -2,6 +2,12 @@
 
 This file records every notable change to the project, one section per sprint or fix. The first release is 0.1.0.
 
+## Unreleased
+
+### Changed
+
+- Your partner has a name, drawn at random each game from Sammy, Cathy, Rev, Nick, Dr Love, Koach, Allison, Whit, Nay, Vinnie and Leo. The name is only a label: every partner plays the same Sharp game. A game saved before this release keeps calling its partner "Partner".
+
 ## 0.2.4 — Sound after an update (2026-10-21)
 
 ### Fixed
