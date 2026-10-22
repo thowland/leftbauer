@@ -2,7 +2,7 @@
 
 This file records every notable change to the project, one section per sprint or fix. The first release is 0.1.0.
 
-## Unreleased
+## 0.2.5 — Partners with names (2026-10-21)
 
 ### Changed
 
