@@ -13,7 +13,7 @@
 
 import type { BotSpec, PersonaId, SkillLevel } from '../bots/bot';
 import { PARTNER_SPEC } from '../bots/factory';
-import { DISGUISES, PERSONAS } from '../bots/personas';
+import { DISGUISES, PARTNER_NAMES, PERSONAS } from '../bots/personas';
 import { isCardId, SUITS } from '../engine/cards';
 import type { GameEvent } from '../engine/events';
 import { currentActor, legalActions, newGame } from '../engine/game';
@@ -30,6 +30,12 @@ export interface SeatSetup {
   readonly humanSeat: Seat;
   /** Seats without an entry are human. */
   readonly bots: Partial<Record<Seat, BotSpec>>;
+  /**
+   * The partner's name, from `PARTNER_NAMES`. Kept out of the `BotSpec`,
+   * whose every field seeds the bot's decisions. Games saved before names
+   * have none, and their partner stays "Partner".
+   */
+  readonly partnerName?: string;
 }
 
 export interface SavedGame {
@@ -88,7 +94,13 @@ export function startGame({
     [partnerOf(humanSeat)]: PARTNER_SPEC,
     [leftOf(partnerOf(humanSeat))]: opponent(right),
   };
-  return { saved: { game: state, seats: { humanSeat, bots }, seed }, events, shuffleRng };
+  // Last from the stream, so it changes neither the opponents nor Johnny's disguise.
+  const partnerName = PARTNER_NAMES[pickRng.nextInt(PARTNER_NAMES.length)]!;
+  return {
+    saved: { game: state, seats: { humanSeat, bots, partnerName }, seed },
+    events,
+    shuffleRng,
+  };
 }
 
 /**
@@ -138,7 +150,8 @@ function isBotSpec(value: unknown): value is BotSpec {
 
 function isSeatSetup(value: unknown): value is SeatSetup {
   if (!isRecord(value) || !isSeat(value.humanSeat) || !isRecord(value.bots)) return false;
-  const { humanSeat, bots } = value;
+  const { humanSeat, bots, partnerName } = value;
+  if (partnerName !== undefined && !PARTNER_NAMES.includes(partnerName as string)) return false;
   return SEATS.every((seat) => (seat === humanSeat ? !(seat in bots) : isBotSpec(bots[seat])));
 }
 

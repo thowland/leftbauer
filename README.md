@@ -8,7 +8,7 @@ The name comes from the left bower, the jack that leaves its own suit to become 
 
 The game is at https://leftbauer.beta-site.us. On an iPhone or iPad, open it in Safari and use **Share**, then **Add to Home Screen**; on Android, open it in Chrome and choose **Install app**. Installed, it runs full screen and needs no network after the first visit. The [beta guide](docs/BETA.md) has the details for each device.
 
-Your partner always plays Sharp, against two opponents drawn from Soopy, Shrubs, Rusty, Smooth and Johnny Blue, who plays as one of the other four, drawn at random each game and never revealed. The opponents play at Casual, Standard or Sharp. The house rules are stick the dealer, game to 5, 7, 10 or 11, defending alone, the dealer's partner must go alone, farmer's hand and loner sweeps, and there is an optional four-color deck. Hints, a rules reference, a page on how your partner plays and lifetime stats are all in the app.
+Your partner, under a different name each game, always plays Sharp, against two opponents drawn from Soopy, Shrubs, Rusty, Smooth and Johnny Blue, who plays as one of the other four, drawn at random each game and never revealed. The opponents play at Casual, Standard or Sharp. The house rules are stick the dealer, game to 5, 7, 10 or 11, defending alone, the dealer's partner must go alone, farmer's hand and loner sweeps, and there is an optional four-color deck. Hints, a rules reference, a page on how your partner plays and lifetime stats are all in the app.
 
 ## Status
 

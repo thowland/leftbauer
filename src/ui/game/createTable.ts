@@ -107,7 +107,8 @@ function buildTable(
     const spec = botAt(seats, seat);
     if (spec === null) return { name: 'You', persona: null };
     const persona = personaById(spec.personaId);
-    return { name: persona.name, persona };
+    const name = spec.role === 'partner' ? (seats.partnerName ?? persona.name) : persona.name;
+    return { name, persona };
   };
   const setup: GameSetup = { seats, seed: saved.seed };
   const presenter = new Presenter(motion === null ? immediateScheduler : timerScheduler, motion);

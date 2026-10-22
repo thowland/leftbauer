@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { PARTNER_NAMES } from '../../src/bots/personas';
 
 /**
  * Playing a game — Implementation Plan, Sprint 3. `?e2e` removes pacing;
@@ -50,7 +51,9 @@ test.describe('playing a game', () => {
     expect(left).toMatch(names);
     expect(right).toMatch(names);
     expect(left.match(names)![0]).not.toBe(right.match(names)![0]);
-    await expect(page.getByRole('region', { name: 'Partner' })).toContainText('Partner');
+    await expect(page.getByRole('region', { name: 'Partner' })).toContainText(
+      new RegExp(PARTNER_NAMES.join('|'))
+    );
     await page.screenshot({ path: testInfo.outputPath(`table-${testInfo.project.name}.png`) });
   });
 

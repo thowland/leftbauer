@@ -145,10 +145,12 @@ describe('TableScreen with personas (OP-4)', () => {
     const seats = [
       { name: 'You', persona: null },
       { name: 'Rusty', persona: personaById('rusty') },
-      { name: 'Partner', persona: personaById('partner') },
+      { name: 'Dr Love', persona: personaById('partner') },
       { name: 'Soopy', persona: personaById('soopy') },
     ] as const;
     render(<TableScreen view={toPlayerView(gameFromDeck(), 0)} seats={seats} />);
+    // The partner's monogram is its name's initial, in the partner's color.
+    expect(screen.getByRole('region', { name: 'Partner' })).toHaveTextContent('DDr Love');
     const left = screen.getByRole('region', { name: 'Left opponent' });
     expect(left).toHaveTextContent('Rusty');
     expect(within(left).getByText('Rusty').closest('.seat-name')).toHaveAttribute(

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { PARTNER_NAMES } from '../../../src/bots/personas';
 import { load, memoryStorage } from '../../../src/state/persistence';
 import { GAME_STORE } from '../../../src/state/savedGame';
 import { DEFAULT_SETTINGS, type Settings } from '../../../src/state/settings';
@@ -46,7 +47,13 @@ describe('newTable seating (OP-4)', () => {
       4,
       FAST
     );
-    expect(table.seats.map((s) => s.name)).toEqual(['You', 'Rusty', 'Partner', 'Soopy']);
+    expect(table.seats.map((s) => s.name)).toEqual([
+      'You',
+      'Rusty',
+      table.setup.seats.partnerName,
+      'Soopy',
+    ]);
+    expect(PARTNER_NAMES).toContain(table.seats[2].name);
     expect(table.setup.seats.bots[1]).toEqual({
       role: 'opponent',
       personaId: 'rusty',
@@ -86,6 +93,10 @@ describe('saving and resuming (PE-1)', () => {
     const resumed = resumeTable(saved, FAST);
     expect(resumed.initialEvents).toEqual([]);
     expect(resumed.seats).toEqual(table.seats);
+
+    // A game saved before partners had names keeps calling it "Partner".
+    const { partnerName: _, ...unnamed } = saved.seats;
+    expect(resumeTable({ ...saved, seats: unnamed }, FAST).seats[2].name).toBe('Partner');
     expect(resumed.driver.snapshot().state).toEqual(saved.game);
   });
 });

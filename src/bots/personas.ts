@@ -99,6 +99,24 @@ export const PERSONAS: readonly Persona[] = [
   },
 ];
 
+/**
+ * The partner's name for a game, drawn when it starts. A label only: the
+ * partner plays the same whatever it is called.
+ */
+export const PARTNER_NAMES: readonly string[] = [
+  'Sammy',
+  'Cathy',
+  'Rev',
+  'Nick',
+  'Dr Love',
+  'Koach',
+  'Allison',
+  'Whit',
+  'Nay',
+  'Vinnie',
+  'Leo',
+];
+
 /** The opponents a player can face (everyone but the partner). */
 export const OPPONENT_IDS: readonly PersonaId[] = PERSONAS.filter((p) => p.id !== 'partner').map(
   (p) => p.id
