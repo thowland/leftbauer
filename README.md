@@ -12,7 +12,7 @@ Your partner, under a different name each game, always plays Sharp, against two 
 
 ## Status
 
-The first release, 0.1.0, was the friends beta that closed Sprint 10 of the [implementation plan](docs/IMPLEMENTATION_PLAN.md). The current release is 0.2.4, and it is what runs at https://leftbauer.beta-site.us. The [changelog](CHANGELOG.md) has the details.
+The first release, 0.1.0, was the friends beta that closed Sprint 10 of the [implementation plan](docs/IMPLEMENTATION_PLAN.md). The current release is 0.2.5, and it is what runs at https://leftbauer.beta-site.us. The [changelog](CHANGELOG.md) has the details.
 
 ## Documents
 
